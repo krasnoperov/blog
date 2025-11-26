@@ -1,0 +1,189 @@
+/**
+ * Shared markdown styles
+ * Use this class on any container that renders markdown content
+ */
+
+.markdown {
+  color: var(--text-on-brand-strong);
+  font-size: 0.95rem;
+}
+
+/* Headings */
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  color: var(--text-on-brand-strong);
+  font-weight: 600;
+  margin: 0 0 0.625rem 0;
+  letter-spacing: -0.01em;
+}
+
+.markdown h1 {
+  font-size: 1rem;
+}
+
+.markdown h2 {
+  font-size: 0.875rem;
+}
+
+.markdown h3 {
+  font-size: 0.8125rem;
+}
+
+.markdown h1:not(:first-child),
+.markdown h2:not(:first-child),
+.markdown h3:not(:first-child),
+.markdown h4:not(:first-child),
+.markdown h5:not(:first-child),
+.markdown h6:not(:first-child) {
+  margin-top: 1rem;
+}
+
+/* Paragraphs */
+.markdown p {
+  margin: 0 0 0.625rem 0;
+}
+
+.markdown p:last-child {
+  margin-bottom: 0;
+}
+
+/* Lists */
+.markdown ul,
+.markdown ol {
+  margin: 0 0 0.625rem 0;
+  padding-left: 1.5rem;
+}
+
+.markdown ul:last-child,
+.markdown ol:last-child {
+  margin-bottom: 0;
+}
+
+.markdown li {
+  margin-bottom: 0.375rem;
+}
+
+.markdown li:last-child {
+  margin-bottom: 0;
+}
+
+.markdown ul > li {
+  list-style-type: disc;
+}
+
+.markdown ol > li {
+  list-style-type: decimal;
+}
+
+.markdown li::marker {
+  color: inherit;
+}
+
+/* Text styling */
+.markdown strong {
+  font-weight: 600;
+}
+
+.markdown em {
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* Code */
+.markdown code {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.875em;
+  color: var(--text-on-brand-strong);
+}
+
+.markdown pre {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0 0 0.625rem 0;
+}
+
+.markdown pre:last-child {
+  margin-bottom: 0;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Links */
+.markdown a {
+  color: var(--status-info-text);
+  text-decoration: underline;
+}
+
+.markdown a:hover {
+  opacity: 0.8;
+}
+
+/* Horizontal rules */
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--border-glass);
+  margin: 1rem 0;
+  opacity: 0.6;
+}
+
+/* Blockquotes */
+.markdown blockquote {
+  border-left: 3px solid var(--border-glass);
+  padding-left: 1rem;
+  margin: 0 0 0.625rem 0;
+  opacity: 0.9;
+}
+
+.markdown blockquote:last-child {
+  margin-bottom: 0;
+}
+
+/* Tables */
+.markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 0.625rem 0;
+}
+
+.markdown table:last-child {
+  margin-bottom: 0;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid var(--border-glass);
+  padding: 0.375rem 0.625rem;
+  text-align: left;
+}
+
+.markdown th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .markdown {
+    font-size: 0.9rem;
+  }
+
+  .markdown h2 {
+    font-size: 0.95rem;
+  }
+
+  .markdown h3 {
+    font-size: 0.9rem;
+  }
+}

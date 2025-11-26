@@ -1,0 +1,65 @@
+# ============================================================================
+# BARE FRAMEWORK FOUNDATION - Local Development Configuration
+# ============================================================================
+# Unified worker for local dev (handles HTTP + queues + workflows in one)
+# Usage: wrangler dev --config wrangler.dev.toml
+
+account_id = "2d61278ad8b69df60cde602758926e14"
+name = "whitelabel-local"
+main = "src/worker/unified.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Observability
+[observability]
+enabled = true
+
+# Serve the React frontend
+[assets]
+directory = "./dist/frontend"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*", "/.well-known/*"]
+
+# D1 Database binding - LOCAL (uses persistent SQLite file in .wrangler/state/v3/d1/)
+[[d1_databases]]
+binding = "DB"
+database_name = "whitelabel-local"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "db/migrations"
+
+# KV namespace for OAuth state
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "08f7fd3b25ac4cc59ad9e2975d510df3"
+
+# Environment variables for local dev
+[vars]
+NODE_ENV = "development"
+ENVIRONMENT = "local"
+
+[dev]
+port = 8788
+local_protocol = "http"
+
+# --- FUTURE: Queue (unified worker handles both producer and consumer) ---
+# Uncomment when you add async workflows:
+# [[queues.consumers]]
+# queue = "my-queue-local"
+# max_batch_size = 1
+# max_batch_timeout = 60
+# max_retries = 3
+#
+# [[queues.producers]]
+# queue = "my-queue-local"
+# binding = "MY_QUEUE"
+
+# --- FUTURE: Workflow Binding ---
+# [[workflows]]
+# binding = "MY_WORKFLOW"
+# name = "my-workflow-local"
+# class_name = "MyWorkflow"
+
+# --- FUTURE: R2 Storage ---
+# [[r2_buckets]]
+# binding = "MY_STORAGE"
+# bucket_name = "my-bucket-local"

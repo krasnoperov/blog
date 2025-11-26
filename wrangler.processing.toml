@@ -1,0 +1,124 @@
+# ============================================================================
+# BARE FRAMEWORK FOUNDATION - Processing Worker Configuration
+# ============================================================================
+# Handles queue consumption and workflows
+# Separated from main worker for better resource isolation
+# Currently empty - add queues/workflows when implementing business logic
+
+account_id = "2d61278ad8b69df60cde602758926e14"
+name = "whitelabel-processing-stage"
+main = "src/worker/processing.ts"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Observability
+[observability]
+enabled = true
+
+# Stage environment routes
+[[routes]]
+pattern = "whitelabel-processing-stage.krasnoperov.me"
+custom_domain = true
+
+# D1 Database binding (same as main worker)
+[[d1_databases]]
+binding = "DB"
+database_name = "whitelabel-stage"
+database_id = "fe3cb23a-2286-4a10-a21b-217fb0be999d"
+migrations_dir = "db/migrations"
+
+# KV namespace for OAuth state (same as main worker)
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "08f7fd3b25ac4cc59ad9e2975d510df3"
+
+# Environment variables for stage
+[vars]
+NODE_ENV = "stage"
+ENVIRONMENT = "stage"
+
+# --- FUTURE: Queue CONSUMER ---
+# Uncomment when you add async workflows:
+# [[queues.consumers]]
+# queue = "my-queue-stage"
+# max_batch_size = 1
+# max_batch_timeout = 60
+# max_retries = 3
+
+# --- FUTURE: Queue PRODUCER (for retries) ---
+# [[queues.producers]]
+# queue = "my-queue-stage"
+# binding = "MY_QUEUE"
+
+# --- FUTURE: Workflow Binding ---
+# Uncomment when you create workflows:
+# [[workflows]]
+# binding = "MY_WORKFLOW"
+# name = "my-workflow-stage"
+# class_name = "MyWorkflow"
+
+# --- FUTURE: R2 Storage ---
+# [[r2_buckets]]
+# binding = "MY_STORAGE"
+# bucket_name = "my-bucket-stage"
+
+# ====================
+# PRODUCTION ENVIRONMENT
+# ====================
+[env.production]
+name = "whitelabel-processing-production"
+
+# Production routes
+[[env.production.routes]]
+pattern = "whitelabel-processing.krasnoperov.me"
+custom_domain = true
+
+# D1 Database binding - Production (same as main worker)
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "whitelabel-production"
+database_id = "239df1be-1499-4d03-80bf-7341545b4547"
+migrations_dir = "db/migrations"
+
+# KV namespace for OAuth state - Production (same as main worker)
+[[env.production.kv_namespaces]]
+binding = "OAUTH_KV"
+id = "08f7fd3b25ac4cc59ad9e2975d510df3"
+
+[env.production.vars]
+NODE_ENV = "production"
+ENVIRONMENT = "production"
+
+# --- FUTURE: Queue CONSUMER - Production ---
+# [[env.production.queues.consumers]]
+# queue = "my-queue-production"
+# max_batch_size = 1
+# max_batch_timeout = 60
+# max_retries = 3
+
+# --- FUTURE: Queue PRODUCER - Production ---
+# [[env.production.queues.producers]]
+# queue = "my-queue-production"
+# binding = "MY_QUEUE"
+
+# --- FUTURE: Workflow Binding - Production ---
+# [[env.production.workflows]]
+# binding = "MY_WORKFLOW"
+# name = "my-workflow-production"
+# class_name = "MyWorkflow"
+
+# --- FUTURE: R2 Storage - Production ---
+# [[env.production.r2_buckets]]
+# binding = "MY_STORAGE"
+# bucket_name = "my-bucket-production"
+
+# ====================
+# LOCAL DEVELOPMENT
+# ====================
+[dev]
+port = 8789  # Different port from main worker (8788)
+local_protocol = "http"
+
+# Secrets should be set via wrangler CLI:
+# wrangler secret put GOOGLE_AI_API_KEY --config wrangler.processing.toml
+# (Add other secrets as needed for your workflows)

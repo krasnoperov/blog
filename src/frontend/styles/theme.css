@@ -1,0 +1,273 @@
+:root {
+  /* Brand gradients */
+  /* Light: #667eea (oklch(62.19% 0.1845 276.62)) to #764ba2 (oklch(48.97% 0.1549 307.72)) */
+  /* Dark: Medium-dark (2/3 to dark) - comfortable for night without being too intense */
+  --brand-gradient-start: light-dark(
+    oklch(62.19% 0.1845 276.62),
+    oklch(35% 0.12 276.62)
+  );
+  --brand-gradient-end: light-dark(
+    oklch(48.97% 0.1549 307.72),
+    oklch(25% 0.10 307.72)
+  );
+  --gradient-brand: linear-gradient(135deg, var(--brand-gradient-start) 0%, var(--brand-gradient-end) 100%);
+
+  /* Light: rgba(102, 126, 234, 0.92) and rgba(118, 75, 162, 0.92) */
+  /* Dark: Slightly lighter than background gradient for distinction */
+  --gradient-player: linear-gradient(135deg,
+    light-dark(oklch(62.19% 0.1845 276.62 / 0.92), oklch(38% 0.12 276.62 / 0.95)),
+    light-dark(oklch(48.97% 0.1549 307.72 / 0.92), oklch(28% 0.10 307.72 / 0.95))
+  );
+
+  /* Text colors on brand surfaces */
+  /* Light: rgba(255, 255, 255, 0.95) = oklch(100% 0 0 / 0.95) - contrast ~3.5:1 */
+  /* Dark: Dimmed to match light theme's comfortable contrast ratio */
+  --text-on-brand-strong: light-dark(
+    oklch(100% 0 0 / 0.95),
+    oklch(85% 0 0 / 0.90)
+  );
+
+  /* Light: rgba(226, 232, 240, 0.85) ≈ oklch(92.5% 0.008 264 / 0.85) */
+  /* Dark: Proportionally dimmed for secondary content */
+  --text-on-brand-muted: light-dark(
+    oklch(92.5% 0.008 264 / 0.85),
+    oklch(78% 0.008 264 / 0.85)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.75) = oklch(100% 0 0 / 0.75) */
+  /* Dark: Dimmed subtle text */
+  --text-on-brand-subtle: light-dark(
+    oklch(100% 0 0 / 0.75),
+    oklch(72% 0 0 / 0.75)
+  );
+
+  /* Glass surfaces */
+  /* Light: rgba(255, 255, 255, 0.12) = oklch(100% 0 0 / 0.12) */
+  /* Dark: Keep white/light color for glass effect, just lower opacity */
+  --surface-glass: light-dark(
+    oklch(100% 0 0 / 0.12),
+    oklch(100% 0 0 / 0.08)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.18) = oklch(100% 0 0 / 0.18) */
+  /* Dark: More opaque white for elevated surface */
+  --surface-glass-strong: light-dark(
+    oklch(100% 0 0 / 0.18),
+    oklch(100% 0 0 / 0.12)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.24) = oklch(100% 0 0 / 0.24) */
+  /* Dark: Most opaque white for highest elevation */
+  --surface-glass-intense: light-dark(
+    oklch(100% 0 0 / 0.24),
+    oklch(100% 0 0 / 0.18)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.12) = oklch(100% 0 0 / 0.12) */
+  --surface-glass-background: light-dark(
+    oklch(100% 0 0 / 0.12),
+    oklch(100% 0 0 / 0.08)
+  );
+
+  /* Light: rgba(15, 23, 42, 0.32) ≈ oklch(9.5% 0.022 264 / 0.32) */
+  /* Dark: Code backgrounds darker for contrast */
+  --surface-code-bg: light-dark(
+    oklch(9.5% 0.022 264 / 0.32),
+    oklch(20% 0.015 264 / 0.7)
+  );
+
+  /* Borders */
+  /* Light: rgba(255, 255, 255, 0.2) = oklch(100% 0 0 / 0.2) */
+  /* Dark: Keep white for glass effect, reduce opacity for subtlety */
+  --border-glass: light-dark(
+    oklch(100% 0 0 / 0.2),
+    oklch(100% 0 0 / 0.15)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.35) = oklch(100% 0 0 / 0.35) */
+  /* Dark: More visible white border */
+  --border-glass-strong: light-dark(
+    oklch(100% 0 0 / 0.35),
+    oklch(100% 0 0 / 0.25)
+  );
+
+  /* Chips & badges */
+  /* Light: rgba(255, 255, 255, 0.18) = oklch(100% 0 0 / 0.18) */
+  /* Dark: Glassy chip backgrounds with white */
+  --chip-bg: light-dark(
+    oklch(100% 0 0 / 0.18),
+    oklch(100% 0 0 / 0.12)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.25) = oklch(100% 0 0 / 0.25) */
+  /* Dark: Glassy chip borders */
+  --chip-border: light-dark(
+    oklch(100% 0 0 / 0.25),
+    oklch(100% 0 0 / 0.20)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.92) = oklch(100% 0 0 / 0.92) */
+  /* Dark: Dimmed chip text to match overall theme */
+  --chip-text: light-dark(
+    oklch(100% 0 0 / 0.92),
+    oklch(85% 0 0 / 0.88)
+  );
+
+  /* Light: rgba(56, 189, 248, 0.3) ≈ oklch(74% 0.145 230 / 0.3) */
+  --status-info-bg: light-dark(
+    oklch(74% 0.145 230 / 0.3),
+    oklch(74% 0.145 230 / 0.25)
+  );
+
+  /* Light: rgba(56, 189, 248, 0.4) ≈ oklch(74% 0.145 230 / 0.4) */
+  --status-info-border: light-dark(
+    oklch(74% 0.145 230 / 0.4),
+    oklch(74% 0.145 230 / 0.35)
+  );
+
+  /* Light: #e0f2fe ≈ oklch(95% 0.02 230) */
+  --status-info-text: light-dark(
+    oklch(95% 0.02 230),
+    oklch(96% 0.02 230)
+  );
+
+  /* Light: rgba(253, 230, 138, 0.35) ≈ oklch(92% 0.09 95 / 0.35) */
+  --status-warning-bg: light-dark(
+    oklch(92% 0.09 95 / 0.35),
+    oklch(92% 0.09 95 / 0.28)
+  );
+
+  /* Light: rgba(251, 191, 36, 0.4) ≈ oklch(82% 0.145 85 / 0.4) */
+  --status-warning-border: light-dark(
+    oklch(82% 0.145 85 / 0.4),
+    oklch(82% 0.145 85 / 0.35)
+  );
+
+  /* Light: #fff7ed ≈ oklch(98% 0.015 75) */
+  --status-warning-text: light-dark(
+    oklch(98% 0.015 75),
+    oklch(99% 0.015 75)
+  );
+
+  /* Buttons */
+  /* Gradient buttons (primary action) */
+  /* Light: linear-gradient(135deg, #667eea 0%, #764ba2 100%) */
+  --button-primary-bg: linear-gradient(135deg, var(--brand-gradient-start) 0%, var(--brand-gradient-end) 100%);
+
+  /* Light: linear-gradient(135deg, #7889f0 0%, #8659b0 100%) */
+  /* #7889f0 ≈ oklch(65% 0.17 276), #8659b0 ≈ oklch(52% 0.15 308) */
+  --button-primary-bg-hover: linear-gradient(135deg,
+    light-dark(oklch(65% 0.17 276), oklch(75% 0.15 276)),
+    light-dark(oklch(52% 0.15 308), oklch(62% 0.13 308))
+  );
+
+  /* Light: #ffffff = oklch(100% 0 0) */
+  --button-primary-text: light-dark(
+    oklch(100% 0 0),
+    oklch(100% 0 0)
+  );
+
+  /* Light: 1px solid rgba(255, 255, 255, 0.2) */
+  --button-primary-border: 1px solid light-dark(
+    oklch(100% 0 0 / 0.2),
+    oklch(100% 0 0 / 0.15)
+  );
+
+  /* Light: 0 4px 12px rgba(102, 126, 234, 0.4) */
+  --button-primary-shadow: 0 4px 12px light-dark(
+    oklch(62.19% 0.1845 276.62 / 0.4),
+    oklch(0% 0 0 / 0.5)
+  );
+
+  /* Light: 0 16px 32px rgba(0, 0, 0, 0.25) */
+  --button-primary-shadow-hover: 0 16px 32px light-dark(
+    oklch(0% 0 0 / 0.25),
+    oklch(0% 0 0 / 0.4)
+  );
+
+  /* Ghost buttons (secondary actions) */
+  /* Light: rgba(255, 255, 255, 0.18) = oklch(100% 0 0 / 0.18) */
+  /* Dark: Glassy button backgrounds */
+  --button-ghost-bg: light-dark(
+    oklch(100% 0 0 / 0.18),
+    oklch(100% 0 0 / 0.12)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.3) = oklch(100% 0 0 / 0.3) */
+  /* Dark: More opaque on hover */
+  --button-ghost-bg-hover: light-dark(
+    oklch(100% 0 0 / 0.3),
+    oklch(100% 0 0 / 0.20)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.35) = oklch(100% 0 0 / 0.35) */
+  /* Dark: Glassy button borders */
+  --button-ghost-border: light-dark(
+    oklch(100% 0 0 / 0.35),
+    oklch(100% 0 0 / 0.25)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.92) = oklch(100% 0 0 / 0.92) */
+  /* Dark: Dimmed button text to match overall theme */
+  --button-ghost-text: light-dark(
+    oklch(100% 0 0 / 0.92),
+    oklch(85% 0 0 / 0.88)
+  );
+
+  /* Scrollbars */
+  /* Light: rgba(255, 255, 255, 0.08) = oklch(100% 0 0 / 0.08) */
+  /* Dark: Keep white for consistency */
+  --scroll-track: light-dark(
+    oklch(100% 0 0 / 0.08),
+    oklch(100% 0 0 / 0.05)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.2) = oklch(100% 0 0 / 0.2) */
+  /* Dark: White thumb, slightly more visible */
+  --scroll-thumb: light-dark(
+    oklch(100% 0 0 / 0.2),
+    oklch(100% 0 0 / 0.15)
+  );
+
+  /* Light: rgba(255, 255, 255, 0.35) = oklch(100% 0 0 / 0.35) */
+  /* Dark: More opaque on hover */
+  --scroll-thumb-hover: light-dark(
+    oklch(100% 0 0 / 0.35),
+    oklch(100% 0 0 / 0.25)
+  );
+
+  /* Shadows */
+  /* Light: 0 12px 24px rgba(0, 0, 0, 0.1) */
+  --shadow-header: 0 12px 24px light-dark(
+    oklch(0% 0 0 / 0.1),
+    oklch(0% 0 0 / 0.3)
+  );
+
+  /* Light: 0 24px 40px rgba(0, 0, 0, 0.16) */
+  --shadow-elevated: 0 24px 40px light-dark(
+    oklch(0% 0 0 / 0.16),
+    oklch(0% 0 0 / 0.4)
+  );
+
+  /* Light: 0 30px 50px rgba(0, 0, 0, 0.12) */
+  --shadow-floating: 0 30px 50px light-dark(
+    oklch(0% 0 0 / 0.12),
+    oklch(0% 0 0 / 0.35)
+  );
+
+  /* Light: 0 -12px 24px rgba(0, 0, 0, 0.15) */
+  --shadow-player: 0 -12px 24px light-dark(
+    oklch(0% 0 0 / 0.15),
+    oklch(0% 0 0 / 0.35)
+  );
+
+  /* Layout spacing */
+  --header-height: 90px;
+  --layout-gap: 20px;
+  --panel-spacing: 1.5rem;
+  --panel-spacing-sm: 1rem;
+}
+
+body {
+  background: var(--gradient-brand);
+}

@@ -1,0 +1,33 @@
+node_modules/
+dist/
+.wrangler
+.env
+.dev.vars
+.DS_Store
+wrangler-state.json
+samples
+
+# OIDC/OAuth keys (sensitive cryptographic material)
+oidc-keys/
+
+# Test audio files
+*.mp3
+
+# Generated VTT transcripts (regenerate with: npm run transcribe:openai-gpt-4o-diarize file.mp3)
+*.vtt
+
+# Evaluation artifacts (temporary)
+*.analysis.json
+*.scores.json
+summary-*.md
+evaluate/runs/
+
+# Raw transcription outputs
+*-raw.json
+
+# Documentation scratch files
+queries-*.md
+
+# Test reference files (local only)
+test-references/
+tmp/

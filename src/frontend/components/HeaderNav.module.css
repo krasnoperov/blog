@@ -1,0 +1,25 @@
+.nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navLink {
+  color: var(--text-on-brand-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    gap: 0.75rem;
+  }
+
+  .navLink {
+    font-size: 0.9rem;
+  }
+}

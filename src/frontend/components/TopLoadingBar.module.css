@@ -1,0 +1,52 @@
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  z-index: 9999;
+  overflow: hidden;
+  background: transparent;
+}
+
+.bar {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(56, 189, 248, 1) 20%,
+    rgba(96, 165, 250, 1) 40%,
+    rgba(59, 130, 246, 1) 50%,
+    rgba(96, 165, 250, 1) 60%,
+    rgba(56, 189, 248, 1) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.5s linear infinite;
+  transform-origin: left;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+.bar.complete {
+  animation: complete 0.3s ease-out forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes complete {
+  0% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}

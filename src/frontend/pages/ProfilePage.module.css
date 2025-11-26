@@ -1,0 +1,80 @@
+/* Page layout */
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--gradient-brand);
+  color: var(--text-on-brand-strong);
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 3rem 1.25rem 3.5rem;
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-on-brand-muted);
+  padding: 2rem;
+}
+
+/* Header navigation */
+.brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-on-brand-strong);
+  text-decoration: none;
+}
+
+.nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navLink {
+  color: var(--text-on-brand-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  text-decoration: underline;
+}
+
+.authButton {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: var(--button-ghost-bg);
+  color: var(--button-ghost-text);
+  text-decoration: none;
+  border: 1px solid var(--button-ghost-border);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.authButton:hover {
+  background: var(--button-ghost-bg-hover);
+  transform: translateY(-1px);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .main {
+    padding: 2.5rem 1rem 3rem;
+  }
+
+  .nav {
+    gap: 0.75rem;
+  }
+
+  .navLink {
+    font-size: 0.9rem;
+  }
+}

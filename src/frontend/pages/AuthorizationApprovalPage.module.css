@@ -1,0 +1,128 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.errorBox {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 20px 0;
+  color: #c33;
+}
+
+.clientInfo {
+  text-align: center;
+  margin: 30px 0;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.clientName {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.clientDescription {
+  color: #666;
+  font-size: 16px;
+  margin: 0;
+}
+
+.userInfo {
+  text-align: center;
+  margin: 20px 0;
+  padding: 12px;
+  background-color: #e9ecef;
+  border-radius: 6px;
+}
+
+.userInfo p {
+  margin: 0;
+  color: #495057;
+}
+
+.userInfo strong {
+  color: #212529;
+}
+
+.permissions {
+  margin: 30px 0;
+  padding: 20px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+}
+
+.permissions h4 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #856404;
+}
+
+.permissions ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #856404;
+}
+
+.permissions li {
+  margin: 8px 0;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.denyButton,
+.approveButton {
+  flex: 1;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.denyButton {
+  background-color: #6c757d;
+  color: white;
+}
+
+.denyButton:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.approveButton {
+  background-color: #667eea;
+  color: white;
+}
+
+.approveButton:hover:not(:disabled) {
+  background-color: #5568d3;
+}
+
+.denyButton:disabled,
+.approveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

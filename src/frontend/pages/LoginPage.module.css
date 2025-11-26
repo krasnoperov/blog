@@ -1,0 +1,42 @@
+/* Page layout */
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gradient-brand);
+  padding: 2rem 1rem;
+}
+
+/* Login content */
+.subtitle {
+  color: var(--text-on-brand-subtle);
+  margin: 0 0 2rem;
+  text-align: center;
+}
+
+.googleButton {
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #3c4043;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  transition: box-shadow 0.2s;
+}
+
+.googleButton:hover {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.googleIcon {
+  width: 20px;
+  height: 20px;
+}

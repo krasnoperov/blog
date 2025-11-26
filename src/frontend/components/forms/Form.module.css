@@ -1,0 +1,145 @@
+/* Shared form styles */
+
+.formContainer {
+  background: var(--surface-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: 20px;
+  padding: 2.25rem 2.5rem;
+  box-shadow: var(--shadow-elevated);
+  backdrop-filter: blur(18px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-on-brand-strong);
+}
+
+.error {
+  background: rgba(248, 113, 113, 0.18);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+  border-radius: 16px;
+  color: #fee2e2;
+  padding: 0.85rem 1rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.formGroup + .formGroup {
+  margin-top: 2rem;
+}
+
+.fieldRow .formGroup {
+  margin-top: 0;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-on-brand-subtle);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  background: var(--surface-code-bg);
+  color: var(--text-on-brand-strong);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--text-on-brand-subtle);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.75);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+.input:disabled,
+.select:disabled,
+.textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.readonly {
+  background: rgba(100, 116, 139, 0.15);
+  border-color: var(--border-glass);
+  cursor: not-allowed;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-on-brand-muted);
+  font-style: italic;
+}
+
+.submitButton {
+  width: 100%;
+  margin-top: 1.75rem;
+  padding: 0.9rem;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  font-size: 1rem;
+  font-weight: 600;
+  border: var(--button-primary-border);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: var(--button-primary-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--button-primary-bg-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--button-primary-shadow-hover);
+}
+
+.submitButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .formContainer {
+    padding: 2rem 1.75rem;
+  }
+
+  .fieldRow {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
