@@ -1,46 +1,41 @@
 import type { Context, Next } from 'hono';
-import type { Container } from 'inversify';
-import type { Env } from '../../core/types';
-import { AuthService } from '../features/auth/auth-service';
+import type { AppContext } from '../routes/types';
+import { resolveRequestAuth } from '../features/auth/request-auth';
 
-/**
- * Extract token from request headers (Bearer token or cookie)
- */
-function extractToken(c: Context): string | undefined {
-  // Check Authorization header first for Bearer token
-  const authHeader = c.req.header('Authorization');
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7);
-  }
+type AuthFailureReason = 'invalid_token' | 'missing_token' | 'user_not_found';
 
-  // Fall back to cookie
-  const cookieHeader = c.req.header('Cookie');
-  return cookieHeader
-    ?.split('; ')
-    .find((row) => row.startsWith('auth_token='))
-    ?.split('=')[1];
-}
+type AuthMiddlewareOptions = {
+  loadUser?: boolean;
+  onAuthFailure?: (c: Context<AppContext>, reason: AuthFailureReason) => void;
+};
 
-/**
- * Create auth middleware that validates JWT tokens
- */
-export function createAuthMiddleware() {
-  return async (c: Context<{ Bindings: Env; Variables: { userId: number; container: Container } }>, next: Next) => {
-    const container = c.get('container');
-    const authService = container.get(AuthService);
+export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
+  const { loadUser = true, onAuthFailure } = options;
 
-    const token = extractToken(c);
+  return async (c: Context<AppContext>, next: Next) => {
+    const auth = await resolveRequestAuth(c, { loadUser });
 
-    if (!token) {
+    if (auth.kind === 'missing') {
+      onAuthFailure?.(c, 'missing_token');
       return c.json({ error: 'Not authenticated' }, 401);
     }
 
-    const payload = await authService.verifyJWT(token);
-    if (!payload) {
+    if (auth.kind === 'invalid_token') {
+      onAuthFailure?.(c, 'invalid_token');
       return c.json({ error: 'Invalid token' }, 401);
     }
 
-    c.set('userId', payload.userId);
+    if (loadUser && !auth.user) {
+      onAuthFailure?.(c, 'user_not_found');
+      return c.json({ error: 'User not found' }, 404);
+    }
+
+    c.set('userId', auth.userId);
+    c.set('authIsTestSession', auth.isTestSession);
+    if (auth.user) {
+      c.set('authUser', auth.user);
+    }
+
     await next();
   };
 }

@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { Context } from 'hono';
 import { AuthController } from './auth-controller';
 import { AuthService } from './auth-service';
-import { createAuthCookie, clearAuthCookie, getAuthToken } from '../../auth';
+import { createAuthCookie, clearAuthCookie } from '../../auth';
 import {
   consumeAuthorizationCode,
   consumeAuthorizationRequest,
@@ -10,7 +10,8 @@ import {
   storeAuthorizationRequest,
 } from './oauth-store';
 import { computeCodeChallenge } from './pkce';
-import { readTestSessionOverride, TEST_SESSION_HEADER } from './test-session';
+import { resolveRequestAuth } from './request-auth';
+import type { AppContext } from '../../routes/types';
 import type { ApiAuthGoogleRequest } from '../../../shared/schemas/auth';
 import type {
   ApiOAuthApprovalDecisionRequest,
@@ -20,6 +21,12 @@ import type {
   ApiOAuthTokenRequest,
 } from '../../../shared/schemas/oauth';
 
+type OAuthKvNamespace = Parameters<typeof consumeAuthorizationRequest>[0];
+
+function getOAuthKv(c: Context<AppContext>): OAuthKvNamespace {
+  return c.env.OAUTH_KV as OAuthKvNamespace;
+}
+
 @injectable()
 export class AuthHandler {
   constructor(
@@ -27,7 +34,7 @@ export class AuthHandler {
     @inject(AuthService) private authService: AuthService,
   ) {}
 
-  async authorize(c: Context, query: ApiOAuthAuthorizeQuery): Promise<Response> {
+  async authorize(c: Context<AppContext>, query: ApiOAuthAuthorizeQuery): Promise<Response> {
     const clientId = query.client_id ?? null;
     const redirectUri = query.redirect_uri ?? null;
     const responseType = query.response_type ?? null;
@@ -51,12 +58,11 @@ export class AuthHandler {
       return c.json({ error: 'invalid_request' }, 400);
     }
 
-    const token = getAuthToken(c.req.header('Cookie') || null);
-    const userSession = token ? await this.authService.verifyJWT(token) : null;
+    const auth = await resolveRequestAuth(c, { loadUser: false });
     const requestId = crypto.randomUUID();
 
-    if (!userSession) {
-      await storeAuthorizationRequest(c.env.OAUTH_KV, requestId, {
+    if (auth.kind !== 'authenticated') {
+      await storeAuthorizationRequest(getOAuthKv(c), requestId, {
         clientId,
         redirectUri,
         codeChallenge,
@@ -82,19 +88,19 @@ export class AuthHandler {
       return c.redirect(googleAuthUrl.toString(), 302);
     }
 
-    await storeAuthorizationRequest(c.env.OAUTH_KV, requestId, {
+    await storeAuthorizationRequest(getOAuthKv(c), requestId, {
       clientId,
       redirectUri,
       codeChallenge,
       codeChallengeMethod,
       originalState,
-      userId: userSession.userId,
+      userId: auth.userId,
     });
 
     return c.redirect(`/oauth/approve?request=${requestId}`, 302);
   }
 
-  async oauthCallback(c: Context, query: ApiOAuthCallbackQuery): Promise<Response> {
+  async oauthCallback(c: Context<AppContext>, query: ApiOAuthCallbackQuery): Promise<Response> {
     const code = query.code ?? null;
     const state = query.state ?? null;
 
@@ -102,7 +108,7 @@ export class AuthHandler {
       return c.json({ error: 'invalid_request' }, 400);
     }
 
-    const pending = await consumeAuthorizationRequest(c.env.OAUTH_KV, state);
+    const pending = await consumeAuthorizationRequest(getOAuthKv(c), state);
     if (!pending) {
       return c.json({ error: 'invalid_request' }, 400);
     }
@@ -123,7 +129,7 @@ export class AuthHandler {
 
       if (googleTokens.refresh_token) {
         const { storeGoogleRefreshToken } = await import('./oauth-store');
-        await storeGoogleRefreshToken(c.env.OAUTH_KV, result.user.id, googleTokens.refresh_token);
+        await storeGoogleRefreshToken(getOAuthKv(c), result.user.id, googleTokens.refresh_token);
       }
 
       if (!pending.clientId) {
@@ -131,7 +137,7 @@ export class AuthHandler {
       }
 
       const newRequestId = crypto.randomUUID();
-      await storeAuthorizationRequest(c.env.OAUTH_KV, newRequestId, {
+      await storeAuthorizationRequest(getOAuthKv(c), newRequestId, {
         ...pending,
         userId: result.user.id,
       });
@@ -148,29 +154,23 @@ export class AuthHandler {
     }
   }
 
-  async getApprovalRequest(c: Context, query: ApiOAuthApprovalRequestQuery): Promise<Response> {
+  async getApprovalRequest(c: Context<AppContext>, query: ApiOAuthApprovalRequestQuery): Promise<Response> {
     const requestId = query.request;
-
-    const token = getAuthToken(c.req.header('Cookie') || null);
-    const userSession = token ? await this.authService.verifyJWT(token) : null;
-
-    if (!userSession) {
-      return c.json({ error: 'Not authenticated' }, 401);
-    }
+    const userId = c.get('userId');
+    const authUser = c.get('authUser');
 
     const { getAuthorizationRequest } = await import('./oauth-store');
-    const request = await getAuthorizationRequest(c.env.OAUTH_KV, requestId);
+    const request = await getAuthorizationRequest(getOAuthKv(c), requestId);
 
     if (!request) {
       return c.json({ error: 'Invalid or expired request' }, 404);
     }
 
-    if (request.userId !== userSession.userId) {
+    if (!userId || request.userId !== userId) {
       return c.json({ error: 'Forbidden' }, 403);
     }
 
-    const userResult = await this.authController.getCurrentUser(userSession.userId);
-    if (!userResult.user) {
+    if (!authUser) {
       return c.json({ error: 'User not found' }, 404);
     }
 
@@ -181,29 +181,23 @@ export class AuthHandler {
       clientName,
       scopes: ['openid', 'profile', 'email'],
       user: {
-        id: userResult.user.id,
-        email: userResult.user.email,
+        id: authUser.id,
+        email: authUser.email,
       },
     });
   }
 
-  async handleApprovalDecision(c: Context, body: ApiOAuthApprovalDecisionRequest): Promise<Response> {
+  async handleApprovalDecision(c: Context<AppContext>, body: ApiOAuthApprovalDecisionRequest): Promise<Response> {
     const { requestId, approved } = body;
+    const userId = c.get('userId');
 
-    const token = getAuthToken(c.req.header('Cookie') || null);
-    const userSession = token ? await this.authService.verifyJWT(token) : null;
-
-    if (!userSession) {
-      return c.json({ error: 'Not authenticated' }, 401);
-    }
-
-    const request = await consumeAuthorizationRequest(c.env.OAUTH_KV, requestId);
+    const request = await consumeAuthorizationRequest(getOAuthKv(c), requestId);
 
     if (!request) {
       return c.json({ error: 'Invalid or expired request' }, 404);
     }
 
-    if (request.userId !== userSession.userId) {
+    if (!userId || request.userId !== userId) {
       return c.json({ error: 'Forbidden' }, 403);
     }
 
@@ -218,8 +212,8 @@ export class AuthHandler {
     }
 
     const authCode = crypto.randomUUID();
-    await storeAuthorizationCode(c.env.OAUTH_KV, authCode, {
-      userId: userSession.userId,
+    await storeAuthorizationCode(getOAuthKv(c), authCode, {
+      userId,
       clientId: request.clientId,
       redirectUri: request.redirectUri,
       codeChallenge: request.codeChallenge,
@@ -243,7 +237,7 @@ export class AuthHandler {
     return clientNames[clientId] || clientId;
   }
 
-  async googleAuth(c: Context, body: ApiAuthGoogleRequest): Promise<Response> {
+  async googleAuth(c: Context<AppContext>, body: ApiAuthGoogleRequest): Promise<Response> {
     try {
       const result = await this.authController.authenticateWithGoogle(body.access_token);
 
@@ -260,7 +254,7 @@ export class AuthHandler {
     }
   }
 
-  async oauthToken(c: Context, body: ApiOAuthTokenRequest): Promise<Response> {
+  async oauthToken(c: Context<AppContext>, body: ApiOAuthTokenRequest): Promise<Response> {
     const grantType = body.grant_type ?? null;
     const code = body.code ?? null;
     const codeVerifier = body.code_verifier ?? null;
@@ -276,7 +270,7 @@ export class AuthHandler {
     }
 
     try {
-      const entry = await consumeAuthorizationCode(c.env.OAUTH_KV, code);
+      const entry = await consumeAuthorizationCode(getOAuthKv(c), code);
       if (!entry || entry.clientId !== clientId || entry.redirectUri !== redirectUri) {
         return c.json({ error: 'invalid_grant' }, 400);
       }
@@ -315,12 +309,12 @@ export class AuthHandler {
     }
   }
 
-  async logout(c: Context): Promise<Response> {
+  async logout(c: Context<AppContext>): Promise<Response> {
     c.header('Set-Cookie', clearAuthCookie());
     return c.json({ success: true });
   }
 
-  async getSession(c: Context): Promise<Response> {
+  async getSession(c: Context<AppContext>): Promise<Response> {
     const sessionData: {
       user: {
         id: number;
@@ -342,26 +336,9 @@ export class AuthHandler {
       },
     };
 
-    const testSessionUser = readTestSessionOverride(c.env, c.req.header(TEST_SESSION_HEADER));
-    if (testSessionUser !== undefined) {
-      sessionData.user = testSessionUser;
-      return c.json(sessionData);
-    }
-
-    const cookieHeader = c.req.header('Cookie');
-    const token = getAuthToken(cookieHeader || null);
-
-    if (token) {
-      const container = c.get('container');
-      const authService = container.get(AuthService);
-      const payload = await authService.verifyJWT(token);
-
-      if (payload) {
-        const result = await this.authController.getCurrentUser(payload.userId);
-        if (!result.error && result.user) {
-          sessionData.user = result.user;
-        }
-      }
+    const auth = await resolveRequestAuth(c);
+    if (auth.kind === 'authenticated' && auth.user) {
+      sessionData.user = auth.user;
     }
 
     return c.json(sessionData);

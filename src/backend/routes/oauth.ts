@@ -2,9 +2,12 @@ import { OpenAPIHono } from '@hono/zod-openapi';
 import type { AppContext } from './types';
 import { AuthService } from '../features/auth/auth-service';
 import { AuthHandler } from '../features/auth/auth-handler';
+import { createAuthMiddleware } from '../middleware/auth-middleware';
 import { registerContractRoute } from '../openapi/contract-openapi';
 
 const oauthRoutes = new OpenAPIHono<AppContext>();
+oauthRoutes.use('/api/oauth/authorize/request', createAuthMiddleware());
+oauthRoutes.use('/api/oauth/authorize/decision', createAuthMiddleware());
 
 registerContractRoute(oauthRoutes, 'oauthDiscovery', (c) => {
   const container = c.get('container');
