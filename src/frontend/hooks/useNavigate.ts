@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { navigate } from '../navigation/navigator';
+import { useNavigate as useRouterNavigate } from '@tanstack/react-router';
 
 /**
  * Hook for programmatic navigation
@@ -8,9 +8,14 @@ import { navigate } from '../navigation/navigator';
  * Note: Currently only supports string paths, not relative navigation numbers
  */
 export function useNavigate() {
+  const navigate = useRouterNavigate();
+
   return useCallback((to: string, options?: { replace?: boolean }) => {
-    navigate(to, options);
-  }, []);
+    return navigate({
+      to,
+      replace: options?.replace,
+    });
+  }, [navigate]);
 }
 
 export default useNavigate;

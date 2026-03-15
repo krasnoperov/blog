@@ -33,7 +33,7 @@ function migrate(env: Environment, remote: boolean = false) {
   try {
     execSync(command, { stdio: 'inherit' });
     console.log(`\n✅ Migrations applied successfully to ${dbName}`);
-  } catch (error) {
+  } catch {
     console.error(`\n❌ Migration failed for ${dbName}`);
     process.exit(1);
   }

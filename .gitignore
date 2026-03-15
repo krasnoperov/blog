@@ -31,3 +31,4 @@ queries-*.md
 # Test reference files (local only)
 test-references/
 tmp/
+test-results/

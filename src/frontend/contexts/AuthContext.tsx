@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import { useNavigate } from '../hooks/useNavigate';
 import { AuthContext, type User } from './AuthContextProvider';
+import { requestContract } from '../lib/api';
 
 // Re-export types for backward compatibility
 export type { User, AuthContextType } from './AuthContextProvider';
@@ -18,16 +19,8 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
   const fetchUser = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/session", {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json() as { user: User };
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
+      const data = await requestContract('authSession');
+      setUser(data.user ?? null);
     } catch (error) {
       console.error("Error fetching user:", error);
       setUser(null);
@@ -48,10 +41,7 @@ export function AuthProvider({ children, initialUser }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      await fetch("/api/auth/logout", { 
-        method: "POST",
-        credentials: 'include'
-      });
+      await requestContract('authLogout');
       setUser(null);
       navigate("/");
     } catch (error) {

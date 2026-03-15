@@ -1,25 +1,29 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import type { AppContext } from './types';
 import { AuthHandler } from '../features/auth/auth-handler';
+import { registerContractRoute } from '../openapi/contract-openapi';
 
-const authRoutes = new Hono<AppContext>();
+const authRoutes = new OpenAPIHono<AppContext>();
 
-authRoutes.get('/api/auth/session', async (c) => {
+registerContractRoute(authRoutes, 'authSession', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
   return authHandler.getSession(c);
-});
+}, { tags: ['Auth'] });
 
-authRoutes.post('/api/auth/google', async (c) => {
+registerContractRoute(authRoutes, 'authGoogle', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
-  return authHandler.googleAuth(c);
+  return authHandler.googleAuth(c, c.req.valid('json'));
+}, {
+  errorMessage: 'Invalid request payload',
+  tags: ['Auth'],
 });
 
-authRoutes.post('/api/auth/logout', async (c) => {
+registerContractRoute(authRoutes, 'authLogout', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
   return authHandler.logout(c);
-});
+}, { tags: ['Auth'] });
 
 export { authRoutes };

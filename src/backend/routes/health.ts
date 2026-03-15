@@ -1,16 +1,17 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import type { AppContext } from './types';
+import { registerContractRoute } from '../openapi/contract-openapi';
 
-const healthRoutes = new Hono<AppContext>();
+const healthRoutes = new OpenAPIHono<AppContext>();
 
-healthRoutes.get('/api/health', (c) => {
+registerContractRoute(healthRoutes, 'healthCheck', (c) => {
   console.log('health-check:hello', { env: c.env.ENVIRONMENT });
   return c.json({ status: 'ok', environment: c.env.ENVIRONMENT });
-});
+}, { tags: ['Health'] });
 
-healthRoutes.get('/api/hello', (c) => {
+registerContractRoute(healthRoutes, 'hello', (c) => {
   console.log('hello-route:visited');
   return c.json({ message: 'API foundation ready' });
-});
+}, { tags: ['Health'] });
 
 export { healthRoutes };

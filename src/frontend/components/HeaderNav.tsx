@@ -12,7 +12,8 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({ userName, userEmail, class
 
   return (
     <nav className={`${styles.nav} ${className || ''}`}>
-      {/* Add your navigation links here */}
+      <Link to="/guides" className={styles.navLink}>Guides</Link>
+      <Link to="/app" className={styles.navLink}>App</Link>
       <Link to="/profile" className={styles.navLink}>{displayName}</Link>
     </nav>
   );

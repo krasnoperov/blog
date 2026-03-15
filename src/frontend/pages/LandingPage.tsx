@@ -2,6 +2,7 @@ import { Link } from '../components/Link';
 import { useAuth } from '../contexts/useAuth';
 import { AppHeader } from '../components/AppHeader';
 import { HeaderNav } from '../components/HeaderNav';
+import { LANDING_PAGES } from '../../shared/content/landing-pages';
 import styles from './LandingPage.module.css';
 
 export default function LandingPage() {
@@ -28,46 +29,59 @@ export default function LandingPage() {
         <div className={styles.container}>
           {!user ? (
             <div className={styles.hero}>
-              <h2 className={styles.headline}>Build Your Next Project</h2>
+              <h2 className={styles.headline}>SSR landing pages outside, offline-first game engine inside.</h2>
               <p className={styles.subtitle}>
-                A modern, authenticated web application framework on Cloudflare Workers.
-                Multi-user support, dual-worker architecture, real-time chat, and ready for your domain logic.
+                Use this foundation for a public content website with many independent text pages, and a local-first `/app` experience that keeps running even when the network disappears.
               </p>
 
               <div className={styles.features}>
                 <div className={styles.featureItem}>
+                  <span className={styles.featureIcon}>📰</span>
+                  <span className={styles.featureText}>SSR content</span>
+                  <span className={styles.featureDescription}>Public marketing and guide pages render server-side for indexing, sharing, and fast first paint</span>
+                </div>
+                <div className={styles.featureItem}>
+                  <span className={styles.featureIcon}>📦</span>
+                  <span className={styles.featureText}>Content registry</span>
+                  <span className={styles.featureDescription}>Add independent markdown-backed landing pages without dragging app state into the public surface</span>
+                </div>
+                <div className={styles.featureItem}>
+                  <span className={styles.featureIcon}>📱</span>
+                  <span className={styles.featureText}>Offline-first app</span>
+                  <span className={styles.featureDescription}>Local drafts, local phase transitions, and optional sync that can be unplugged safely</span>
+                </div>
+                <div className={styles.featureItem}>
                   <span className={styles.featureIcon}>🔐</span>
-                  <span className={styles.featureText}>Authentication</span>
-                  <span className={styles.featureDescription}>Google OAuth with JWT tokens, secure user sessions</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>👥</span>
-                  <span className={styles.featureText}>Multi-User</span>
-                  <span className={styles.featureDescription}>User profiles, role-based access, complete user management</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>⚡</span>
-                  <span className={styles.featureText}>Dual Workers</span>
-                  <span className={styles.featureDescription}>HTTP worker for API + frontend, processing worker for async jobs</span>
-                </div>
-                <div className={styles.featureItem}>
-                  <span className={styles.featureIcon}>💬</span>
-                  <span className={styles.featureText}>Real-Time Chat</span>
-                  <span className={styles.featureDescription}>Chat components ready for AI integration or messaging</span>
+                  <span className={styles.featureText}>Account-aware sync</span>
+                  <span className={styles.featureDescription}>Keep auth and remote APIs available for profiles and future backup or collaboration workflows</span>
                 </div>
               </div>
 
               <div className={styles.ctaButtons}>
-                <Link to="/login" className={styles.ctaButton}>Get Started</Link>
+                <Link to="/app" className={styles.ctaButton}>Open App Shell</Link>
+                <Link to="/guides" className={styles.ctaButton}>Browse Guides</Link>
+              </div>
+
+              <div className={styles.features}>
+                {LANDING_PAGES.map((page) => (
+                  <div key={page.slug} className={styles.featureItem}>
+                    <span className={styles.featureIcon}>→</span>
+                    <span className={styles.featureText}>
+                      <Link to={`/guides/${page.slug}`} className={styles.authButton}>{page.title}</Link>
+                    </span>
+                    <span className={styles.featureDescription}>{page.description}</span>
+                  </div>
+                ))}
               </div>
             </div>
           ) : (
             <div className={styles.hero}>
               <h2 className={styles.headline}>Welcome, {user.name}!</h2>
               <p className={styles.subtitle}>
-                You're logged in and ready to build. This is your bare framework foundation—add your domain logic to get started.
+                Your authenticated shell is ready. Use the public SSR guides for acquisition and the offline-first app for actual play.
               </p>
               <div className={styles.ctaButtons}>
+                <Link to="/app" className={styles.ctaButton}>Open App</Link>
                 <Link to="/profile" className={styles.ctaButton}>View Profile</Link>
               </div>
             </div>

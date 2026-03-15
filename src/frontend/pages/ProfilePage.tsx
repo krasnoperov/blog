@@ -1,61 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '../components/Link';
-import { useNavigate } from '../hooks/useNavigate';
 import { useAuth } from '../contexts/useAuth';
 import { AppHeader } from '../components/AppHeader';
 import { HeaderNav } from '../components/HeaderNav';
 import { FormContainer, FormTitle, ErrorMessage, formStyles } from '../components/forms';
+import { requestContract } from '../lib/api';
+import { userProfileQueryOptions } from '../queries/pageQueries';
+import type { ApiResponse } from '../../shared/api-contracts';
 import styles from './ProfilePage.module.css';
 
-interface ProfileData {
-  id: number;
-  email: string;
-  name: string;
+interface ProfilePageProps {
+  initialProfile?: ApiResponse<'userProfileGet'>;
 }
 
-export default function ProfilePage() {
-  const navigate = useNavigate();
+export default function ProfilePage({ initialProfile }: ProfilePageProps) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [nameDraft, setNameDraft] = useState('');
+  const [hasEditedName, setHasEditedName] = useState(false);
 
-  const [name, setName] = useState('');
+  const profileQuery = useQuery({
+    ...userProfileQueryOptions(),
+    initialData: initialProfile,
+  });
 
-  useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+  const saveMutation = useMutation({
+    mutationFn: async (nextName: string) => requestContract('userProfileUpdate', undefined, {
+      body: { name: nextName },
+    }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(['userProfile'], data.user);
+      setSuccessMessage('Profile updated successfully!');
+      setError(null);
+      setNameDraft('');
+      setHasEditedName(false);
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 3000);
+    },
+    onError: (err) => {
+      console.error('Profile update error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update profile');
+    },
+  });
 
-    fetchProfile();
-  }, [user, navigate]);
-
-  const fetchProfile = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch('/api/user/profile', {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
-      }
-
-      const data = await response.json() as ProfileData;
-      setProfile(data);
-      setName(data.name);
-    } catch (err) {
-      console.error('Profile fetch error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const profile = profileQuery.data ?? null;
+  const isLoading = profileQuery.isLoading;
+  const isSaving = saveMutation.isPending;
+  const name = hasEditedName ? nameDraft : (profile?.name ?? '');
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -65,41 +61,9 @@ export default function ProfilePage() {
       return;
     }
 
-    setIsSaving(true);
     setError(null);
     setSuccessMessage(null);
-
-    try {
-      const response = await fetch('/api/user/profile', {
-        method: 'PATCH',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json() as { error?: string };
-        throw new Error(errorData.error || 'Failed to update profile');
-      }
-
-      const data = await response.json() as { success: boolean; user: ProfileData };
-      setProfile(data.user);
-      setSuccessMessage('Profile updated successfully!');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => {
-        setSuccessMessage(null);
-      }, 3000);
-    } catch (err) {
-      console.error('Profile update error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update profile');
-    } finally {
-      setIsSaving(false);
-    }
+    await saveMutation.mutateAsync(name.trim());
   };
 
   const headerRightSlot = user ? (
@@ -129,6 +93,7 @@ export default function ProfilePage() {
             <FormTitle>Your Profile</FormTitle>
 
             <ErrorMessage message={error} />
+            <ErrorMessage message={successMessage} />
 
             <form onSubmit={handleSubmit}>
               <div className={formStyles.formGroup}>
@@ -139,7 +104,10 @@ export default function ProfilePage() {
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => {
+                    setHasEditedName(true);
+                    setNameDraft(e.target.value);
+                  }}
                   className={formStyles.input}
                   placeholder="Enter your name"
                   disabled={isSaving}

@@ -16,9 +16,8 @@ enabled = true
 
 # Serve the React frontend
 [assets]
-directory = "./dist/frontend"
-not_found_handling = "single-page-application"
-run_worker_first = ["/api/*", "/.well-known/*"]
+directory = "./dist/frontend-start/client"
+run_worker_first = ["/", "/guides", "/guides/*", "/app", "/login", "/profile", "/oauth/*", "/api/*", "/.well-known/*"]
 
 # Stage environment custom domain
 [[routes]]

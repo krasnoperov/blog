@@ -1,0 +1,10 @@
+{
+  "name": "Mafia Engine",
+  "short_name": "Mafia",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050914",
+  "theme_color": "#08111f",
+  "description": "Offline-first Mafia hosting app with optional sync and server-rendered public landing pages."
+}

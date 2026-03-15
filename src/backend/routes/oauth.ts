@@ -1,11 +1,12 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import type { AppContext } from './types';
 import { AuthService } from '../features/auth/auth-service';
 import { AuthHandler } from '../features/auth/auth-handler';
+import { registerContractRoute } from '../openapi/contract-openapi';
 
-const oauthRoutes = new Hono<AppContext>();
+const oauthRoutes = new OpenAPIHono<AppContext>();
 
-oauthRoutes.get('/.well-known/openid-configuration', (c) => {
+registerContractRoute(oauthRoutes, 'oauthDiscovery', (c) => {
   const container = c.get('container');
   const authService = container.get(AuthService);
   const issuer = authService.getIssuerUrl();
@@ -23,43 +24,58 @@ oauthRoutes.get('/.well-known/openid-configuration', (c) => {
     token_endpoint_auth_methods_supported: ['none'],
     scopes_supported: ['openid', 'profile', 'email'],
   });
-});
+}, { tags: ['OAuth'] });
 
-oauthRoutes.get('/.well-known/jwks.json', async (c) => {
+registerContractRoute(oauthRoutes, 'oauthJwks', async (c) => {
   const container = c.get('container');
   const authService = container.get(AuthService);
   const jwks = await authService.getJwks();
   return c.json(jwks);
-});
+}, { tags: ['OAuth'] });
 
-oauthRoutes.get('/api/oauth/authorize', async (c) => {
+registerContractRoute(oauthRoutes, 'oauthAuthorize', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
-  return authHandler.authorize(c);
+  return authHandler.authorize(c, c.req.valid('query'));
+}, {
+  errorMessage: 'Invalid query parameters',
+  tags: ['OAuth'],
 });
 
-oauthRoutes.get('/api/oauth/callback', async (c) => {
+registerContractRoute(oauthRoutes, 'oauthCallback', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
-  return authHandler.oauthCallback(c);
+  return authHandler.oauthCallback(c, c.req.valid('query'));
+}, {
+  errorMessage: 'Invalid query parameters',
+  tags: ['OAuth'],
 });
 
-oauthRoutes.post('/api/oauth/token', async (c) => {
+registerContractRoute(oauthRoutes, 'oauthToken', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
-  return authHandler.oauthToken(c);
+  return authHandler.oauthToken(c, c.req.valid('json'));
+}, {
+  errorMessage: 'Invalid request payload',
+  tags: ['OAuth'],
 });
 
-oauthRoutes.get('/api/oauth/authorize/request', async (c) => {
+registerContractRoute(oauthRoutes, 'oauthApprovalRequest', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
-  return authHandler.getApprovalRequest(c);
+  return authHandler.getApprovalRequest(c, c.req.valid('query'));
+}, {
+  errorMessage: 'Invalid query parameters',
+  tags: ['OAuth'],
 });
 
-oauthRoutes.post('/api/oauth/authorize/decision', async (c) => {
+registerContractRoute(oauthRoutes, 'oauthApprovalDecision', async (c) => {
   const container = c.get('container');
   const authHandler = container.get(AuthHandler);
-  return authHandler.handleApprovalDecision(c);
+  return authHandler.handleApprovalDecision(c, c.req.valid('json'));
+}, {
+  errorMessage: 'Invalid request payload',
+  tags: ['OAuth'],
 });
 
 export { oauthRoutes };

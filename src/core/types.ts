@@ -34,7 +34,7 @@ export interface Env {
   OPENAI_API_KEY?: string;
 
   // Environment
-  ENVIRONMENT?: 'development' | 'stage' | 'staging' | 'production';
+  ENVIRONMENT?: 'local' | 'development' | 'stage' | 'staging' | 'production';
 
   // --- FUTURE: Add your domain-specific bindings here ---
   // Example for queues:

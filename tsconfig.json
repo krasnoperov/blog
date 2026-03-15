@@ -22,6 +22,6 @@
     "emitDecoratorMetadata": true,
     "types": ["reflect-metadata", "@cloudflare/workers-types"]
   },
-  "include": ["src", "scripts", "vite.config.ts"],
+  "include": ["src", "scripts", "vite.start.config.ts"],
   "exclude": ["dist", "node_modules"]
 }

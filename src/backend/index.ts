@@ -1,13 +1,14 @@
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import type { Env } from '../core/types';
 import { createContainer } from '../core/container';
 import { registerRoutes } from './routes';
 import { uploadSecurityMiddleware } from './middleware/upload-security';
 import type { AppContext } from './routes/types';
+import { renderStartDynamicApp } from './frontend-start-ssr';
 
 export type Bindings = Env;
 
-const app = new Hono<AppContext>();
+const app = new OpenAPIHono<AppContext>();
 
 // Middleware to set up container
 app.use('*', async (c, next) => {
@@ -21,6 +22,11 @@ app.use('/api/upload/*', uploadSecurityMiddleware());
 
 // Register all routes
 registerRoutes(app);
+
+app.doc31('/api/openapi', {
+  openapi: '3.1.0',
+  info: { title: 'Whitelabel API', version: '1.0.0' },
+});
 
 // Queue handler - bare foundation (no processing)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -57,11 +63,19 @@ async function handleQueue(batch: MessageBatch<any>, env: Env): Promise<void> {
   // }
 }
 
-// No custom notFound handler needed!
-// With not_found_handling = "single-page-application" in wrangler.toml:
-// - API routes that match will return their responses
-// - Unmatched routes fall through to Assets middleware
-// - Assets serves the file if it exists, or index.html for SPA routing
+app.notFound(async (c) => {
+  const path = new URL(c.req.url).pathname;
+  if (path.startsWith('/api/') || path.startsWith('/.well-known/')) {
+    return c.json({ error: 'Not found' }, 404);
+  }
+
+  const startApp = await renderStartDynamicApp(c);
+  if (startApp) {
+    return startApp;
+  }
+
+  return c.env.ASSETS.fetch(new Request(c.req.url));
+});
 
 // Export as default for standalone use
 export default {

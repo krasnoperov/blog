@@ -10,6 +10,15 @@ import {
   storeAuthorizationRequest,
 } from './oauth-store';
 import { computeCodeChallenge } from './pkce';
+import { readTestSessionOverride, TEST_SESSION_HEADER } from './test-session';
+import type { ApiAuthGoogleRequest } from '../../../shared/schemas/auth';
+import type {
+  ApiOAuthApprovalDecisionRequest,
+  ApiOAuthApprovalRequestQuery,
+  ApiOAuthAuthorizeQuery,
+  ApiOAuthCallbackQuery,
+  ApiOAuthTokenRequest,
+} from '../../../shared/schemas/oauth';
 
 @injectable()
 export class AuthHandler {
@@ -18,14 +27,13 @@ export class AuthHandler {
     @inject(AuthService) private authService: AuthService,
   ) {}
 
-  async authorize(c: Context): Promise<Response> {
-    const url = new URL(c.req.url);
-    const clientId = url.searchParams.get('client_id');
-    const redirectUri = url.searchParams.get('redirect_uri');
-    const responseType = url.searchParams.get('response_type');
-    const codeChallenge = url.searchParams.get('code_challenge');
-    const codeChallengeMethod = url.searchParams.get('code_challenge_method');
-    const originalState = url.searchParams.get('state');
+  async authorize(c: Context, query: ApiOAuthAuthorizeQuery): Promise<Response> {
+    const clientId = query.client_id ?? null;
+    const redirectUri = query.redirect_uri ?? null;
+    const responseType = query.response_type ?? null;
+    const codeChallenge = query.code_challenge ?? null;
+    const codeChallengeMethod = query.code_challenge_method ?? null;
+    const originalState = query.state ?? null;
 
     if (!clientId || !redirectUri || responseType !== 'code') {
       return c.json({ error: 'invalid_request' }, 400);
@@ -43,19 +51,16 @@ export class AuthHandler {
       return c.json({ error: 'invalid_request' }, 400);
     }
 
-    // Check if user is already authenticated
     const token = getAuthToken(c.req.header('Cookie') || null);
     const userSession = token ? await this.authService.verifyJWT(token) : null;
-
     const requestId = crypto.randomUUID();
 
     if (!userSession) {
-      // User NOT authenticated: store request and redirect to Google
       await storeAuthorizationRequest(c.env.OAUTH_KV, requestId, {
         clientId,
         redirectUri,
-        codeChallenge: codeChallenge ?? null,
-        codeChallengeMethod: (codeChallengeMethod as 'S256' | 'plain' | null) ?? null,
+        codeChallenge,
+        codeChallengeMethod,
         originalState,
       });
 
@@ -77,23 +82,21 @@ export class AuthHandler {
       return c.redirect(googleAuthUrl.toString(), 302);
     }
 
-    // User IS authenticated: redirect to approval page
     await storeAuthorizationRequest(c.env.OAUTH_KV, requestId, {
       clientId,
       redirectUri,
-      codeChallenge: codeChallenge ?? null,
-      codeChallengeMethod: (codeChallengeMethod as 'S256' | 'plain' | null) ?? null,
+      codeChallenge,
+      codeChallengeMethod,
       originalState,
-      userId: userSession.userId, // Bind to authenticated user
+      userId: userSession.userId,
     });
 
     return c.redirect(`/oauth/approve?request=${requestId}`, 302);
   }
 
-  async oauthCallback(c: Context): Promise<Response> {
-    const url = new URL(c.req.url);
-    const code = url.searchParams.get('code');
-    const state = url.searchParams.get('state');
+  async oauthCallback(c: Context, query: ApiOAuthCallbackQuery): Promise<Response> {
+    const code = query.code ?? null;
+    const state = query.state ?? null;
 
     if (!code || !state) {
       return c.json({ error: 'invalid_request' }, 400);
@@ -116,23 +119,17 @@ export class AuthHandler {
         return c.json({ error: 'invalid_grant' }, 400);
       }
 
-      // Create session JWT and set cookie
-      const jwt = result.token;
-      c.header('Set-Cookie', createAuthCookie(jwt));
+      c.header('Set-Cookie', createAuthCookie(result.token));
 
-      // Store Google refresh token if provided
       if (googleTokens.refresh_token) {
         const { storeGoogleRefreshToken } = await import('./oauth-store');
         await storeGoogleRefreshToken(c.env.OAUTH_KV, result.user.id, googleTokens.refresh_token);
       }
 
-      // Check if this is an OAuth authorization flow
       if (!pending.clientId) {
-        // Regular website login: redirect to home
         return c.redirect('/', 302);
       }
 
-      // OAuth flow: update request with userId and redirect to approval page
       const newRequestId = crypto.randomUUID();
       await storeAuthorizationRequest(c.env.OAUTH_KV, newRequestId, {
         ...pending,
@@ -151,14 +148,9 @@ export class AuthHandler {
     }
   }
 
-  async getApprovalRequest(c: Context): Promise<Response> {
-    const requestId = c.req.query('request');
+  async getApprovalRequest(c: Context, query: ApiOAuthApprovalRequestQuery): Promise<Response> {
+    const requestId = query.request;
 
-    if (!requestId) {
-      return c.json({ error: 'Missing request parameter' }, 400);
-    }
-
-    // Verify user is authenticated
     const token = getAuthToken(c.req.header('Cookie') || null);
     const userSession = token ? await this.authService.verifyJWT(token) : null;
 
@@ -166,7 +158,6 @@ export class AuthHandler {
       return c.json({ error: 'Not authenticated' }, 401);
     }
 
-    // Retrieve authorization request (non-destructive read)
     const { getAuthorizationRequest } = await import('./oauth-store');
     const request = await getAuthorizationRequest(c.env.OAUTH_KV, requestId);
 
@@ -174,18 +165,15 @@ export class AuthHandler {
       return c.json({ error: 'Invalid or expired request' }, 404);
     }
 
-    // Verify request belongs to this user
     if (request.userId !== userSession.userId) {
       return c.json({ error: 'Forbidden' }, 403);
     }
 
-    // Get user details
     const userResult = await this.authController.getCurrentUser(userSession.userId);
     if (!userResult.user) {
       return c.json({ error: 'User not found' }, 404);
     }
 
-    // Return client details for approval UI
     const clientName = this.getClientName(request.clientId);
 
     return c.json({
@@ -199,15 +187,9 @@ export class AuthHandler {
     });
   }
 
-  async handleApprovalDecision(c: Context): Promise<Response> {
-    const body = await c.req.json<{ requestId: string; approved: boolean }>();
+  async handleApprovalDecision(c: Context, body: ApiOAuthApprovalDecisionRequest): Promise<Response> {
     const { requestId, approved } = body;
 
-    if (!requestId || typeof approved !== 'boolean') {
-      return c.json({ error: 'Invalid request' }, 400);
-    }
-
-    // Verify user is authenticated
     const token = getAuthToken(c.req.header('Cookie') || null);
     const userSession = token ? await this.authService.verifyJWT(token) : null;
 
@@ -215,20 +197,17 @@ export class AuthHandler {
       return c.json({ error: 'Not authenticated' }, 401);
     }
 
-    // Retrieve and consume authorization request
     const request = await consumeAuthorizationRequest(c.env.OAUTH_KV, requestId);
 
     if (!request) {
       return c.json({ error: 'Invalid or expired request' }, 404);
     }
 
-    // Verify request belongs to this user
     if (request.userId !== userSession.userId) {
       return c.json({ error: 'Forbidden' }, 403);
     }
 
     if (!approved) {
-      // User denied: redirect to client with error
       const errorUrl = new URL(request.redirectUri);
       errorUrl.searchParams.set('error', 'access_denied');
       errorUrl.searchParams.set('error_description', 'User denied authorization');
@@ -238,7 +217,6 @@ export class AuthHandler {
       return c.json({ redirectUrl: errorUrl.toString() });
     }
 
-    // User approved: generate authorization code
     const authCode = crypto.randomUUID();
     await storeAuthorizationCode(c.env.OAUTH_KV, authCode, {
       userId: userSession.userId,
@@ -248,7 +226,6 @@ export class AuthHandler {
       codeChallengeMethod: request.codeChallengeMethod,
     });
 
-    // Redirect to client with authorization code
     const callbackUrl = new URL(request.redirectUri);
     callbackUrl.searchParams.set('code', authCode);
     if (request.originalState) {
@@ -259,7 +236,6 @@ export class AuthHandler {
   }
 
   private getClientName(clientId: string): string {
-    // Map client IDs to friendly names
     const clientNames: Record<string, string> = {
       'lrsr-cli': 'Whitelabel CLI',
       'claude-desktop': 'Claude Desktop',
@@ -267,37 +243,29 @@ export class AuthHandler {
     return clientNames[clientId] || clientId;
   }
 
-  async googleAuth(c: Context): Promise<Response> {
+  async googleAuth(c: Context, body: ApiAuthGoogleRequest): Promise<Response> {
     try {
-      const { access_token } = await c.req.json();
-
-      if (!access_token) {
-        return c.json({ error: "Access token required" }, 400);
-      }
-
-      const result = await this.authController.authenticateWithGoogle(access_token);
+      const result = await this.authController.authenticateWithGoogle(body.access_token);
 
       if (!result.success || !result.token) {
-        return c.json({ error: result.error || "Authentication failed" }, 500);
+        return c.json({ error: result.error || 'Authentication failed' }, 500);
       }
 
-      c.header("Set-Cookie", createAuthCookie(result.token));
+      c.header('Set-Cookie', createAuthCookie(result.token));
 
       return c.json({ success: true, user: result.user });
     } catch (error) {
-      console.error("Auth handler error:", error);
-      return c.json({ error: "Authentication failed" }, 500);
+      console.error('Auth handler error:', error);
+      return c.json({ error: 'Authentication failed' }, 500);
     }
   }
 
-  async oauthToken(c: Context): Promise<Response> {
-    const {
-      grantType,
-      code,
-      codeVerifier,
-      redirectUri,
-      clientId,
-    } = await this.parseOAuthRequest(c);
+  async oauthToken(c: Context, body: ApiOAuthTokenRequest): Promise<Response> {
+    const grantType = body.grant_type ?? null;
+    const code = body.code ?? null;
+    const codeVerifier = body.code_verifier ?? null;
+    const redirectUri = body.redirect_uri ?? null;
+    const clientId = body.client_id ?? null;
 
     if (grantType !== 'authorization_code' || !code || !redirectUri || !clientId) {
       return c.json({ error: 'invalid_request' }, 400);
@@ -309,15 +277,7 @@ export class AuthHandler {
 
     try {
       const entry = await consumeAuthorizationCode(c.env.OAUTH_KV, code);
-      if (!entry) {
-        return c.json({ error: 'invalid_grant' }, 400);
-      }
-
-      if (entry.clientId !== clientId) {
-        return c.json({ error: 'invalid_grant' }, 400);
-      }
-
-      if (entry.redirectUri !== redirectUri) {
+      if (!entry || entry.clientId !== clientId || entry.redirectUri !== redirectUri) {
         return c.json({ error: 'invalid_grant' }, 400);
       }
 
@@ -326,12 +286,9 @@ export class AuthHandler {
           return c.json({ error: 'invalid_request' }, 400);
         }
 
-        let expectedChallenge = entry.codeChallenge;
-        if (entry.codeChallengeMethod === 'S256') {
-          expectedChallenge = await computeCodeChallenge(codeVerifier);
-        } else if (entry.codeChallengeMethod === 'plain') {
-          expectedChallenge = codeVerifier;
-        }
+        const expectedChallenge = entry.codeChallengeMethod === 'S256'
+          ? await computeCodeChallenge(codeVerifier)
+          : codeVerifier;
 
         if (expectedChallenge !== entry.codeChallenge) {
           return c.json({ error: 'invalid_grant' }, 400);
@@ -359,12 +316,11 @@ export class AuthHandler {
   }
 
   async logout(c: Context): Promise<Response> {
-    c.header("Set-Cookie", clearAuthCookie());
+    c.header('Set-Cookie', clearAuthCookie());
     return c.json({ success: true });
   }
 
   async getSession(c: Context): Promise<Response> {
-    // Always return 200 with session data
     const sessionData: {
       user: {
         id: number;
@@ -383,11 +339,16 @@ export class AuthHandler {
       config: {
         googleClientId: c.env.GOOGLE_CLIENT_ID || '',
         environment: c.env.ENVIRONMENT || 'development',
-      }
+      },
     };
 
-    // Try to get the current user if authenticated
-    const cookieHeader = c.req.header("Cookie");
+    const testSessionUser = readTestSessionOverride(c.env, c.req.header(TEST_SESSION_HEADER));
+    if (testSessionUser !== undefined) {
+      sessionData.user = testSessionUser;
+      return c.json(sessionData);
+    }
+
+    const cookieHeader = c.req.header('Cookie');
     const token = getAuthToken(cookieHeader || null);
 
     if (token) {
@@ -403,58 +364,6 @@ export class AuthHandler {
       }
     }
 
-    // Always return 200 with session data
     return c.json(sessionData);
-  }
-
-  private async parseOAuthRequest(c: Context): Promise<{
-    grantType: string | null;
-    code: string | null;
-    codeVerifier: string | null;
-    redirectUri: string | null;
-    clientId: string | null;
-  }> {
-    const contentType = c.req.header('content-type') ?? '';
-    let grantType: string | null = null;
-    let code: string | null = null;
-    let codeVerifier: string | null = null;
-    let redirectUri: string | null = null;
-    let clientId: string | null = null;
-
-    if (contentType.includes('application/json')) {
-      const body = await c.req.json<Record<string, string | undefined>>();
-      grantType = body.grant_type ?? null;
-      code = body.code ?? null;
-      codeVerifier = body.code_verifier ?? null;
-      redirectUri = body.redirect_uri ?? null;
-      clientId = body.client_id ?? null;
-    } else if (contentType.includes('application/x-www-form-urlencoded')) {
-      const form = await c.req.formData();
-      grantType = form.get('grant_type')?.toString() ?? null;
-      code = form.get('code')?.toString() ?? null;
-      codeVerifier = form.get('code_verifier')?.toString() ?? null;
-      redirectUri = form.get('redirect_uri')?.toString() ?? null;
-      clientId = form.get('client_id')?.toString() ?? null;
-    } else {
-      // Attempt JSON parse fallback
-      try {
-        const body = await c.req.json<Record<string, string | undefined>>();
-        grantType = body.grant_type ?? null;
-        code = body.code ?? null;
-        codeVerifier = body.code_verifier ?? null;
-        redirectUri = body.redirect_uri ?? null;
-        clientId = body.client_id ?? null;
-      } catch {
-        // ignore
-      }
-    }
-
-    return {
-      grantType,
-      code,
-      codeVerifier,
-      redirectUri,
-      clientId,
-    };
   }
 }
