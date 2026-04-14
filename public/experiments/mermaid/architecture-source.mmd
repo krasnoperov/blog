@@ -1,0 +1,15 @@
+architecture-beta
+  group edge(cloud)[Edge delivery]
+  group authoring(server)[Authoring loop]
+  group content(database)[Content store]
+
+  service writer(server)[Writer workstation] in authoring
+  service git(disk)[Git repo] in content
+  service build(server)[Build pipeline] in authoring
+  service worker(server)[Cloudflare Worker] in edge
+  service reader(internet)[Reader browser] in edge
+
+  writer:R --> L:git
+  git:T --> B:build
+  build:R --> L:worker
+  reader:L --> R:worker

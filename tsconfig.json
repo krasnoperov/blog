@@ -14,13 +14,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/shared/*"]
+      "@shared/*": ["./src/shared/*"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "types": ["reflect-metadata", "@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types"]
   },
   "include": ["src", "scripts", "vite.start.config.ts"],
   "exclude": ["dist", "node_modules"]

@@ -1,33 +1,23 @@
-import js from "@eslint/js";
 import globals from "globals";
 import react from "eslint-plugin-react";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
-const sharedTypescript = {
-  extends: [js.configs.recommended, ...tseslint.configs.recommended],
-  languageOptions: {
-    sourceType: "module",
-    ecmaVersion: 2020,
-  },
-};
-
+// Scoped ESLint config: only rules that oxlint cannot cover.
+// All other linting (TS, react-hooks, refresh-style checks, etc.) is handled by oxlint.
 export default tseslint.config(
   {
-    ignores: ["dist", "worker-configuration*.d.ts", ".wrangler", "node_modules"],
+    ignores: ["dist", "worker-configuration*.d.ts", ".wrangler", "node_modules", "src/frontend-start/routeTree.gen.ts"],
   },
   {
-    ...sharedTypescript,
-    files: ["src/frontend/**/*.{ts,tsx}"],
+    extends: [tseslint.configs.base],
+    files: ["src/frontend/**/*.{ts,tsx}", "src/frontend-start/**/*.{ts,tsx}"],
     languageOptions: {
-      ...sharedTypescript.languageOptions,
+      sourceType: "module",
+      ecmaVersion: 2020,
       globals: globals.browser,
     },
     plugins: {
       react,
-      "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
     },
     settings: {
       react: {
@@ -35,29 +25,27 @@ export default tseslint.config(
       },
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      "react-refresh/only-export-components": [
-        "warn",
-        { allowConstantExport: true },
-      ],
       "react/react-in-jsx-scope": "off",
     },
   },
   {
-    ...sharedTypescript,
-    files: ["src/backend/**/*.{ts,tsx}", "src/shared/**/*.{ts,tsx}", "scripts/**/*.ts"],
+    extends: [tseslint.configs.base],
+    files: [
+      "src/backend/**/*.{ts,tsx}",
+      "src/shared/**/*.{ts,tsx}",
+      "src/worker/**/*.{ts,tsx}",
+      "tests/**/*.{ts,tsx}",
+      "*.config.ts",
+      "*.config.js",
+      "vite.start.config.ts",
+    ],
     languageOptions: {
-      ...sharedTypescript.languageOptions,
+      sourceType: "module",
+      ecmaVersion: 2020,
       globals: {
         ...globals.node,
         ...globals.worker,
       },
-    },
-    plugins: {
-      "react-hooks": reactHooks,
-    },
-    rules: {
-      ...reactHooks.configs.recommended.rules,
     },
   },
 );

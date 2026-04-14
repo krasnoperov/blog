@@ -10,7 +10,7 @@ export const TopLoadingBar: React.FC<TopLoadingBarProps> = ({ isLoading }) => {
 
   useEffect(() => {
     if (isLoading) {
-      setIsVisible(true); // eslint-disable-line react-hooks/set-state-in-effect
+      setIsVisible(true);
     } else {
       // Delay hiding to allow completion animation
       const timer = setTimeout(() => setIsVisible(false), 300);

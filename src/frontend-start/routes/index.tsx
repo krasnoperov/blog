@@ -1,6 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
-import LandingPage from '../../frontend/pages/LandingPage';
+import BlogHomePage from '../../frontend/blog/BlogHomePage';
+import { homePageHead } from '../lib/metadata';
 
 export const Route = createFileRoute('/')({
-  component: LandingPage,
+  head: () => homePageHead(),
+  component: BlogHomePage,
 });

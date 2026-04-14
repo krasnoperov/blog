@@ -1,0 +1,133 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  overflow: clip;
+}
+
+.page::before,
+.page::after {
+  content: '';
+  position: fixed;
+  inset: auto;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page::before {
+  top: -8rem;
+  right: -10rem;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(29, 91, 82, 0.18), transparent 68%);
+  filter: blur(4px);
+}
+
+.page::after {
+  bottom: -10rem;
+  left: -8rem;
+  width: 26rem;
+  height: 26rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(184, 116, 71, 0.18), transparent 66%);
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.875rem;
+  color: var(--text-on-brand-strong);
+}
+
+.brandMark {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.95rem;
+  background: linear-gradient(135deg, rgba(29, 91, 82, 0.96), rgba(73, 103, 79, 0.88));
+  color: #f8f4ec;
+  font-size: 1rem;
+  font-weight: 700;
+  box-shadow: 0 12px 30px rgba(29, 91, 82, 0.18);
+}
+
+.brandCopy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.brandName {
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.brandTag {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-on-brand-subtle);
+}
+
+.nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navLink {
+  color: var(--text-on-brand-muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  transition: color 0.2s ease;
+}
+
+.navLink:hover {
+  color: var(--text-on-brand-strong);
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.72);
+  border: 1px solid rgba(46, 54, 43, 0.12);
+  color: #445048;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.main {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 5rem;
+}
+
+@media (max-width: 900px) {
+  .nav {
+    display: none;
+  }
+
+  .statusPill {
+    display: none;
+  }
+
+  .main {
+    width: min(100% - 1.25rem, 1120px);
+    padding-top: 1rem;
+  }
+}

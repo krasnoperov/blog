@@ -1,22 +1,20 @@
-// Unified Worker: Frontend + API + Queue + Workflow (for local dev)
-// In stage/production, queue processing and workflows are handled by the separate processing worker
-// But for local development, everything runs in one worker for simplicity
+import { app } from '../backend/index';
+import type { Env } from '../core/types';
 
-import 'reflect-metadata';
-import { app, handleQueue } from '../backend/index';
-
-// Export unified worker with all capabilities (used in local dev)
-// In stage/production deployments, this worker only handles HTTP (see wrangler.toml)
 export default {
-  // HTTP handler - Hono app handles ALL requests
-  // API routes return responses, static files fall through to Assets via notFound handler
-  // Assets binding serves files or returns 404
-  fetch: app.fetch,
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const response = await app.fetch(request, env, ctx);
 
-  // Queue consumer handler (only used in local dev)
-  queue: handleQueue,
+    if (env.ENVIRONMENT !== 'stage' || response.webSocket || response.status === 101) {
+      return response;
+    }
+
+    const headers = new Headers(response.headers);
+    headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
+  },
 };
-
-// --- FUTURE: Export your Workflow classes here (only used in local dev) ---
-// Example:
-// export { MyWorkflow } from '../backend/workflows/MyWorkflow';

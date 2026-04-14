@@ -9,177 +9,68 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as GuidesIndexRouteImport } from './routes/guides.index'
-import { Route as OauthApproveRouteImport } from './routes/oauth.approve'
-import { Route as GuidesSlugRouteImport } from './routes/guides.$slug'
-import { Route as AppSettingsRouteImport } from './routes/app.settings'
-import { Route as AppDraftsRouteImport } from './routes/app.drafts'
-import { Route as AppDraftsDraftIdRouteImport } from './routes/app.drafts.$draftId'
+import { Route as PostsIndexRouteImport } from './routes/posts.index'
+import { Route as PostsSlugRouteImport } from './routes/posts.$slug'
+import { Route as ExperimentsMermaidSvgRouteImport } from './routes/experiments.mermaid-svg'
 
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuidesIndexRoute = GuidesIndexRouteImport.update({
-  id: '/guides/',
-  path: '/guides/',
+const PostsIndexRoute = PostsIndexRouteImport.update({
+  id: '/posts/',
+  path: '/posts/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OauthApproveRoute = OauthApproveRouteImport.update({
-  id: '/oauth/approve',
-  path: '/oauth/approve',
+const PostsSlugRoute = PostsSlugRouteImport.update({
+  id: '/posts/$slug',
+  path: '/posts/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuidesSlugRoute = GuidesSlugRouteImport.update({
-  id: '/guides/$slug',
-  path: '/guides/$slug',
+const ExperimentsMermaidSvgRoute = ExperimentsMermaidSvgRouteImport.update({
+  id: '/experiments/mermaid-svg',
+  path: '/experiments/mermaid-svg',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDraftsRoute = AppDraftsRouteImport.update({
-  id: '/drafts',
-  path: '/drafts',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDraftsDraftIdRoute = AppDraftsDraftIdRouteImport.update({
-  id: '/$draftId',
-  path: '/$draftId',
-  getParentRoute: () => AppDraftsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/app/drafts': typeof AppDraftsRouteWithChildren
-  '/app/settings': typeof AppSettingsRoute
-  '/guides/$slug': typeof GuidesSlugRoute
-  '/oauth/approve': typeof OauthApproveRoute
-  '/guides/': typeof GuidesIndexRoute
-  '/app/drafts/$draftId': typeof AppDraftsDraftIdRoute
+  '/experiments/mermaid-svg': typeof ExperimentsMermaidSvgRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/posts/': typeof PostsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/app/drafts': typeof AppDraftsRouteWithChildren
-  '/app/settings': typeof AppSettingsRoute
-  '/guides/$slug': typeof GuidesSlugRoute
-  '/oauth/approve': typeof OauthApproveRoute
-  '/guides': typeof GuidesIndexRoute
-  '/app/drafts/$draftId': typeof AppDraftsDraftIdRoute
+  '/experiments/mermaid-svg': typeof ExperimentsMermaidSvgRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/posts': typeof PostsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRouteWithChildren
-  '/login': typeof LoginRoute
-  '/profile': typeof ProfileRoute
-  '/app/drafts': typeof AppDraftsRouteWithChildren
-  '/app/settings': typeof AppSettingsRoute
-  '/guides/$slug': typeof GuidesSlugRoute
-  '/oauth/approve': typeof OauthApproveRoute
-  '/guides/': typeof GuidesIndexRoute
-  '/app/drafts/$draftId': typeof AppDraftsDraftIdRoute
+  '/experiments/mermaid-svg': typeof ExperimentsMermaidSvgRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/posts/': typeof PostsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/app'
-    | '/login'
-    | '/profile'
-    | '/app/drafts'
-    | '/app/settings'
-    | '/guides/$slug'
-    | '/oauth/approve'
-    | '/guides/'
-    | '/app/drafts/$draftId'
+  fullPaths: '/' | '/experiments/mermaid-svg' | '/posts/$slug' | '/posts/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/app'
-    | '/login'
-    | '/profile'
-    | '/app/drafts'
-    | '/app/settings'
-    | '/guides/$slug'
-    | '/oauth/approve'
-    | '/guides'
-    | '/app/drafts/$draftId'
-  id:
-    | '__root__'
-    | '/'
-    | '/app'
-    | '/login'
-    | '/profile'
-    | '/app/drafts'
-    | '/app/settings'
-    | '/guides/$slug'
-    | '/oauth/approve'
-    | '/guides/'
-    | '/app/drafts/$draftId'
+  to: '/' | '/experiments/mermaid-svg' | '/posts/$slug' | '/posts'
+  id: '__root__' | '/' | '/experiments/mermaid-svg' | '/posts/$slug' | '/posts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  ProfileRoute: typeof ProfileRoute
-  GuidesSlugRoute: typeof GuidesSlugRoute
-  OauthApproveRoute: typeof OauthApproveRoute
-  GuidesIndexRoute: typeof GuidesIndexRoute
+  ExperimentsMermaidSvgRoute: typeof ExperimentsMermaidSvgRoute
+  PostsSlugRoute: typeof PostsSlugRoute
+  PostsIndexRoute: typeof PostsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -187,83 +78,35 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/guides/': {
-      id: '/guides/'
-      path: '/guides'
-      fullPath: '/guides/'
-      preLoaderRoute: typeof GuidesIndexRouteImport
+    '/posts/': {
+      id: '/posts/'
+      path: '/posts'
+      fullPath: '/posts/'
+      preLoaderRoute: typeof PostsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/oauth/approve': {
-      id: '/oauth/approve'
-      path: '/oauth/approve'
-      fullPath: '/oauth/approve'
-      preLoaderRoute: typeof OauthApproveRouteImport
+    '/posts/$slug': {
+      id: '/posts/$slug'
+      path: '/posts/$slug'
+      fullPath: '/posts/$slug'
+      preLoaderRoute: typeof PostsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/guides/$slug': {
-      id: '/guides/$slug'
-      path: '/guides/$slug'
-      fullPath: '/guides/$slug'
-      preLoaderRoute: typeof GuidesSlugRouteImport
+    '/experiments/mermaid-svg': {
+      id: '/experiments/mermaid-svg'
+      path: '/experiments/mermaid-svg'
+      fullPath: '/experiments/mermaid-svg'
+      preLoaderRoute: typeof ExperimentsMermaidSvgRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/app/settings': {
-      id: '/app/settings'
-      path: '/settings'
-      fullPath: '/app/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/drafts': {
-      id: '/app/drafts'
-      path: '/drafts'
-      fullPath: '/app/drafts'
-      preLoaderRoute: typeof AppDraftsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/app/drafts/$draftId': {
-      id: '/app/drafts/$draftId'
-      path: '/$draftId'
-      fullPath: '/app/drafts/$draftId'
-      preLoaderRoute: typeof AppDraftsDraftIdRouteImport
-      parentRoute: typeof AppDraftsRoute
     }
   }
 }
 
-interface AppDraftsRouteChildren {
-  AppDraftsDraftIdRoute: typeof AppDraftsDraftIdRoute
-}
-
-const AppDraftsRouteChildren: AppDraftsRouteChildren = {
-  AppDraftsDraftIdRoute: AppDraftsDraftIdRoute,
-}
-
-const AppDraftsRouteWithChildren = AppDraftsRoute._addFileChildren(
-  AppDraftsRouteChildren,
-)
-
-interface AppRouteChildren {
-  AppDraftsRoute: typeof AppDraftsRouteWithChildren
-  AppSettingsRoute: typeof AppSettingsRoute
-}
-
-const AppRouteChildren: AppRouteChildren = {
-  AppDraftsRoute: AppDraftsRouteWithChildren,
-  AppSettingsRoute: AppSettingsRoute,
-}
-
-const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRouteWithChildren,
-  LoginRoute: LoginRoute,
-  ProfileRoute: ProfileRoute,
-  GuidesSlugRoute: GuidesSlugRoute,
-  OauthApproveRoute: OauthApproveRoute,
-  GuidesIndexRoute: GuidesIndexRoute,
+  ExperimentsMermaidSvgRoute: ExperimentsMermaidSvgRoute,
+  PostsSlugRoute: PostsSlugRoute,
+  PostsIndexRoute: PostsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,0 +1,41 @@
+{
+  "workflow_definitions": [
+    {
+      "id": "default",
+      "stages": [
+        {
+          "id": "development",
+          "when_state": "Start",
+          "active_state": "Implementing",
+          "workflow_file": "CLAUDE.md",
+          "fallback_state": "Human Needed"
+        },
+        {
+          "id": "review",
+          "when_state": "Review",
+          "active_state": "Reviewing",
+          "workflow_file": "CLAUDE.md",
+          "fallback_state": "Human Needed"
+        },
+        {
+          "id": "deploy",
+          "when_state": "Deploy",
+          "active_state": "Deploying",
+          "workflow_file": "CLAUDE.md",
+          "fallback_state": "Human Needed"
+        },
+        {
+          "id": "cleanup",
+          "when_state": "Cleanup",
+          "active_state": "Cleaning Up",
+          "workflow_file": "CLAUDE.md",
+          "fallback_state": "Human Needed"
+        }
+      ]
+    }
+  ],
+  "workflow_selection": {
+    "default_workflow": "default",
+    "by_label": []
+  }
+}

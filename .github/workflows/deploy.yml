@@ -1,0 +1,170 @@
+name: Deploy
+
+run-name: >-
+  Deploy ${{
+    github.event_name == 'workflow_dispatch'
+      && github.event.inputs.environment
+      || 'stage + production'
+  }} @ ${{ github.sha }}
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to deploy manually
+        required: true
+        type: choice
+        options:
+          - stage
+          - production
+      ref:
+        description: Optional branch, tag, or commit SHA to deploy
+        required: false
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.event_name == 'workflow_dispatch' && github.event.inputs.environment || 'automatic' }}
+  cancel-in-progress: true
+
+env:
+  NODE_OPTIONS: --dns-result-order=ipv4first
+
+jobs:
+  resolve:
+    name: Resolve deploy target
+    runs-on:
+      - self-hosted
+    outputs:
+      automatic: ${{ steps.resolve.outputs.automatic }}
+      deploy_ref: ${{ steps.resolve.outputs.deploy_ref }}
+      requested_env: ${{ steps.resolve.outputs.requested_env }}
+    steps:
+      - id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          automatic=false
+          deploy_ref=""
+          requested_env=""
+
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            automatic=true
+            deploy_ref="${GITHUB_SHA}"
+            requested_env=automatic
+          else
+            requested_env="${{ github.event.inputs.environment }}"
+            deploy_ref="${{ github.event.inputs.ref || 'refs/heads/main' }}"
+          fi
+
+          {
+            echo "automatic=${automatic}"
+            echo "deploy_ref=${deploy_ref}"
+            echo "requested_env=${requested_env}"
+          } >> "$GITHUB_OUTPUT"
+
+  deploy-stage:
+    name: Deploy stage
+    needs: resolve
+    if: >-
+      needs.resolve.outputs.automatic == 'true' ||
+      needs.resolve.outputs.requested_env == 'stage'
+    runs-on:
+      - self-hosted
+      - self-hosted-host
+    environment: stage
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.deploy_ref }}
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: deploy-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci --include=dev --loglevel=error
+
+      - name: Deploy application worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run deploy:stage
+
+  deploy-production:
+    name: Deploy production
+    needs: resolve
+    if: >-
+      needs.resolve.outputs.automatic == 'true' ||
+      needs.resolve.outputs.requested_env == 'production'
+    runs-on:
+      - self-hosted
+      - self-hosted-host
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.deploy_ref }}
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: deploy-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci --include=dev --loglevel=error
+
+      - name: Deploy application worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run deploy:production
+
+  deployment-result:
+    name: Deployment result
+    needs:
+      - resolve
+      - deploy-stage
+      - deploy-production
+    if: always()
+    runs-on:
+      - self-hosted
+    steps:
+      - name: Report outcome
+        shell: bash
+        run: |
+          set -euo pipefail
+          automatic="${{ needs.resolve.outputs.automatic }}"
+          requested_env="${{ needs.resolve.outputs.requested_env }}"
+          stage_result="${{ needs.deploy-stage.result }}"
+          production_result="${{ needs.deploy-production.result }}"
+
+          echo "automatic=${automatic} requested_env=${requested_env}"
+          echo "stage=${stage_result} production=${production_result}"
+
+          if [[ "${automatic}" == "true" ]]; then
+            if [[ "${production_result}" == "success" ]]; then
+              echo "Deploy completed: production=${production_result} stage=${stage_result}"
+              exit 0
+            fi
+            echo "Deploy incomplete: production=${production_result} stage=${stage_result}"
+            exit 1
+          fi
+
+          target_result="${stage_result}"
+          if [[ "${requested_env}" == "production" ]]; then
+            target_result="${production_result}"
+          fi
+
+          if [[ "${target_result}" == "success" ]]; then
+            echo "Manual ${requested_env} deploy succeeded."
+            exit 0
+          fi
+          echo "Manual ${requested_env} deploy failed."
+          exit 1

@@ -5,25 +5,30 @@
 }
 
 :root {
-  /* Enable automatic dark/light theme based on system preference */
-  color-scheme: light dark;
-
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  color-scheme: light;
+  font-family:
+    'Avenir Next', 'Segoe UI', 'Helvetica Neue', 'Nimbus Sans', sans-serif;
   line-height: 1.2;
   font-weight: 400;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(29, 91, 82, 0.12), transparent 36%),
+    radial-gradient(circle at bottom left, rgba(184, 116, 71, 0.12), transparent 32%),
+    linear-gradient(180deg, #f6f0e6 0%, #f3ece2 100%);
+  color: #1d281f;
 }
 
 #root {
@@ -49,6 +54,3 @@ button {
 input[type="range"] {
   cursor: pointer;
 }
-
-/* Use native OS scrollbars for better platform integration */
-/* Custom scrollbar styles are defined per-component where needed */

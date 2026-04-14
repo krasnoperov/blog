@@ -1,8 +1,6 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import mkcert from 'vite-plugin-mkcert';
-import { visualizer } from 'rollup-plugin-visualizer';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 
 const KNOWN_SSR_EXTERNAL_UNUSED_IMPORT_WARNINGS = [
@@ -20,17 +18,6 @@ export default defineConfig({
       },
     }),
     react(),
-    mkcert(),
-    visualizer({
-      filename: './dist/stats.html',
-      open: false,
-      gzipSize: true,
-      brotliSize: true,
-    }),
-    visualizer({
-      filename: './dist/stats.json',
-      template: 'raw-data',
-    }),
   ],
   resolve: {
     alias: {
@@ -38,16 +25,11 @@ export default defineConfig({
     },
   },
   server: {
-    host: 'local.krasnoperov.me',
+    host: 'localhost',
     port: 3001,
-    open: 'https://local.krasnoperov.me:3001',
+    open: 'http://localhost:3001',
     proxy: {
       '/api': {
-        target: 'http://localhost:8788',
-        changeOrigin: true,
-        secure: false,
-      },
-      '/.well-known': {
         target: 'http://localhost:8788',
         changeOrigin: true,
         secure: false,
@@ -58,7 +40,6 @@ export default defineConfig({
     port: 4173,
     strictPort: true,
   },
-  publicDir: path.resolve(__dirname, 'src/frontend/public'),
   build: {
     outDir: path.resolve(__dirname, 'dist/frontend-start'),
     emptyOutDir: true,

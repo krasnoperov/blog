@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - "**"
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_OPTIONS: --dns-result-order=ipv4first
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  checks:
+    name: Checks
+    runs-on:
+      - self-hosted
+      - self-hosted-container
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --user 1000:1000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci --include=dev --loglevel=error
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - run: npm test -- --test-reporter=dot
+
+  test-ui:
+    name: UI Tests
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/mq-spec-')
+    needs:
+      - checks
+    runs-on:
+      - self-hosted
+      - self-hosted-container
+    container:
+      image: mcr.microsoft.com/playwright:v1.58.2-noble
+      options: --user 1000:1000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: npm-${{ hashFiles('package-lock.json') }}
+
+      - run: npm ci --include=dev --loglevel=error
+      - run: npm run test:ui:local
+
+  Tests:
+    name: Tests
+    if: always()
+    needs:
+      - checks
+      - test-ui
+    runs-on:
+      - self-hosted
+    steps:
+      - name: Evaluate CI gate
+        env:
+          NEEDS_JSON: ${{ toJson(needs) }}
+        run: |
+          node <<'NODE'
+          const needs = JSON.parse(process.env.NEEDS_JSON);
+          const blocking = Object.entries(needs).filter(([, value]) =>
+            !["success", "skipped"].includes(value.result),
+          );
+
+          if (blocking.length > 0) {
+            console.error(
+              `Blocking jobs: ${blocking.map(([name, value]) => `${name}=${value.result}`).join(", ")}`,
+            );
+            process.exit(1);
+          }
+
+          console.log(
+            `Tests gate passed: ${Object.entries(needs).map(([name, value]) => `${name}=${value.result}`).join(", ")}`,
+          );
+          NODE
