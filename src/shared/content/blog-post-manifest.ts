@@ -11,8 +11,8 @@ export const BLOG_POST_MANIFEST = [
     slug: 'from-yolo-to-patchrelay',
     title: 'From YOLO to patchrelay',
     summary:
-      'Permission prompts killed agent velocity. A rented VPS fixed security. Four parallel agents created a merge mess. Copy-pasting task IDs created patchrelay.',
-    publishedAt: '2026-04-07',
+      'Notes on a year of agent-driven development — permission prompts, a rented Hetzner box with nothing on it, a parallel-agent experiment that turned into merge-conflict hell, and the small annoyance that became patchrelay.',
+    publishedAt: '2026-04-29',
     readingTime: '5 min read',
     tags: ['software-factory', 'patchrelay', 'agentic-development', 'security'],
     featured: true,

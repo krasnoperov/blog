@@ -1,63 +1,57 @@
 ---
 title: From YOLO to patchrelay
-summary: Permission prompts killed agent velocity. A rented VPS fixed security. Four parallel agents created a merge mess. Copy-pasting task IDs created patchrelay.
-publishedAt: 2026-04-07
+summary: Notes on a year of agent-driven development — permission prompts, a rented Hetzner box with nothing on it, a parallel-agent experiment that turned into merge-conflict hell, and the small annoyance that became patchrelay.
+publishedAt: 2026-04-29
 readingTime: 5 min read
 tags: software-factory, patchrelay, agentic-development, security
 featured: true
 ---
 
-## The mental shift
+## Writing less code
 
-The transition was calm. Gradual. Sometime in late 2025 I stopped writing code directly and started describing what I wanted in prose. Not because I read a blog post about it or watched a talk. Just because the models got good enough.
+Sometime in late 2025 I stopped writing code by hand, and it crept up on me. I didn't decide to — there was no manifesto, no talk that converted me. I just noticed, a few weeks in, that I'd been describing what I wanted in prose and reading the diff afterwards, and that this had been working well enough that picking up the keyboard again felt like a downgrade.
 
-Around December 2025, GPT-5.3 and Opus 5.3 crossed a quality threshold. The architecture they produced was reasonable. You didn't need to babysit every decision. You could express an idea, walk away, and come back to something that mostly worked. The gap between "I have an idea" and "I have working code" shrank dramatically.
+Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I didn't have to babysit every decision. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
 
-But something else shifted too. You lose grip on decisions. Sometimes it's no longer your ideas — it's a black box. The code works, the tests pass, and you can't fully explain why a particular abstraction was chosen. That's the trade-off. Faster output, less authorship. I'm still in the process of understanding how that changes what "writing software" means.
+Something about that is unsettling, and I'm trying to be honest with myself about it. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. I don't have a clean read on what that does to me as an engineer. I'm just noting it.
 
-## The permission brake
+## Permission prompts
 
-The speed gain had an armed brake on it: permission prompts.
+The thing that almost killed agent flow for me was permission prompts.
 
-Every time the agent wanted to run a command, it asked. Every time. The allowlist approach failed immediately. Models constantly invented new command variants — bash scripts, `git -c` flags, argument shapes you'd never seen before. You can't pattern-match against creativity. Tasks would stall before the model had even started doing useful work.
+Every command the agent wanted to run, it asked me first. I tried to allowlist my way out of it, and allowlists don't work against an agent — the model invents new command shapes constantly. A `git -c` flag I'd never seen, a one-line bash script, an argument I didn't think to whitelist. So the agent stalls, often before it's done anything useful, and I'm sitting in front of it tapping "yes" like I'm logging into my bank.
 
-So you turn the prompts off. Now the agent is fast. It also has your SSH keys, your personal documents, your privileged access. Everything on the notebook.
+The obvious move is to turn the prompts off. Then the agent is fast. It also has my SSH keys, my browser sessions, and full access to anything on the laptop. Nothing I saw was actually malicious — not in months of running this way — but I could imagine the attack surface clearly enough: prompt injection from a web search, a poisoned npm package the model decides to try because it looked plausible. The right answer can't be that the model is well-behaved. It has to be that the agent physically can't reach the things I care about.
 
-I never saw anything actually dangerous. Not once. But I can imagine the attack vectors: prompt injection via web search, a malicious npm package suggestion. The model is reliable enough not to spoil its own work. Security should come from physical restrictions — an agent should not be able to interact with sensitive resources in the first place. I wasn't ready for unrestricted local access.
+## Renting a box
 
-## The VPS
+So I rented a server. A dedicated box at [Hetzner](https://www.hetzner.com/), comfortably under $100/month, which is roughly what I was already spending on Claude and Codex subscriptions combined. I considered running everything in Docker on my laptop and decided I didn't want to find out where Docker's developer experience falls apart at agent speed. I looked at a Mac Mini and the specs didn't justify it; I looked at a Mac Studio and the math didn't work against two years of rent. I'm in Spain and the home internet is fine, but pinning a workflow to my apartment's uplink also felt wrong.
 
-Never tried Docker. Great for servers and testcontainers but terrible developer experience. Didn't want to find out the issues.
+The point of the box isn't power. It's that there's nothing on it. No SSH keys to anything that matters, no browser session, no personal documents, no production credentials. The agent runs without permission prompts because there is genuinely nothing worth stealing. If the box gets compromised tomorrow, I rebuild it in an afternoon and lose nothing.
 
-[Hetzner](https://www.hetzner.com/): a dedicated server under $100/month. Comparable to $200 in combined Claude and Codex subscriptions. A Mac Mini has worse specs. A Mac Studio is too expensive — won't beat renting for a couple of years. No home internet dependency either, though Spain has reliable internet.
+## Four agents at once
 
-The reasoning is simple. The instance has nothing sensitive on it. No personal documents, no production credentials, no browser sessions. The agent runs unrestricted because there's nothing worth stealing. Security through absence.
+Once the box was set up, the obvious next experiment was running multiple agents in parallel. I'd been reading about parallel-agent setups for a while and wanted to see what it actually felt like. I cloned the project four times, prepared the environment in each, and pointed an agent at each of them.
 
-## Four agents on OpenClaw
+I'd also moved my task tracking off GitHub Issues to [Linear](https://linear.app/) by then, which is dramatically nicer for spinning up well-scoped tasks quickly. I broke the work into four lanes, fed one to each terminal, and watched.
 
-During the [OpenClaw](https://github.com/openclaw/openclaw) hype, I tried running agents in parallel. Project cloned, environment ready. Easy to log in to Codex, harder for Claude but manageable.
+The first hour was magic. No permission prompts. Tools all worked. Agents installed Playwright, took screenshots, ran tests. Four lanes of progress at the same time. That's the demo every parallel-agent post is selling, and it really does work — for an hour.
 
-I tried [Linear](https://linear.app/) as a task tracker instead of GitHub Issues. Easy to spin up agents for detailed plans: main feature, billing, observability. Feed them to four terminals. Agents go brrrr.
-
-No permission requests. All tools work. Agents install Playwright, capture screenshots. Everything worked like a charm — until merge time.
-
-Four agents means four PRs. Four PRs in an actively developed project means merge conflicts. Each conflict can be resolved by an agent, but now you're micromanaging all of them, watching CI, repairing builds. You didn't write those four PRs yourself so you couldn't prevent the conflicts. The parallelism bought speed and sold control.
+Merge time is where it stops being magic. Four agents means four pull requests, and four pull requests in an actively-developed project means merge conflicts — not occasionally, but in essentially every combination. Each individual conflict is something an agent can resolve. But by then I'm a manager. I'm watching CI, restarting failed builds, deciding which PR lands first, asking each agent to rebase against whatever just landed. I hadn't written the four branches myself, so I had no intuition for which conflicts were trivial and which were going to bite. By the end of the day I'd shipped less than I would have if I'd worked one PR at a time.
 
 ## patchrelay
 
-patchrelay was not born from the merge conflicts. It was born from copy-pasting task IDs.
+patchrelay didn't come from the merge problem. It came from a much smaller frustration: copy-pasting task IDs.
 
-When you have a task tracker you still need to copy the task ID to the terminal every time you start an agent on something. Over and over. The obvious idea: agents should receive tasks automatically, in a way where you can open a session to review what they're doing.
+Every time I started an agent on something, I copied the task ID from Linear into the terminal. Then again for the next task. Then again. After enough of that it started to feel obviously wrong — agents should be receiving tasks the way a human teammate does, assigned to them, with a thread I can open and read along.
 
-Linear stuck as the tracker. I started with webhooks about task statuses. Then I discovered Linear's agentic integrations — delegating tasks directly is interesting. There's potential here for something like a software factory core.
+Linear stayed as my tracker. I started small, with webhooks reacting to task-status changes, and ended up looking at Linear's agent integrations, which let you delegate work to an agent directly. Somewhere in there the shape of a "software factory" loop started to suggest itself: task in, branch out, review and CI in the middle, all of it visible from the tracker without me copying anything anywhere.
 
-patchrelay v1: a Node.js server, decent code quality, user-primitive webhooks. It stuck often trying to build the implement/CI/review pipeline. The loop from task to pull request kept breaking in new ways.
-
-Still figuring it out. Will it work? Let's find out.
+patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1. The loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle. I don't know yet whether it's going to be the thing or a stepping stone to the thing. I'm going to keep building it and find out.
 
 ## PS
 
-This post was written using the [Ghostwriter](https://github.com/estruyf/ghostwriter-agents-ai) skill in Claude Code. I did an interview, the skill captured the material, and the Writer agent drafted the post from my answers. The voice and opinions are mine. The typing isn't.
+This post was drafted by the [Ghostwriter](https://github.com/estruyf/ghostwriter-agents-ai) skill in Claude Code from an interview I did with it, and then rewritten by hand because the first draft sounded too much like an AI doing an impression of a person. The opinions are mine throughout.
 
 ## Related
 
