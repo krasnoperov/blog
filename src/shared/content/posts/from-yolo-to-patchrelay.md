@@ -13,7 +13,7 @@ Sometime in late 2025 I stopped writing code by hand, and it crept up on me. I d
 
 Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I didn't have to babysit every decision. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
 
-Something about that is unsettling, and I'm trying to be honest with myself about it. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. I don't have a clean read on what that does to me as an engineer. I'm just noting it.
+Something about that is unsettling, and I'm trying to be honest with myself about it. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. What I plan to do about it is train the intuition the way I always have — build things, see where I land, correct, iterate, try different approaches and see which ones hold up. The shape of "writing software" is moving and the only honest way to map the new shape is to keep working in it.
 
 ## Permission prompts
 
@@ -25,29 +25,33 @@ The obvious move is to turn the prompts off. Then the agent is fast. It also has
 
 ## Renting a box
 
-So I rented a server. A dedicated box at [Hetzner](https://www.hetzner.com/), comfortably under $100/month, which is roughly what I was already spending on Claude and Codex subscriptions combined. I considered running everything in Docker on my laptop and decided I didn't want to find out where Docker's developer experience falls apart at agent speed. I looked at a Mac Mini and the specs didn't justify it; I looked at a Mac Studio and the math didn't work against two years of rent. I'm in Spain and the home internet is fine, but pinning a workflow to my apartment's uplink also felt wrong.
+So I rented a server. A dedicated box at [Hetzner](https://www.hetzner.com/) for well under €100/month — a quarter of what the top Claude Max and ChatGPT Pro tiers cost combined, at $200/month each.
+
+The current hype cycle around running coding agents at home has people buying Mac Minis for this: quiet, your own hardware, available 24/7. The problem is that a base Mac Mini strains the moment you have a handful of headless browsers running Playwright in parallel, which is exactly the kind of load a fleet of agents will throw at it. A loaded Mac Studio handles the workload, but against two years of Hetzner rent the math isn't close. Hetzner gives absurd value per euro, and the gap only widens at the higher tiers. I'm in Spain and the home internet is fine, but pinning a workflow to my apartment's uplink also felt wrong.
 
 The point of the box isn't power. It's that there's nothing on it. No SSH keys to anything that matters, no browser session, no personal documents, no production credentials. The agent runs without permission prompts because there is genuinely nothing worth stealing. If the box gets compromised tomorrow, I rebuild it in an afternoon and lose nothing.
 
 ## Four agents at once
 
-Once the box was set up, the obvious next experiment was running multiple agents in parallel. I'd been reading about parallel-agent setups for a while and wanted to see what it actually felt like. I cloned the project four times, prepared the environment in each, and pointed an agent at each of them.
+Running multiple agents in parallel wasn't really an experiment — it's what naturally falls out of a proper setup. bash + tmux + git worktrees gives you several shells side by side, each on its own branch in its own directory, and spinning up four agents on four worktrees is no harder than opening four terminals. The first time I had it working I just sat there for a minute looking at it.
 
 I'd also moved my task tracking off GitHub Issues to [Linear](https://linear.app/) by then, which is dramatically nicer for spinning up well-scoped tasks quickly. I broke the work into four lanes, fed one to each terminal, and watched.
 
 The first hour was magic. No permission prompts. Tools all worked. Agents installed Playwright, took screenshots, ran tests. Four lanes of progress at the same time. That's the demo every parallel-agent post is selling, and it really does work — for an hour.
 
-Merge time is where it stops being magic. Four agents means four pull requests, and four pull requests in an actively-developed project means merge conflicts — not occasionally, but in essentially every combination. Each individual conflict is something an agent can resolve. But by then I'm a manager. I'm watching CI, restarting failed builds, deciding which PR lands first, asking each agent to rebase against whatever just landed. I hadn't written the four branches myself, so I had no intuition for which conflicts were trivial and which were going to bite. By the end of the day I'd shipped less than I would have if I'd worked one PR at a time.
+Merge time is where it stops being magic. Four agents means four pull requests, and four pull requests in an actively-developed project means merge conflicts — not occasionally, but in essentially every combination. Each individual conflict is something an agent can resolve. But by then I'm a manager. I'm watching CI, restarting failed builds, deciding which PR lands first, asking each agent to rebase against whatever just landed. I hadn't written the four branches myself, so I had no intuition for which conflicts were trivial and which were going to bite.
+
+By the end of the day, most of my time had gone into mechanical coordination rather than building features — and that's all work that has to be automated.
 
 ## patchrelay
 
-patchrelay didn't come from the merge problem. It came from a much smaller frustration: copy-pasting task IDs.
+The real reason I started patchrelay wasn't typing. It was that running four agents had turned me into a full-time conductor — most of what I did all day was telling each one to go check CI, fix what was broken, rebase against whatever had just landed, run the build again. The agents could do all of that work themselves; what they couldn't do was decide on their own when to do it. (This was a couple of weeks before `/loop` landed in Claude Code, which closes a meaningful chunk of this gap on its own. At the time there was no built-in option, so I started building one.)
 
-Every time I started an agent on something, I copied the task ID from Linear into the terminal. Then again for the next task. Then again. After enough of that it started to feel obviously wrong — agents should be receiving tasks the way a human teammate does, assigned to them, with a thread I can open and read along.
+The shape of the answer was clear enough: something that could pull a task from Linear, kick off an agentic session against it, listen for webhooks from CI and review, and keep steering the agent until the PR was green, conflict-free, and merged. Not a copy-paste helper — actual orchestration around an agent session.
 
-Linear stayed as my tracker. I started small, with webhooks reacting to task-status changes, and ended up looking at Linear's agent integrations, which let you delegate work to an agent directly. Somewhere in there the shape of a "software factory" loop started to suggest itself: task in, branch out, review and CI in the middle, all of it visible from the tracker without me copying anything anywhere.
+Linear stayed as the tracker. I started small, with webhooks reacting to status changes, and worked outward from there into Linear's agent integrations, which let you delegate a task to an agent directly. Each new piece pulled the loop closer to running on its own: task in, branch out, review and CI iterating in the middle, all of it visible from the tracker.
 
-patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1. The loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle. I don't know yet whether it's going to be the thing or a stepping stone to the thing. I'm going to keep building it and find out.
+patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle. I don't know yet whether it's going to be the thing or a stepping stone to the thing. I'm going to keep building it and find out.
 
 ## PS
 
