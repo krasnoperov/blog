@@ -1,6 +1,9 @@
 import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
+import mergeStewardMarkdown from './posts/merge-steward.md';
+import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
+import reviewQuillMarkdown from './posts/review-quill.md';
 import {
   createBlogPost,
   getBlogPostBySlug,
@@ -16,7 +19,10 @@ import {
 const RAW_POSTS = {
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
   'hello-world-formatting-the-factory-notes': helloWorldMarkdown,
+  'merge-steward': mergeStewardMarkdown,
+  'patchrelay': patchrelayMarkdown,
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
+  'review-quill': reviewQuillMarkdown,
 } satisfies Record<BlogPostSlug, string>;
 
 export const BLOG_POSTS: BlogPost[] = BLOG_POST_SUMMARIES.map((summary) =>
