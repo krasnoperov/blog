@@ -11,7 +11,7 @@ featured: false
 
 Once you have a server and a coordinator, the next question is unavoidable: what actually runs the agent loop? Something has to hold the conversation, dispatch tool calls, ask for approvals, persist thread state across restarts, and emit enough events back out that you can render what's happening. That something is the harness, and you do not get to skip picking one.
 
-I want to lay out the choices I looked at before I picked, because the decision is more interesting than the answer. If you read the research notes I leaned on (`~/vault/notes/research/20260324_unlocking_the_codex_harness_app_server.md` and `20260317-patchrelay-agent-pipeline-landscape.md`) you'll see the same survey from a different angle — this post is the version that's grounded in what I actually tried and which commits in patchrelay represent the changes of mind.
+I want to lay out the choices I looked at before I picked, because the decision is more interesting than the answer. This post is grounded in what I actually tried and which commits in patchrelay represent the changes of mind.
 
 ## The landscape
 
