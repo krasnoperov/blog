@@ -32,3 +32,8 @@ queries-*.md
 test-references/
 tmp/
 test-results/
+
+# Visual audit + style-reference output (regenerate with playwright configs)
+audit-out/
+audit-shots/
+playwright-report/

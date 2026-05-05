@@ -1,0 +1,14 @@
+{
+  "description": "Canonical CSS tokens whose source value uses CSS constructs with no DTCG-conformant shape (color-mix, clamp, calc, CSS shorthand). They remain authoritative in src/frontend/styles/ and are deliberately omitted from the DTCG snapshot.",
+  "generatedBy": "scripts/snapshot-design-tokens.mjs",
+  "tokens": [
+    {
+      "cssVar": "--button-ghost-bg",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "transparent",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`).",
+      "recommendation": "Legacy compat token (the new design system uses segments, not buttons). Remove from theme.css when AppHeader.module.css migrates to .seg-style chrome."
+    }
+  ]
+}

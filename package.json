@@ -15,7 +15,10 @@
     "test:ui:local": "npx playwright test --config playwright.local.config.ts",
     "test:ui:serve": "npm run build && wrangler dev --config wrangler.dev.toml --port 8788 --persist-to .wrangler/state-playwright",
     "lint": "oxlint -c oxlintrc.json && eslint \"{src,tests}/**/*.{ts,tsx}\"",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "tokens:snapshot": "node scripts/snapshot-design-tokens.mjs",
+    "tokens:snapshot:check": "node scripts/snapshot-design-tokens.mjs --check",
+    "tokens:roundtrip": "node scripts/generate-css-from-tokens.mjs --check"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.168.7",

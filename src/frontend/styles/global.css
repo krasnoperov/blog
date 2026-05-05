@@ -1,3 +1,6 @@
+/* Global resets and base styles. All design tokens live in tokens.css and
+   theme.css; this file only consumes them. */
+
 * {
   margin: 0;
   padding: 0;
@@ -5,11 +8,7 @@
 }
 
 :root {
-  color-scheme: light;
-  font-family:
-    'Avenir Next', 'Segoe UI', 'Helvetica Neue', 'Nimbus Sans', sans-serif;
-  line-height: 1.2;
-  font-weight: 400;
+  font-size: 16px;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -21,14 +20,13 @@ html {
 }
 
 body {
-  margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(29, 91, 82, 0.12), transparent 36%),
-    radial-gradient(circle at bottom left, rgba(184, 116, 71, 0.12), transparent 32%),
-    linear-gradient(180deg, #f6f0e6 0%, #f3ece2 100%);
-  color: #1d281f;
+  font-family: var(--font-mono);
+  font-size: var(--t-body);
+  line-height: var(--leading-mono);
+  color: var(--ink);
+  background: var(--paper);
 }
 
 #root {
@@ -53,4 +51,30 @@ button {
 
 input[type="range"] {
   cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+button:disabled,
+[disabled] {
+  cursor: not-allowed;
+}
+
+/* Hairline scrollbars */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: var(--radius-pill);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
 }

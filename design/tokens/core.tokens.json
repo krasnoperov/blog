@@ -1,0 +1,44 @@
+{
+  "$description": "Type, font, spacing, radius, layout primitives. Mirrors src/frontend/styles/global.css and the structural slice of theme.css.",
+  "$extensions": {
+    "me.krasnoperov.blog.source": "global.css and the structural slice of theme.css",
+    "me.krasnoperov.blog.generatedBy": "scripts/snapshot-design-tokens.mjs",
+    "me.krasnoperov.blog.note": "Generated from CSS. Do not edit by hand. Run `npm run tokens:snapshot` after changing the canonical CSS."
+  },
+  "layout": {
+    "maxWidth": {
+      "content": {
+        "$value": "{layout.col.wide}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--max-width-content",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--col-wide)"
+        }
+      }
+    },
+    "headerHeight": {
+      "$value": "{bar.top}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--header-height",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--bar-top)"
+      }
+    },
+    "gap": {
+      "$value": "{space.s.4}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--layout-gap",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-4)"
+      }
+    },
+    "panelSpacing": {
+      "$value": "{space.s.4}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--panel-spacing",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-4)"
+      }
+    }
+  }
+}

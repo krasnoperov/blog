@@ -1,0 +1,125 @@
+/* Blog design tokens — mono-first, terracotta accent.
+   Light-dark() pairs author both moods of every token in OKLCH:
+     - light: warm paper terminal
+     - dark : warm carbon terminal (warm dark, terracotta brightens slightly)
+
+   This file is the foundation: surfaces, ink, accent, typography, spacing,
+   chrome heights, geometry, motion, layout. theme.css adds semantic-only
+   tokens (code blocks, status colors) on top. global.css applies them. */
+
+:root {
+  /* ─── Surfaces ─── */
+  --paper:        light-dark(oklch(98%   0.005 95), oklch(14% 0.006 60));
+  --paper-deep:   light-dark(oklch(95%   0.008 90), oklch(18% 0.008 55));
+  --paper-rule:   light-dark(oklch(92%   0.012 88), oklch(28% 0.010 60));
+  --ink:          light-dark(oklch(20%   0     0 ), oklch(94% 0.012 80));
+  --ink-soft:     light-dark(oklch(36%   0.003 95), oklch(76% 0.012 80));
+  --ink-quiet:    light-dark(oklch(58%   0.008 90), oklch(56% 0.012 70));
+  --ink-faint:    light-dark(oklch(78%   0.012 90), oklch(38% 0.010 60));
+
+  /* ─── Single accent — terracotta ─── */
+  --accent:       light-dark(oklch(56%   0.142 39), oklch(70% 0.140 42));
+  --accent-deep:  light-dark(oklch(43%   0.122 38), oklch(80% 0.160 45));
+  --accent-soft:  light-dark(oklch(89%   0.038 40), oklch(32% 0.060 38));
+  --accent-line:  light-dark(oklch(83%   0.060 42), oklch(40% 0.080 40));
+  --accent-warm:  light-dark(oklch(98%   0.018 80), oklch(22% 0.025 50));
+
+  /* Status — quiet semantic states (used for read-time/published-date dots,
+     not for filled badges). */
+  --status-ok:    light-dark(oklch(38% 0.045 150), oklch(76% 0.035 150));
+  --status-idle:  var(--ink-quiet);
+  --status-fail:  var(--accent-deep);
+
+  /* ─── Typography — mono first, pixel scale ─── */
+  --font-mono:     'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, 'Liberation Mono', Menlo, monospace;
+  --font-serif:    'Fraunces', Georgia, serif;
+  --font-sans:     'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-heading:  var(--font-mono);
+  --font-prose:    var(--font-sans);
+
+  --t-xs:          10px;
+  --t-sm:          11px;
+  --t-meta:        12px;
+  --t-body:        13px;
+  --t-lg:          14px;
+  --t-md:          16px;
+  --t-prose:       17px;
+  --t-stat:        18px;
+  --t-display:     22px;
+  --t-display-lg:  32px;
+  --t-display-xl:  56px;
+
+  --leading-tight:    1.1;
+  --leading-snug:     1.25;
+  --leading-normal:   1.4;
+  --leading-relaxed:  1.65;
+  --leading-mono:     1.55;
+
+  --track-tight:       -0.02em;
+  --track-mono:        -0.01em;
+  --track-quiet:       0.14em;
+  --track-quiet-tight: 0.08em;
+  --track-quiet-wide:  0.18em;
+
+  /* ─── Spacing — 4 grid ─── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 48px;
+  --s-9: 64px;
+
+  /* ─── Chrome heights — fixed, load-bearing ─── */
+  --bar-top:   40px;
+  --bar-page:  46px;
+  --bar-foot:  36px;
+  --row-dense: 28px;
+  --ctl-mini:  24px;
+
+  /* ─── Geometry ─── */
+  --radius-soft: 2px;
+  --radius-pill: 9999px;
+
+  --rule:        1px solid var(--paper-rule);
+  --rule-ink:    1px solid var(--ink);
+  --rule-accent: 1px solid var(--accent);
+
+  /* ─── Layout ─── */
+  --col-narrow:  520px;
+  --col-text:    640px;
+  --col-wide:    1180px;
+  --side-w:      220px;
+
+  /* ─── Motion ─── */
+  --ease:    cubic-bezier(0.32, 0.08, 0.24, 1);
+  --d-quick: 140ms;
+  --d-slow:  280ms;
+
+  color-scheme: light dark;
+
+  /* ════════════════════════════════════════════════════════════════════
+     Component-scale tokens — blog primitives. Keep the namespace prefix
+     (--blog-) so consumers can grep these out; the snapshot script strips
+     it when emitting DTCG paths. */
+
+  --blog-page-padding:        var(--s-8);
+  --blog-page-padding-mobile: var(--s-6);
+  --blog-section-gap:         var(--s-9);
+
+  --blog-header-height:       var(--bar-top);
+  --blog-page-head-height:    var(--bar-page);
+  --blog-foot-bar-height:     var(--bar-foot);
+
+  --blog-post-row-gap:        var(--s-7);
+  --blog-post-meta-size:      var(--t-sm);
+
+  --blog-code-block-padding-x: var(--s-4);
+  --blog-code-block-padding-y: var(--s-3);
+  --blog-code-inline-padding:  2px;
+
+  --blog-quiet-label-size:     var(--t-sm);
+  --blog-quiet-label-tracking: var(--track-quiet);
+}

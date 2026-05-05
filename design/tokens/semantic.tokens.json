@@ -1,0 +1,643 @@
+{
+  "$description": "Surfaces, text, borders, status, code, overlay, scroll. Mirrors the semantic slice of src/frontend/styles/theme.css.",
+  "$extensions": {
+    "me.krasnoperov.blog.source": "theme.css",
+    "me.krasnoperov.blog.generatedBy": "scripts/snapshot-design-tokens.mjs",
+    "me.krasnoperov.blog.note": "Generated from CSS. Do not edit by hand. Run `npm run tokens:snapshot` after changing the canonical CSS."
+  },
+  "color": {
+    "successBg": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.95,
+          0.02,
+          145
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-success-bg",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(95% 0.02 145)",
+          "oklch(24% 0.025 150)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(95% 0.02 145), oklch(24% 0.025 150))"
+      }
+    },
+    "successText": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.38,
+          0.06,
+          150
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-success-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(38% 0.06 150)",
+          "oklch(82% 0.06 150)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(38% 0.06 150), oklch(82% 0.06 150))"
+      }
+    },
+    "successBorder": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.8,
+          0.05,
+          145
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-success-border",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(80% 0.05 145)",
+          "oklch(46% 0.05 150)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(80% 0.05 145), oklch(46% 0.05 150))"
+      }
+    },
+    "infoBg": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.94,
+          0.018,
+          250
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-info-bg",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(94% 0.018 250)",
+          "oklch(24% 0.022 250)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(94% 0.018 250), oklch(24% 0.022 250))"
+      }
+    },
+    "infoText": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.4,
+          0.05,
+          250
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-info-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(40% 0.05 250)",
+          "oklch(82% 0.05 250)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(40% 0.05 250), oklch(82% 0.05 250))"
+      }
+    },
+    "infoBorder": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.8,
+          0.05,
+          250
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-info-border",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(80% 0.05 250)",
+          "oklch(46% 0.05 250)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(80% 0.05 250), oklch(46% 0.05 250))"
+      }
+    },
+    "warningBg": {
+      "$value": "{accent.soft}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-warning-bg",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent-soft)"
+      }
+    },
+    "warningText": {
+      "$value": "{accent.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-warning-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent-deep)"
+      }
+    },
+    "warningBorder": {
+      "$value": "{accent.line}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-warning-border",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent-line)"
+      }
+    },
+    "neutralBg": {
+      "$value": "{paper.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-neutral-bg",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+      }
+    },
+    "neutralText": {
+      "$value": "{ink.soft}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-neutral-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink-soft)"
+      }
+    },
+    "link": {
+      "$value": "{accent.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-link",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent)"
+      }
+    },
+    "error": {
+      "$value": "{accent.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--color-error",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent)"
+      }
+    }
+  },
+  "code": {
+    "bg": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.95,
+          0.008,
+          90
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--code-bg",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(95% 0.008 90)",
+          "oklch(18% 0.008 55)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(95% 0.008 90), oklch(18% 0.008 55))"
+      }
+    },
+    "text": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.36,
+          0.005,
+          95
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--code-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(36% 0.005 95)",
+          "oklch(86% 0.012 80)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(36% 0.005 95), oklch(86% 0.012 80))"
+      }
+    }
+  },
+  "overlay": {
+    "backdrop": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.2,
+          0,
+          0
+        ],
+        "alpha": 0.42
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--overlay-backdrop",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(20% 0 0 / 0.42)",
+          "oklch(0% 0 0 / 0.62)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(20% 0 0 / 0.42), oklch(0% 0 0 / 0.62))"
+      }
+    }
+  },
+  "scroll": {
+    "track": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.95,
+          0.008,
+          90
+        ],
+        "alpha": 0.6
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--scroll-track",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(95% 0.008 90 / 0.6)",
+          "oklch(20% 0.008 60 / 0.6)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(95% 0.008 90 / 0.6), oklch(20% 0.008 60 / 0.6))"
+      }
+    },
+    "thumb": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.8,
+          0.012,
+          88
+        ],
+        "alpha": 0.8
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--scroll-thumb",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(80% 0.012 88 / 0.8)",
+          "oklch(40% 0.010 60 / 0.8)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(80% 0.012 88 / 0.8), oklch(40% 0.010 60 / 0.8))"
+      }
+    },
+    "thumbHover": {
+      "$value": {
+        "colorSpace": "oklch",
+        "components": [
+          0.58,
+          0.008,
+          90
+        ]
+      },
+      "$type": "color",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--scroll-thumb-hover",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.lightDark": [
+          "oklch(58% 0.008 90)",
+          "oklch(56% 0.012 70)"
+        ],
+        "me.krasnoperov.blog.cssValue": "light-dark(oklch(58% 0.008 90), oklch(56% 0.012 70))"
+      }
+    }
+  },
+  "surface": {
+    "page": {
+      "$value": "{paper.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--surface-page",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper)"
+      }
+    },
+    "muted": {
+      "$value": "{paper.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--surface-muted",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+      }
+    },
+    "glass": {
+      "$value": "{paper.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--surface-glass",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper)"
+      }
+    },
+    "glassStrong": {
+      "$value": "{paper.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--surface-glass-strong",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+      }
+    },
+    "codeBg": {
+      "$value": "{code.bg}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--surface-code-bg",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--code-bg)"
+      }
+    }
+  },
+  "text": {
+    "default": {
+      "$value": "{ink.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--text-default",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink)"
+      }
+    },
+    "muted": {
+      "$value": "{ink.soft}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--text-muted",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink-soft)"
+      }
+    },
+    "subtle": {
+      "$value": "{ink.quiet}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--text-subtle",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink-quiet)"
+      }
+    },
+    "link": {
+      "$value": "{accent.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--text-link",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent)"
+      }
+    },
+    "onBrand": {
+      "strong": {
+        "$value": "{ink.default}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--text-on-brand-strong",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--ink)"
+        }
+      },
+      "muted": {
+        "$value": "{ink.soft}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--text-on-brand-muted",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--ink-soft)"
+        }
+      },
+      "subtle": {
+        "$value": "{ink.quiet}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--text-on-brand-subtle",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--ink-quiet)"
+        }
+      }
+    }
+  },
+  "border": {
+    "subtle": {
+      "$value": "{paper.rule}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--border-subtle",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
+      }
+    },
+    "strong": {
+      "$value": "{ink.faint}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--border-strong",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink-faint)"
+      }
+    },
+    "glass": {
+      "$value": "{paper.rule}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--border-glass",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
+      }
+    }
+  },
+  "focus": {
+    "ring": {
+      "$value": "{accent.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--focus-ring",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent)"
+      }
+    }
+  },
+  "gradient": {
+    "brandStart": {
+      "$value": "{accent.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--brand-gradient-start",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent)"
+      }
+    },
+    "brandEnd": {
+      "$value": "{accent.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--brand-gradient-end",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent-deep)"
+      }
+    },
+    "brand": {
+      "$value": "{paper.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--gradient-brand",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+      }
+    }
+  },
+  "button": {
+    "primary": {
+      "bg": {
+        "$value": "{accent.default}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-primary-bg",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--accent)"
+        }
+      },
+      "bgHover": {
+        "$value": "{accent.deep}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-primary-bg-hover",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--accent-deep)"
+        }
+      },
+      "text": {
+        "$value": "{paper.default}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-primary-text",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--paper)"
+        }
+      },
+      "border": {
+        "$value": "{rule.accent}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-primary-border",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--rule-accent)"
+        }
+      },
+      "shadow": {
+        "$value": "none",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-primary-shadow",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "none"
+        }
+      },
+      "shadowHover": {
+        "$value": "none",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-primary-shadow-hover",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "none"
+        }
+      }
+    },
+    "ghost": {
+      "bgHover": {
+        "$value": "{paper.deep}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-ghost-bg-hover",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+        }
+      },
+      "border": {
+        "$value": "{paper.rule}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-ghost-border",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
+        }
+      },
+      "text": {
+        "$value": "{ink.default}",
+        "$extensions": {
+          "me.krasnoperov.blog.cssVar": "--button-ghost-text",
+          "me.krasnoperov.blog.sourceFile": "theme.css",
+          "me.krasnoperov.blog.cssValue": "var(--ink)"
+        }
+      }
+    }
+  },
+  "status": {
+    "infoText": {
+      "$value": "{color.infoText}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--status-info-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--color-info-text)"
+      }
+    }
+  },
+  "shadow": {
+    "header": {
+      "$value": "none",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--shadow-header",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "none"
+      }
+    },
+    "elevated": {
+      "$value": "none",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--shadow-elevated",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "none"
+      }
+    }
+  },
+  "diagram": {
+    "frameBorder": {
+      "$value": "{paper.rule}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-frame-border",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
+      }
+    },
+    "nodeFill": {
+      "$value": "{paper.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-node-fill",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+      }
+    },
+    "nodeStroke": {
+      "$value": "{accent.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-node-stroke",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--accent)"
+      }
+    },
+    "clusterFill": {
+      "$value": "{paper.deep}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-cluster-fill",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
+      }
+    },
+    "clusterStroke": {
+      "$value": "{ink.faint}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-cluster-stroke",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink-faint)"
+      }
+    },
+    "line": {
+      "$value": "{ink.soft}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-line",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink-soft)"
+      }
+    },
+    "text": {
+      "$value": "{ink.default}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--diagram-text",
+        "me.krasnoperov.blog.sourceFile": "theme.css",
+        "me.krasnoperov.blog.cssValue": "var(--ink)"
+      }
+    }
+  }
+}
