@@ -37,3 +37,6 @@ test-results/
 audit-out/
 audit-shots/
 playwright-report/
+
+# Local Claude Code project state (scheduled-task locks, transcripts)
+.claude/
