@@ -43,11 +43,15 @@
       }
     },
     "metaSize": {
-      "$value": "{fontSize.t.sm}",
+      "$value": {
+        "value": 1,
+        "unit": "rem"
+      },
+      "$type": "dimension",
       "$extensions": {
         "me.krasnoperov.blog.cssVar": "--blog-post-meta-size",
         "me.krasnoperov.blog.sourceFile": "tokens.css",
-        "me.krasnoperov.blog.cssValue": "var(--t-sm)"
+        "me.krasnoperov.blog.cssValue": "1rem"
       }
     }
   },
@@ -85,11 +89,15 @@
   },
   "quietLabel": {
     "size": {
-      "$value": "{fontSize.t.sm}",
+      "$value": {
+        "value": 1,
+        "unit": "rem"
+      },
+      "$type": "dimension",
       "$extensions": {
         "me.krasnoperov.blog.cssVar": "--blog-quiet-label-size",
         "me.krasnoperov.blog.sourceFile": "tokens.css",
-        "me.krasnoperov.blog.cssValue": "var(--t-sm)"
+        "me.krasnoperov.blog.cssValue": "1rem"
       }
     },
     "tracking": {

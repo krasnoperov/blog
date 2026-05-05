@@ -14,15 +14,15 @@
   position: sticky;
   top: var(--bar-top);
   z-index: 19;
-  height: var(--bar-page);
+  min-height: var(--bar-page);
   display: flex;
   align-items: center;
   gap: var(--s-4);
-  padding: 0 var(--s-8);
+  padding: var(--s-2) var(--s-8);
   border-bottom: 1px solid var(--paper-rule);
   background: var(--paper);
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
+  font-size: 1rem;
   color: var(--ink-soft);
   overflow: hidden;
   white-space: nowrap;
@@ -35,9 +35,6 @@
 }
 
 .pageHeadLabel {
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
   color: var(--ink-quiet);
 }
 
@@ -64,13 +61,12 @@
   align-items: baseline;
   gap: 0;
   font-family: var(--font-mono);
-  font-size: var(--t-md);
+  font-size: 1rem;
   font-weight: 500;
   color: var(--ink);
   letter-spacing: var(--track-tight);
 }
 
-.brandSigil,
 .brandSuffix {
   color: var(--accent);
 }
@@ -87,9 +83,8 @@
 
 .navLink {
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
-  letter-spacing: var(--track-quiet);
-  text-transform: lowercase;
+  font-size: 1rem;
+  letter-spacing: 0;
   color: var(--ink-soft);
   transition: color var(--d-quick) var(--ease);
 }
@@ -100,9 +95,7 @@
 
 .statusPill {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 

@@ -24,7 +24,7 @@
 
 .badge {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
+  font-size: 0.875rem;
   letter-spacing: var(--track-quiet);
   text-transform: uppercase;
   color: var(--accent);
@@ -32,15 +32,13 @@
 
 .label {
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
+  font-size: 1rem;
   color: var(--ink);
 }
 
 .hint {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 0.875rem;
   color: var(--ink-quiet);
   text-align: right;
 }
@@ -80,14 +78,14 @@
 .diagramSvg :global(.edgeLabel) {
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: var(--t-md);
+  font-size: 1rem;
   font-weight: 500;
   line-height: var(--leading-snug);
 }
 
 .diagramSvg :global(.edgeLabel) {
   background: var(--paper);
-  font-size: var(--t-meta);
+  font-size: 0.875rem;
   color: var(--ink-soft);
 }
 
@@ -106,7 +104,7 @@
 .diagramSvg :global(.cluster text) {
   fill: var(--ink);
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
+  font-size: 0.9375rem;
   font-weight: 600;
   letter-spacing: var(--track-quiet);
   text-transform: uppercase;
@@ -146,17 +144,15 @@
   place-items: center;
   min-height: 12rem;
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
 .fallback {
   margin: 0;
   font-family: var(--font-mono);
-  font-size: var(--t-body);
-  line-height: var(--leading-mono);
+  font-size: 1rem;
+  line-height: var(--leading-relaxed);
   color: var(--ink);
   white-space: pre-wrap;
 }

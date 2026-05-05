@@ -22,7 +22,6 @@ export function BlogShell({ children, statusText, pageHead }: BlogShellProps) {
         className={styles.header}
         leftSlot={(
           <Link to="/" className={styles.brand}>
-            <span className={styles.brandSigil}>$</span>
             <span className={styles.brandName}>krasnoperov</span>
             <span className={styles.brandSuffix}>.me</span>
           </Link>
