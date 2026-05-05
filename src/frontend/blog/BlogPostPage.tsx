@@ -12,9 +12,6 @@ interface BlogPostPageProps {
   post: BlogPost;
 }
 
-interface CodeProps extends HTMLAttributes<HTMLElement> {
-  inline?: boolean;
-}
 
 function extractText(node: ReactNode): string {
   if (typeof node === 'string' || typeof node === 'number') {
@@ -88,33 +85,43 @@ const markdownComponents: Components = {
       </a>
     );
   },
-  code({ inline, className, children, ...props }: CodeProps) {
+  // react-markdown v10 dropped the `inline` prop. The contract is now: a
+  // language-* className identifies a fenced block, anything else is inline.
+  code({ className, children, ...props }: HTMLAttributes<HTMLElement>) {
     const languageMatch = /language-([\w-]+)/.exec(className ?? '');
-    const code = String(children).replace(/\n$/, '');
 
-    if (!inline && languageMatch?.[1] === 'mermaid') {
-      return <MermaidBlock chart={code} />;
-    }
-
-    if (!inline) {
-      const language = languageMatch?.[1];
+    if (!languageMatch) {
       return (
-        <div className={markdownStyles.codeBlock}>
-          {language && <span className={markdownStyles.codeLabel}>{language}</span>}
-          <pre className={markdownStyles.codeFrame}>
-            <code className={className} {...props}>
-              {code}
-            </code>
-          </pre>
-        </div>
+        <code className={markdownStyles.inlineCode} {...props}>
+          {children}
+        </code>
       );
     }
 
+    const language = languageMatch[1];
+    const code = String(children).replace(/\n$/, '');
+
+    if (language === 'mermaid') {
+      return <MermaidBlock chart={code} />;
+    }
+
     return (
-      <code className={markdownStyles.inlineCode} {...props}>
-        {children}
-      </code>
+      <div className={markdownStyles.codeBlock}>
+        <span className={markdownStyles.codeLabel}>{language}</span>
+        <pre className={markdownStyles.codeFrame}>
+          <code className={className} {...props}>
+            {code}
+          </code>
+        </pre>
+      </div>
     );
+  },
+  // The block-code renderer above emits its own <pre>. react-markdown still
+  // wraps the <code> element in <pre> by default for fenced blocks, which
+  // would nest <pre><div><pre>...</pre></div></pre>. Pass-through to drop
+  // the outer wrapper.
+  pre({ children }) {
+    return <>{children}</>;
   },
 };
 
