@@ -71,7 +71,7 @@
   gap: var(--s-4);
   margin-bottom: var(--s-5);
   padding-bottom: var(--s-3);
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--paper-rule);
 }
 
 .sectionEyebrow {

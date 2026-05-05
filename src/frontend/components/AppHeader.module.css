@@ -4,7 +4,6 @@
   z-index: 100;
   background: var(--paper);
   border-bottom: 1px solid var(--paper-rule);
-  will-change: transform;
 }
 
 .header {

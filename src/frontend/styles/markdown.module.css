@@ -90,18 +90,43 @@
 }
 
 .inlineCode {
-  font-family: var(--font-mono);
-  font-size: 0.92em;
+  background: var(--paper-deep);
+  border: 1px solid var(--paper-rule);
+  border-radius: var(--radius-soft);
   color: var(--accent-deep);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.08em 0.32em;
+}
+
+.codeBlock {
+  margin: 0 0 var(--s-4) 0;
+}
+
+.codeLabel {
+  display: block;
+  padding: var(--s-1) var(--blog-code-block-padding-x);
+  border-top: 1px solid var(--paper-rule);
+  background: var(--paper-deep);
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: var(--track-quiet);
+  text-transform: uppercase;
+  color: var(--ink-quiet);
 }
 
 .codeFrame {
   background: var(--code-bg);
   border-top: 1px solid var(--paper-rule);
   border-bottom: 1px solid var(--paper-rule);
-  margin: 0 0 var(--s-4) 0;
+  margin: 0;
   overflow-x: auto;
   padding: var(--blog-code-block-padding-y) var(--blog-code-block-padding-x);
+}
+
+.codeLabel + .codeFrame {
+  border-top: none;
 }
 
 .codeFrame code {
