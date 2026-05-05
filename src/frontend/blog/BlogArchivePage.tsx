@@ -14,7 +14,7 @@ function formatPublishedDate(value: string) {
 
 export default function BlogArchivePage() {
   return (
-    <BlogShell>
+    <BlogShell pageHead={[{ value: 'archive' }, { value: `${BLOG_POSTS.length} posts` }]}>
       <section className={styles.hero}>
         <span className={styles.eyebrow}>Archive · {BLOG_POSTS.length} posts</span>
         <h1 className={styles.title}>Software factory writing, one post at a time.</h1>

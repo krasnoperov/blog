@@ -3,12 +3,18 @@ import { AppHeader } from '../components/AppHeader';
 import { Link } from '../components/Link';
 import styles from './BlogShell.module.css';
 
+export interface PageHeadSegment {
+  label?: string;
+  value: string;
+}
+
 interface BlogShellProps {
   children: ReactNode;
   statusText?: string;
+  pageHead?: PageHeadSegment[];
 }
 
-export function BlogShell({ children, statusText }: BlogShellProps) {
+export function BlogShell({ children, statusText, pageHead }: BlogShellProps) {
   return (
     <div className={styles.page}>
       <AppHeader
@@ -28,6 +34,18 @@ export function BlogShell({ children, statusText }: BlogShellProps) {
         )}
         rightSlot={statusText ? <span className={styles.statusPill}>{statusText}</span> : null}
       />
+
+      {pageHead && pageHead.length > 0 && (
+        <div className={styles.pageHead}>
+          {pageHead.map((segment, index) => (
+            <span key={index}>
+              {index > 0 && <span className={styles.pageHeadSep}> · </span>}
+              {segment.label && <span className={styles.pageHeadLabel}>{segment.label} </span>}
+              <span className={styles.pageHeadValue}>{segment.value}</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       <main className={styles.main}>{children}</main>
     </div>

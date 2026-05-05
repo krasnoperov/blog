@@ -127,7 +127,14 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
   const relatedPosts = BLOG_POSTS.filter((candidate) => candidate.slug !== post.slug).slice(0, 2);
 
   return (
-    <BlogShell>
+    <BlogShell
+      pageHead={[
+        { value: 'post' },
+        { value: formatPublishedDate(post.publishedAt) },
+        { value: post.readingTime },
+        { value: post.title },
+      ]}
+    >
       <section className={styles.intro}>
         <Link to="/posts" className={styles.backLink}>← back to archive</Link>
         <div className={styles.meta}>
