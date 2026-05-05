@@ -149,11 +149,14 @@
   color: var(--ink-quiet);
   display: inline-flex;
   align-items: center;
-  margin-right: var(--s-2);
+  position: absolute;
+  right: 100%;
+  top: 0;
+  bottom: 0;
+  padding-right: var(--s-2);
   opacity: 0;
   text-decoration: none;
   transition: opacity var(--d-quick) var(--ease);
-  vertical-align: middle;
 }
 
 .markdown h1:hover .headingAnchor,
