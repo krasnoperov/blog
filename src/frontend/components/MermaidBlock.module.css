@@ -1,58 +1,47 @@
 .figure {
-  margin: 2.2rem 0;
-  border-radius: 1.65rem;
-  border: 1px solid var(--diagram-frame-border);
-  background:
-    linear-gradient(180deg, rgba(255, 251, 246, 0.96), rgba(245, 237, 225, 0.94)),
-    radial-gradient(circle at top left, rgba(29, 91, 82, 0.11), transparent 52%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.76),
-    0 22px 44px rgba(58, 44, 23, 0.1);
+  margin: var(--s-7) 0;
+  border-top: 1px solid var(--paper-rule);
+  border-bottom: 1px solid var(--paper-rule);
+  background: var(--paper-deep);
   overflow: hidden;
 }
 
 .header {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 1rem 0.85rem;
-  border-bottom: 1px solid rgba(46, 54, 43, 0.08);
-  background: linear-gradient(180deg, rgba(255, 252, 247, 0.94), rgba(248, 243, 234, 0.9));
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--paper-rule);
 }
 
 .headerMeta {
   display: inline-flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: baseline;
+  gap: var(--s-3);
   min-width: 0;
 }
 
 .badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.35rem 0.62rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, rgba(29, 91, 82, 0.12), rgba(29, 91, 82, 0.2));
-  color: #184940;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  letter-spacing: var(--track-quiet);
   text-transform: uppercase;
+  color: var(--accent);
 }
 
 .label {
-  color: #223029;
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: var(--font-mono);
+  font-size: var(--t-meta);
+  color: var(--ink);
 }
 
 .hint {
-  color: #6b705f;
-  font-size: 0.78rem;
-  line-height: 1.4;
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  letter-spacing: var(--track-quiet);
+  text-transform: uppercase;
+  color: var(--ink-quiet);
   text-align: right;
 }
 
@@ -60,26 +49,10 @@
   position: relative;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: clamp(1rem, 3vw, 1.6rem);
-  background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.84), transparent 34%),
-    linear-gradient(180deg, rgba(246, 240, 230, 0.76), rgba(242, 235, 224, 0.9));
+  padding: var(--s-6);
+  background: var(--paper-deep);
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y pinch-zoom;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(122, 99, 69, 0.48) rgba(255, 255, 255, 0.4);
-}
-
-.canvas::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(63, 83, 75, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(63, 83, 75, 0.06) 1px, transparent 1px);
-  background-size: 26px 26px;
-  mask-image: radial-gradient(circle at center, black 58%, transparent 100%);
-  pointer-events: none;
 }
 
 .diagramSvg {
@@ -97,54 +70,52 @@
 .diagramSvg :global(.node circle),
 .diagramSvg :global(.node ellipse),
 .diagramSvg :global(.node path) {
-  fill: var(--diagram-node-fill);
-  stroke: var(--diagram-node-stroke);
-  stroke-width: 1.6px;
-  filter: drop-shadow(0 10px 18px rgba(41, 59, 51, 0.12));
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.2px;
 }
 
 .diagramSvg :global(.label),
 .diagramSvg :global(.nodeLabel),
 .diagramSvg :global(.edgeLabel) {
-  color: var(--diagram-text);
-  font-weight: 600;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--t-meta);
 }
 
 .diagramSvg :global(.edgeLabel) {
-  background: rgba(255, 250, 243, 0.96);
-  box-shadow: 0 6px 18px rgba(67, 52, 28, 0.1);
+  background: var(--paper);
 }
 
 .diagramSvg :global(.edgeLabel rect) {
-  fill: rgba(255, 250, 243, 0.96);
-  stroke: rgba(46, 54, 43, 0.1);
-  rx: 10px;
-  ry: 10px;
+  fill: var(--paper);
+  stroke: var(--paper-rule);
 }
 
 .diagramSvg :global(.cluster rect) {
-  fill: var(--diagram-cluster-fill);
-  stroke: var(--diagram-cluster-stroke);
-  stroke-width: 1.3px;
-  rx: 18px;
-  ry: 18px;
+  fill: transparent;
+  stroke: var(--ink-faint);
+  stroke-width: 1px;
 }
 
 .diagramSvg :global(.cluster-label text),
 .diagramSvg :global(.cluster text) {
-  fill: #264238;
-  font-weight: 800;
+  fill: var(--ink-quiet);
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  letter-spacing: var(--track-quiet);
+  text-transform: uppercase;
 }
 
 .diagramSvg :global(.edgePath path),
 .diagramSvg :global(.flowchart-link) {
-  stroke: var(--diagram-line);
-  stroke-width: 2.4px;
+  stroke: var(--ink-soft);
+  stroke-width: 1.2px;
 }
 
 .diagramSvg :global(marker path) {
-  fill: var(--diagram-line);
-  stroke: var(--diagram-line);
+  fill: var(--ink-soft);
+  stroke: var(--ink-soft);
 }
 
 .diagramSvg :global(.actor),
@@ -152,11 +123,11 @@
 .diagramSvg :global(.messageLine1),
 .diagramSvg :global(.loopLine),
 .diagramSvg :global(.loopText) {
-  stroke: var(--diagram-line);
+  stroke: var(--ink-soft);
 }
 
 .diagramSvg :global(text) {
-  fill: var(--diagram-text);
+  fill: var(--ink);
 }
 
 .loadingState,
@@ -168,34 +139,32 @@
 .loadingState {
   display: grid;
   place-items: center;
-  min-height: 14rem;
-  color: #526056;
-  font-weight: 700;
-  letter-spacing: 0.01em;
+  min-height: 12rem;
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  letter-spacing: var(--track-quiet);
+  text-transform: uppercase;
+  color: var(--ink-quiet);
 }
 
 .fallback {
   margin: 0;
-  color: #2f3a31;
+  font-family: var(--font-mono);
+  font-size: var(--t-body);
+  line-height: var(--leading-mono);
+  color: var(--ink);
   white-space: pre-wrap;
-}
-
-.fallback code {
-  font-family: 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
-  font-size: 0.92rem;
-  line-height: 1.7;
 }
 
 @media (max-width: 700px) {
   .figure {
-    margin: 1.8rem 0;
-    border-radius: 1.3rem;
+    margin: var(--s-6) 0;
   }
 
   .header {
     flex-direction: column;
     align-items: flex-start;
-    padding: 0.85rem 0.9rem 0.8rem;
+    padding: var(--s-3);
   }
 
   .hint {
@@ -203,10 +172,6 @@
   }
 
   .canvas {
-    padding: 0.85rem;
-  }
-
-  .canvas::before {
-    background-size: 20px 20px;
+    padding: var(--s-4);
   }
 }
