@@ -5,7 +5,7 @@ test.describe('blog navigation', () => {
     await page.goto('/');
 
     await expect(page.getByRole('heading', { name: 'Notes from building a software factory.' })).toBeVisible();
-    await page.getByRole('link', { name: 'Browse the archive' }).click();
+    await page.getByRole('link', { name: 'browse archive' }).click();
 
     await expect(page).toHaveURL(/\/posts$/);
     await expect(page.getByRole('heading', { name: 'Software factory writing, one post at a time.' })).toBeVisible();
