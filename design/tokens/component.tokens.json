@@ -33,24 +33,6 @@
       }
     }
   },
-  "post": {
-    "rowGap": {
-      "$value": "{space.s.7}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--blog-post-row-gap",
-        "me.krasnoperov.blog.sourceFile": "tokens.css",
-        "me.krasnoperov.blog.cssValue": "var(--s-7)"
-      }
-    },
-    "metaSize": {
-      "$value": "{fontSize.t.sm}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--blog-post-meta-size",
-        "me.krasnoperov.blog.sourceFile": "tokens.css",
-        "me.krasnoperov.blog.cssValue": "var(--t-sm)"
-      }
-    }
-  },
   "codeBlock": {
     "paddingX": {
       "$value": "{space.s.4}",
@@ -80,24 +62,6 @@
         "me.krasnoperov.blog.cssVar": "--blog-code-inline-padding",
         "me.krasnoperov.blog.sourceFile": "tokens.css",
         "me.krasnoperov.blog.cssValue": "2px"
-      }
-    }
-  },
-  "quietLabel": {
-    "size": {
-      "$value": "{fontSize.t.sm}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--blog-quiet-label-size",
-        "me.krasnoperov.blog.sourceFile": "tokens.css",
-        "me.krasnoperov.blog.cssValue": "var(--t-sm)"
-      }
-    },
-    "tracking": {
-      "$value": "{tracking.quiet}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--blog-quiet-label-tracking",
-        "me.krasnoperov.blog.sourceFile": "tokens.css",
-        "me.krasnoperov.blog.cssValue": "var(--track-quiet)"
       }
     }
   }

@@ -11,9 +11,7 @@
   gap: var(--s-2);
   width: max-content;
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
   transition: color var(--d-quick) var(--ease);
 }
@@ -27,9 +25,7 @@
   flex-wrap: wrap;
   gap: var(--s-4);
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
@@ -48,7 +44,7 @@
   margin: var(--s-4) 0 0;
   max-width: 44rem;
   font-family: var(--font-prose);
-  font-size: var(--t-md);
+  font-size: 1.125rem;
   line-height: var(--leading-relaxed);
   color: var(--ink-soft);
 }
@@ -80,15 +76,13 @@
 
 .footEyebrow {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
 .tags {
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
+  font-size: 1rem;
   color: var(--ink-soft);
 }
 
@@ -118,15 +112,15 @@
 }
 
 .relatedTitle {
-  font-family: var(--font-mono);
-  font-size: var(--t-md);
-  font-weight: 500;
+  font-family: var(--font-prose);
+  font-size: 1.125rem;
+  font-weight: 600;
   color: var(--ink);
 }
 
 .relatedSummary {
   font-family: var(--font-prose);
-  font-size: var(--t-meta);
+  font-size: 1rem;
   line-height: var(--leading-normal);
   color: var(--ink-soft);
 }

@@ -7,9 +7,7 @@
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
@@ -27,7 +25,7 @@
 .subtitle {
   margin: var(--s-3) 0 0;
   font-family: var(--font-prose);
-  font-size: var(--t-md);
+  font-size: 1.125rem;
   line-height: var(--leading-relaxed);
   color: var(--ink-soft);
 }
@@ -38,9 +36,7 @@
   gap: var(--s-5);
   margin-top: var(--s-6);
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
-  letter-spacing: var(--track-quiet);
-  text-transform: lowercase;
+  font-size: 1rem;
 }
 
 .actionPrimary {
@@ -76,25 +72,21 @@
 
 .sectionEyebrow {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
 .sectionTitle {
-  font-family: var(--font-mono);
-  font-size: var(--t-md);
-  font-weight: 500;
+  font-family: var(--font-prose);
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--ink);
   margin: 0;
 }
 
 .sectionLink {
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
-  letter-spacing: var(--track-quiet);
-  text-transform: lowercase;
+  font-size: 1rem;
   color: var(--ink-soft);
   border-bottom: 1px solid var(--paper-rule);
   transition: color var(--d-quick) var(--ease), border-color var(--d-quick) var(--ease);
@@ -127,18 +119,17 @@
   flex-wrap: wrap;
   gap: var(--s-4);
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
 .postCardTitle {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--t-lg);
-  font-weight: 500;
+  font-family: var(--font-prose);
+  font-size: 1.375rem;
+  font-weight: 600;
   letter-spacing: var(--track-tight);
+  line-height: var(--leading-tight);
   color: var(--ink);
   transition: color var(--d-quick) var(--ease);
 }
@@ -146,14 +137,14 @@
 .postCardSummary {
   margin: 0;
   font-family: var(--font-prose);
-  font-size: var(--t-meta);
-  line-height: var(--leading-normal);
+  font-size: 1rem;
+  line-height: var(--leading-relaxed);
   color: var(--ink-soft);
 }
 
 .postTags {
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
+  font-size: 1rem;
   color: var(--ink-quiet);
 }
 
@@ -173,7 +164,7 @@
   max-width: var(--col-text);
   margin: var(--s-9) auto 0;
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
+  font-size: 1rem;
   color: var(--ink-quiet);
   line-height: var(--leading-relaxed);
 }

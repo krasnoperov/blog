@@ -58,10 +58,10 @@ function createMermaidConfig(isCompact: boolean, isDark: boolean) {
     htmlLabels: true,
     fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
     // Diagrams sit inside a 64-ch reading column, so they need labels that
-    // hold their weight at body type size (17 px Inter). Mermaid's defaults
-    // (12-14 px) read as captions; bump to 15/16 so the diagram is part of
-    // the read, not a footnote.
-    fontSize: isCompact ? 15 : 16,
+    // hold their weight at body type size. Mermaid's defaults (12-14 px)
+    // read as captions; lock to 16 px on every viewport so diagram text
+    // stays part of the read, not a footnote.
+    fontSize: 16,
     useMaxWidth: !isCompact,
     markdownAutoWrap: true,
     themeVariables: {

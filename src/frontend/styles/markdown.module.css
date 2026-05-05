@@ -6,7 +6,7 @@
 .markdown {
   color: var(--ink);
   font-family: var(--font-prose);
-  font-size: var(--t-prose);
+  font-size: 1.0625rem;
   line-height: var(--leading-relaxed);
   max-width: var(--col-text);
 }
@@ -93,7 +93,7 @@
   border-radius: var(--radius-soft);
   color: var(--accent-deep);
   font-family: var(--font-mono);
-  font-size: 0.88em;
+  font-size: 0.95em;
   padding: 0.08em 0.32em;
 }
 
@@ -103,14 +103,12 @@
 
 .codeLabel {
   display: block;
-  padding: var(--s-1) var(--blog-code-block-padding-x);
+  padding: var(--s-2) var(--blog-code-block-padding-x);
   border-top: 1px solid var(--paper-rule);
   background: var(--paper-deep);
   font-family: var(--font-mono);
-  font-size: var(--t-sm);
+  font-size: 1rem;
   font-weight: 500;
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
   color: var(--ink-quiet);
 }
 
@@ -132,8 +130,8 @@
   padding: 0;
   color: var(--code-text);
   font-family: var(--font-mono);
-  font-size: var(--t-body);
-  line-height: var(--leading-mono);
+  font-size: 1rem;
+  line-height: var(--leading-relaxed);
 }
 
 .markdown a {
@@ -206,10 +204,8 @@
 }
 
 .markdown th {
-  color: var(--ink-quiet);
-  font-family: var(--font-mono);
-  font-size: var(--t-sm);
-  font-weight: 500;
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  color: var(--ink);
+  font-family: var(--font-prose);
+  font-size: 1rem;
+  font-weight: 600;
 }
