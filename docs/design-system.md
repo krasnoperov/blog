@@ -69,7 +69,7 @@ No filled backgrounds at rest. No shadows. No rounded corners except `--radius-s
 The DTCG snapshot under `design/tokens/` is the authoritative listing. The narrative groupings are:
 
 - **Foundation** (`tokens.css`): paper / ink / accent palette, type scale, spacing, chrome heights, geometry, motion, layout columns, `--blog-*` component scale.
-- **Semantic** (`theme.css`): code, status colors, overlay, scroll, plus legacy compat aliases that will be removed during page migration.
-- **Resets + base** (`global.css`): box-sizing, body font, focus ring, scrollbars.
+- **Semantic** (`theme.css`): code, status colors, overlay, scroll, plus a legacy compat alias block.
+- **Resets + base** (`global.css`): box-sizing and body styles.
 
-The legacy compat block at the bottom of `theme.css` is temporary scaffolding so the existing pages keep rendering while migration runs. See [`design/PRIMITIVE_AUDIT.md`](../design/PRIMITIVE_AUDIT.md) for the per-page migration order.
+The legacy compat block at the bottom of `theme.css` is scaffolding so the existing public-route CSS keeps resolving while pages opt into the new tokens incrementally.

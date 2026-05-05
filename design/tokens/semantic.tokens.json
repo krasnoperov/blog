@@ -328,30 +328,6 @@
         "me.krasnoperov.blog.sourceFile": "theme.css",
         "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
       }
-    },
-    "glass": {
-      "$value": "{paper.default}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--surface-glass",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper)"
-      }
-    },
-    "glassStrong": {
-      "$value": "{paper.deep}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--surface-glass-strong",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
-      }
-    },
-    "codeBg": {
-      "$value": "{code.bg}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--surface-code-bg",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--code-bg)"
-      }
     }
   },
   "text": {
@@ -386,32 +362,6 @@
         "me.krasnoperov.blog.sourceFile": "theme.css",
         "me.krasnoperov.blog.cssValue": "var(--accent)"
       }
-    },
-    "onBrand": {
-      "strong": {
-        "$value": "{ink.default}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--text-on-brand-strong",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--ink)"
-        }
-      },
-      "muted": {
-        "$value": "{ink.soft}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--text-on-brand-muted",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--ink-soft)"
-        }
-      },
-      "subtle": {
-        "$value": "{ink.quiet}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--text-on-brand-subtle",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--ink-quiet)"
-        }
-      }
     }
   },
   "border": {
@@ -430,14 +380,6 @@
         "me.krasnoperov.blog.sourceFile": "theme.css",
         "me.krasnoperov.blog.cssValue": "var(--ink-faint)"
       }
-    },
-    "glass": {
-      "$value": "{paper.rule}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--border-glass",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
-      }
     }
   },
   "focus": {
@@ -450,193 +392,67 @@
       }
     }
   },
-  "gradient": {
-    "brandStart": {
-      "$value": "{accent.default}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--brand-gradient-start",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--accent)"
-      }
-    },
-    "brandEnd": {
-      "$value": "{accent.deep}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--brand-gradient-end",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--accent-deep)"
-      }
-    },
-    "brand": {
-      "$value": "{paper.deep}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--gradient-brand",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
-      }
-    }
-  },
   "button": {
     "primary": {
-      "bg": {
-        "$value": "{accent.default}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--button-primary-bg",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--accent)"
-        }
-      },
-      "bgHover": {
-        "$value": "{accent.deep}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--button-primary-bg-hover",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--accent-deep)"
-        }
-      },
       "text": {
-        "$value": "{paper.default}",
+        "$value": "#f7f2e9",
         "$extensions": {
           "me.krasnoperov.blog.cssVar": "--button-primary-text",
           "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--paper)"
-        }
-      },
-      "border": {
-        "$value": "{rule.accent}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--button-primary-border",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--rule-accent)"
+          "me.krasnoperov.blog.cssValue": "#f7f2e9"
         }
       },
       "shadow": {
-        "$value": "none",
+        "$value": "0 14px 28px rgba(29, 91, 82, 0.2)",
         "$extensions": {
           "me.krasnoperov.blog.cssVar": "--button-primary-shadow",
           "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "none"
+          "me.krasnoperov.blog.cssValue": "0 14px 28px rgba(29, 91, 82, 0.2)"
         }
       },
       "shadowHover": {
-        "$value": "none",
+        "$value": "0 18px 34px rgba(29, 91, 82, 0.24)",
         "$extensions": {
           "me.krasnoperov.blog.cssVar": "--button-primary-shadow-hover",
           "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "none"
+          "me.krasnoperov.blog.cssValue": "0 18px 34px rgba(29, 91, 82, 0.24)"
         }
       }
     },
     "ghost": {
-      "bgHover": {
-        "$value": "{paper.deep}",
-        "$extensions": {
-          "me.krasnoperov.blog.cssVar": "--button-ghost-bg-hover",
-          "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
-        }
-      },
       "border": {
-        "$value": "{paper.rule}",
+        "$value": "rgba(46, 54, 43, 0.12)",
         "$extensions": {
           "me.krasnoperov.blog.cssVar": "--button-ghost-border",
           "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
+          "me.krasnoperov.blog.cssValue": "rgba(46, 54, 43, 0.12)"
         }
       },
       "text": {
-        "$value": "{ink.default}",
+        "$value": "#253128",
         "$extensions": {
           "me.krasnoperov.blog.cssVar": "--button-ghost-text",
           "me.krasnoperov.blog.sourceFile": "theme.css",
-          "me.krasnoperov.blog.cssValue": "var(--ink)"
+          "me.krasnoperov.blog.cssValue": "#253128"
         }
-      }
-    }
-  },
-  "status": {
-    "infoText": {
-      "$value": "{color.infoText}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--status-info-text",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--color-info-text)"
       }
     }
   },
   "shadow": {
     "header": {
-      "$value": "none",
+      "$value": "0 18px 50px rgba(53, 43, 22, 0.08)",
       "$extensions": {
         "me.krasnoperov.blog.cssVar": "--shadow-header",
         "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "none"
+        "me.krasnoperov.blog.cssValue": "0 18px 50px rgba(53, 43, 22, 0.08)"
       }
     },
     "elevated": {
-      "$value": "none",
+      "$value": "0 30px 60px rgba(53, 43, 22, 0.1)",
       "$extensions": {
         "me.krasnoperov.blog.cssVar": "--shadow-elevated",
         "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "none"
-      }
-    }
-  },
-  "diagram": {
-    "frameBorder": {
-      "$value": "{paper.rule}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-frame-border",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper-rule)"
-      }
-    },
-    "nodeFill": {
-      "$value": "{paper.deep}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-node-fill",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
-      }
-    },
-    "nodeStroke": {
-      "$value": "{accent.default}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-node-stroke",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--accent)"
-      }
-    },
-    "clusterFill": {
-      "$value": "{paper.deep}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-cluster-fill",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--paper-deep)"
-      }
-    },
-    "clusterStroke": {
-      "$value": "{ink.faint}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-cluster-stroke",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--ink-faint)"
-      }
-    },
-    "line": {
-      "$value": "{ink.soft}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-line",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--ink-soft)"
-      }
-    },
-    "text": {
-      "$value": "{ink.default}",
-      "$extensions": {
-        "me.krasnoperov.blog.cssVar": "--diagram-text",
-        "me.krasnoperov.blog.sourceFile": "theme.css",
-        "me.krasnoperov.blog.cssValue": "var(--ink)"
+        "me.krasnoperov.blog.cssValue": "0 30px 60px rgba(53, 43, 22, 0.1)"
       }
     }
   }

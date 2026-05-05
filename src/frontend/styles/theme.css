@@ -1,9 +1,10 @@
-/* Blog semantic tokens — code, status colors, overlay, scroll. Layered on
-   top of the paper/ink/accent foundation in tokens.css. All values author
-   in OKLCH inside light-dark() pairs.
+/* New system semantic tokens — code, status colours, overlay, scroll.
+   Layered on top of the paper/ink/accent foundation in tokens.css. All
+   values author in OKLCH inside light-dark() pairs.
 
-   Banned (removed in this rewrite): --shadow-*, --gradient-*, glass surfaces,
-   --button-primary-*, brand-gradient. Hairlines + bands carry the system. */
+   The legacy tokens at the bottom are preserved verbatim from the
+   pre-existing CSS so existing public-route page modules keep rendering
+   identically while pages opt into the new tokens incrementally. */
 
 :root {
   /* ─── Status / data tokens (quiet hue-coded text + tints) ─── */
@@ -55,40 +56,38 @@
   --focus-ring:        var(--accent);
 
   /* ════════════════════════════════════════════════════════════════════
-     Legacy compat aliases. The old design language (glass cards, brand
-     gradient, soft shadows) shipped these names; the page CSS still
-     resolves them. Migration pulls one consumer at a time off the legacy
-     names and onto the foundation above; remove this block when nothing
-     greps for the old names. */
+     Pre-existing tokens — preserved verbatim from the prior theme.css so
+     existing page modules keep rendering identically. New code should
+     consume the foundation/system tokens above. */
 
-  --brand-gradient-start:  var(--accent);
-  --brand-gradient-end:    var(--accent-deep);
-  --gradient-brand:        var(--paper-deep);
-  --text-on-brand-strong:  var(--ink);
-  --text-on-brand-muted:   var(--ink-soft);
-  --text-on-brand-subtle:  var(--ink-quiet);
-  --surface-glass:         var(--paper);
-  --surface-glass-strong:  var(--paper-deep);
-  --surface-code-bg:       var(--code-bg);
-  --border-glass:          var(--paper-rule);
-  --button-primary-bg:     var(--accent);
-  --button-primary-bg-hover: var(--accent-deep);
-  --button-primary-text:   var(--paper);
-  --button-primary-border: var(--rule-accent);
-  --button-primary-shadow:       none;
-  --button-primary-shadow-hover: none;
-  --button-ghost-bg:       transparent;
-  --button-ghost-bg-hover: var(--paper-deep);
-  --button-ghost-border:   var(--paper-rule);
-  --button-ghost-text:     var(--ink);
-  --status-info-text:      var(--color-info-text);
-  --shadow-header:         none;
-  --shadow-elevated:       none;
-  --diagram-frame-border:  var(--paper-rule);
-  --diagram-node-fill:     var(--paper-deep);
-  --diagram-node-stroke:   var(--accent);
-  --diagram-cluster-fill:  var(--paper-deep);
-  --diagram-cluster-stroke: var(--ink-faint);
-  --diagram-line:          var(--ink-soft);
-  --diagram-text:          var(--ink);
+  --brand-gradient-start: #1d5b52;
+  --brand-gradient-end: #49674f;
+  --gradient-brand: linear-gradient(135deg, rgba(251, 248, 242, 0.82), rgba(242, 234, 220, 0.92));
+  --text-on-brand-strong: #1c2820;
+  --text-on-brand-muted: #56645a;
+  --text-on-brand-subtle: #7f816f;
+  --surface-glass: rgba(255, 252, 247, 0.72);
+  --surface-glass-strong: rgba(248, 243, 234, 0.92);
+  --surface-code-bg: #efe4d1;
+  --border-glass: rgba(46, 54, 43, 0.12);
+  --button-primary-bg: linear-gradient(135deg, #1d5b52, #49674f);
+  --button-primary-bg-hover: linear-gradient(135deg, #246e63, #597b5f);
+  --button-primary-text: #f7f2e9;
+  --button-primary-border: 1px solid rgba(29, 91, 82, 0.18);
+  --button-primary-shadow: 0 14px 28px rgba(29, 91, 82, 0.2);
+  --button-primary-shadow-hover: 0 18px 34px rgba(29, 91, 82, 0.24);
+  --button-ghost-bg: rgba(255, 255, 255, 0.6);
+  --button-ghost-bg-hover: rgba(255, 255, 255, 0.82);
+  --button-ghost-border: rgba(46, 54, 43, 0.12);
+  --button-ghost-text: #253128;
+  --status-info-text: #1d5b52;
+  --shadow-header: 0 18px 50px rgba(53, 43, 22, 0.08);
+  --shadow-elevated: 0 30px 60px rgba(53, 43, 22, 0.1);
+  --diagram-frame-border: rgba(46, 54, 43, 0.12);
+  --diagram-node-fill: #f8ede0;
+  --diagram-node-stroke: #24594f;
+  --diagram-cluster-fill: rgba(227, 238, 231, 0.88);
+  --diagram-cluster-stroke: #8ba397;
+  --diagram-line: #4a6559;
+  --diagram-text: #1d2b25;
 }
