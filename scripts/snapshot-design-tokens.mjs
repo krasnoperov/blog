@@ -26,10 +26,10 @@ const NS = 'me.krasnoperov.blog';
 // (typography-adjacent primitives that are not surface/color/semantic).
 const THEME_CORE_PREFIXES = ['--max-width-', '--header-height', '--layout-gap', '--panel-spacing'];
 
-// Per-token guidance for the excluded sidecar.
-const EXCLUSION_RECOMMENDATIONS = {
-  '--button-ghost-bg': 'Legacy compat token (the new design system uses segments, not buttons). Remove from theme.css when AppHeader.module.css migrates to .seg-style chrome.',
-};
+// Per-token guidance for the excluded sidecar. Empty today — the snapshot is
+// 100% DTCG-conformant. Add an entry when a new token is excluded so the
+// sidecar surfaces a concrete graduation path.
+const EXCLUSION_RECOMMENDATIONS = {};
 
 // CSS declaration parser. Captures `--name: value;` inside `:root { ... }`.
 // Handles multi-line values (light-dark(...) often spans 4 lines). Strips
