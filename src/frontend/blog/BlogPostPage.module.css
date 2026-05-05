@@ -6,6 +6,10 @@
 }
 
 .backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  width: max-content;
   font-family: var(--font-mono);
   font-size: var(--t-sm);
   letter-spacing: var(--track-quiet);

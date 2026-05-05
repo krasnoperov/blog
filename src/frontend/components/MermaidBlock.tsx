@@ -57,7 +57,11 @@ function createMermaidConfig(isCompact: boolean, isDark: boolean) {
     look: 'classic',
     htmlLabels: true,
     fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
-    fontSize: isCompact ? 12 : 13,
+    // Diagrams sit inside a 64-ch reading column, so they need labels that
+    // hold their weight at body type size (17 px Inter). Mermaid's defaults
+    // (12-14 px) read as captions; bump to 15/16 so the diagram is part of
+    // the read, not a footnote.
+    fontSize: isCompact ? 15 : 16,
     useMaxWidth: !isCompact,
     markdownAutoWrap: true,
     themeVariables: {
@@ -79,17 +83,17 @@ function createMermaidConfig(isCompact: boolean, isDark: boolean) {
       textColor: p.ink,
       mainBkg: p.paper,
       clusterBkg: 'transparent',
-      clusterBorder: p.inkQuiet,
+      clusterBorder: p.inkSoft,
       edgeLabelBackground: p.paper,
       nodeBorder: p.ink,
       nodeTextColor: p.ink,
     },
     flowchart: {
       curve: 'basis',
-      wrappingWidth: isCompact ? 120 : 180,
-      nodeSpacing: isCompact ? 26 : 34,
-      rankSpacing: isCompact ? 36 : 52,
-      padding: isCompact ? 10 : 16,
+      wrappingWidth: isCompact ? 140 : 220,
+      nodeSpacing: isCompact ? 32 : 48,
+      rankSpacing: isCompact ? 44 : 64,
+      padding: isCompact ? 14 : 22,
     },
   };
 }

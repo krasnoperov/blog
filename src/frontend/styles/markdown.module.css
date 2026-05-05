@@ -18,30 +18,28 @@
 .markdown h5,
 .markdown h6 {
   color: var(--ink);
-  font-family: var(--font-mono);
+  font-family: var(--font-prose);
   font-weight: 600;
   letter-spacing: var(--track-tight);
-  line-height: var(--leading-snug);
+  line-height: var(--leading-tight);
   margin: 0 0 var(--s-3) 0;
   position: relative;
   scroll-margin-top: var(--s-9);
 }
 
-.markdown h1 { font-size: var(--t-display); }
-.markdown h2 { font-size: var(--t-md); }
-.markdown h3 { font-size: var(--t-lg); }
+.markdown h1 { font-size: 1.75rem; }
+.markdown h2 { font-size: 1.4rem; }
+.markdown h3 { font-size: 1.15rem; }
+.markdown h4,
+.markdown h5,
+.markdown h6 { font-size: 1.05rem; }
 
+.markdown h1:not(:first-child),
 .markdown h2:not(:first-child),
 .markdown h3:not(:first-child),
 .markdown h4:not(:first-child),
 .markdown h5:not(:first-child),
 .markdown h6:not(:first-child) {
-  border-top: 1px solid var(--paper-rule);
-  margin-top: var(--s-7);
-  padding-top: var(--s-6);
-}
-
-.markdown h1:not(:first-child) {
   margin-top: var(--s-7);
 }
 
@@ -151,13 +149,13 @@
 
 .headingAnchor {
   color: var(--ink-quiet);
-  display: inline-block;
-  font-family: var(--font-mono);
-  font-size: 0.8em;
+  display: inline-flex;
+  align-items: center;
   margin-right: var(--s-2);
   opacity: 0;
   text-decoration: none;
   transition: opacity var(--d-quick) var(--ease);
+  vertical-align: middle;
 }
 
 .markdown h1:hover .headingAnchor,

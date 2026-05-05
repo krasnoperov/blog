@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { BLOG_POSTS, type BlogPost } from '../../shared/content/blog-posts';
 import { MermaidBlock } from '../components/MermaidBlock';
 import { Link } from '../components/Link';
+import { ArrowLeftIcon, HashIcon } from '../components/icons';
 import markdownStyles from '../styles/markdown.module.css';
 import { BlogShell } from './BlogShell';
 import styles from './BlogPostPage.module.css';
@@ -55,7 +56,7 @@ function renderHeading(level: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') {
             className={markdownStyles.headingAnchor}
             aria-label={`Link to section ${label}`}
           >
-            #
+            <HashIcon size={14} />
           </a>
         ) : null}
         {children}
@@ -153,7 +154,10 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
       ]}
     >
       <section className={styles.intro}>
-        <Link to="/posts" className={styles.backLink}>← back to archive</Link>
+        <Link to="/posts" className={styles.backLink}>
+          <ArrowLeftIcon size={14} />
+          <span>back to archive</span>
+        </Link>
         <div className={styles.meta}>
           <span>{formatPublishedDate(post.publishedAt)}</span>
           <span>{post.readingTime}</span>
