@@ -116,9 +116,10 @@ const markdownComponents: Components = {
 
 function formatPublishedDate(value: string) {
   return new Intl.DateTimeFormat('en', {
-    month: 'long',
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'UTC',
   }).format(new Date(`${value}T00:00:00Z`));
 }
 
@@ -126,20 +127,15 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
   const relatedPosts = BLOG_POSTS.filter((candidate) => candidate.slug !== post.slug).slice(0, 2);
 
   return (
-    <BlogShell statusText={`${post.readingTime} · ${post.tags.join(' · ')}`}>
+    <BlogShell>
       <section className={styles.intro}>
-        <Link to="/posts" className={styles.backLink}>← Back to archive</Link>
+        <Link to="/posts" className={styles.backLink}>← back to archive</Link>
         <div className={styles.meta}>
           <span>{formatPublishedDate(post.publishedAt)}</span>
           <span>{post.readingTime}</span>
         </div>
         <h1 className={styles.title}>{post.title}</h1>
         <p className={styles.summary}>{post.summary}</p>
-        <div className={styles.tagRow}>
-          {post.tags.map((tag) => (
-            <span key={tag} className={styles.tag}>{tag}</span>
-          ))}
-        </div>
       </section>
 
       <section className={styles.layout}>
@@ -148,39 +144,21 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
             {post.markdown}
           </ReactMarkdown>
         </article>
+      </section>
 
-        <aside className={styles.sidebar}>
-          <section className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Format</span>
-            <h2 className={styles.sidebarTitle}>Markdown in, polished HTML out</h2>
-            <p className={styles.sidebarText}>
-              Posts live as static markdown source files. Code fences render cleanly and Mermaid blocks
-              are upgraded into diagrams on the page.
-            </p>
-            <div className={styles.relatedList}>
-              <a href={post.markdownPath} className={styles.relatedLink}>
-                <span className={styles.relatedTitle}>Source markdown</span>
-                <span className={styles.relatedSummary}>Read the raw post as plain text.</span>
-              </a>
-              <a href="/feed.xml" className={styles.relatedLink}>
-                <span className={styles.relatedTitle}>RSS feed</span>
-                <span className={styles.relatedSummary}>Follow future posts in any feed reader.</span>
-              </a>
-            </div>
-          </section>
+      <footer className={styles.foot}>
+        <div className={styles.footSection}>
+          <span className={styles.footEyebrow}>Tags</span>
+          <div className={styles.tags}>
+            {post.tags.map((tag) => (
+              <span key={tag} className={styles.tag}>{tag}</span>
+            ))}
+          </div>
+        </div>
 
-          <section className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Current focus</span>
-            <h2 className={styles.sidebarTitle}>Building the software factory</h2>
-            <p className={styles.sidebarText}>
-              The series is centered on execution systems that take an idea and move it toward a delivered,
-              measured outcome.
-            </p>
-          </section>
-
-          <section className={styles.sidebarCard}>
-            <span className={styles.sidebarEyebrow}>Related</span>
-            <h2 className={styles.sidebarTitle}>Keep reading</h2>
+        {relatedPosts.length > 0 && (
+          <div className={styles.footSection}>
+            <span className={styles.footEyebrow}>Keep reading</span>
             <div className={styles.relatedList}>
               {relatedPosts.map((relatedPost) => (
                 <Link key={relatedPost.slug} to={`/posts/${relatedPost.slug}`} className={styles.relatedLink}>
@@ -189,9 +167,9 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
                 </Link>
               ))}
             </div>
-          </section>
-        </aside>
-      </section>
+          </div>
+        )}
+      </footer>
     </BlogShell>
   );
 }

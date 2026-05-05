@@ -13,7 +13,7 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['x-llms-txt']).toBe('/llms.txt');
     const body = await response.text();
     expect(body).toContain('Notes from building a software factory.');
-    expect(body).toContain('The seeded fake posts are gone.');
+    expect(body).toContain('A personal tech blog about agent-driven development');
     expect(body).toContain('rel="canonical" href="https://blog.krasnoperov.me/"');
     expect(body).toContain('property="og:title" content="Krasnoperov Blog"');
   });
