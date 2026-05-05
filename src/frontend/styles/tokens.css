@@ -113,13 +113,7 @@
      consumers reference those directly to avoid two parallel names for one
      dimension. */
 
-  --blog-post-row-gap:        var(--s-7);
-  --blog-post-meta-size:      1rem;
-
   --blog-code-block-padding-x: var(--s-4);
   --blog-code-block-padding-y: var(--s-3);
   --blog-code-inline-padding:  2px;
-
-  --blog-quiet-label-size:     1rem;
-  --blog-quiet-label-tracking: var(--track-quiet);
 }
