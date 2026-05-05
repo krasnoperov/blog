@@ -22,7 +22,34 @@ function getMermaid() {
   return mermaidPromise;
 }
 
-function createMermaidConfig(isCompact: boolean) {
+// Light + dark palettes mirror the foundation tokens. Mermaid runs in the
+// browser and renders SVG with hard-coded fills, so passing CSS variables
+// won't work — we read prefers-color-scheme at render time and pick a
+// branch.
+const MERMAID_PALETTE_LIGHT = {
+  paper: '#fafaf7',
+  paperDeep: '#f3ece2',
+  paperRule: '#ddd6c8',
+  ink: '#1f1d1a',
+  inkSoft: '#5a564f',
+  inkQuiet: '#a39d8e',
+  accent: '#b85c38',
+  accentWarm: '#fff7ea',
+};
+
+const MERMAID_PALETTE_DARK = {
+  paper: '#1c1916',
+  paperDeep: '#2a251f',
+  paperRule: '#3a342c',
+  ink: '#ece6db',
+  inkSoft: '#a39d8e',
+  inkQuiet: '#6b6557',
+  accent: '#d68460',
+  accentWarm: '#382a1f',
+};
+
+function createMermaidConfig(isCompact: boolean, isDark: boolean) {
+  const p = isDark ? MERMAID_PALETTE_DARK : MERMAID_PALETTE_LIGHT;
   return {
     startOnLoad: false,
     securityLevel: 'loose',
@@ -36,26 +63,26 @@ function createMermaidConfig(isCompact: boolean) {
     themeVariables: {
       background: 'transparent',
       fontFamily: "'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace",
-      primaryColor: '#fafaf7',
-      primaryTextColor: '#1f1d1a',
-      primaryBorderColor: '#1f1d1a',
-      secondaryColor: '#f3ece2',
-      secondaryTextColor: '#1f1d1a',
-      secondaryBorderColor: '#1f1d1a',
-      tertiaryColor: '#fafaf7',
-      tertiaryBorderColor: '#1f1d1a',
-      tertiaryTextColor: '#1f1d1a',
-      noteBkgColor: '#fff7ea',
-      noteBorderColor: '#b85c38',
-      noteTextColor: '#1f1d1a',
-      lineColor: '#5a564f',
-      textColor: '#1f1d1a',
-      mainBkg: '#fafaf7',
+      primaryColor: p.paper,
+      primaryTextColor: p.ink,
+      primaryBorderColor: p.ink,
+      secondaryColor: p.paperDeep,
+      secondaryTextColor: p.ink,
+      secondaryBorderColor: p.ink,
+      tertiaryColor: p.paper,
+      tertiaryBorderColor: p.ink,
+      tertiaryTextColor: p.ink,
+      noteBkgColor: p.accentWarm,
+      noteBorderColor: p.accent,
+      noteTextColor: p.ink,
+      lineColor: p.inkSoft,
+      textColor: p.ink,
+      mainBkg: p.paper,
       clusterBkg: 'transparent',
-      clusterBorder: '#a39d8e',
-      edgeLabelBackground: '#fafaf7',
-      nodeBorder: '#1f1d1a',
-      nodeTextColor: '#1f1d1a',
+      clusterBorder: p.inkQuiet,
+      edgeLabelBackground: p.paper,
+      nodeBorder: p.ink,
+      nodeTextColor: p.ink,
     },
     flowchart: {
       curve: 'basis',
@@ -76,14 +103,26 @@ export function MermaidBlock({ chart }: MermaidBlockProps) {
   const [svg, setSvg] = useState('');
   const [error, setError] = useState('');
 
+  const [colorScheme, setColorScheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    setColorScheme(media.matches ? 'dark' : 'light');
+    const onChange = (e: MediaQueryListEvent) => setColorScheme(e.matches ? 'dark' : 'light');
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const isCompact = typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches;
+    const isDark = colorScheme === 'dark';
 
     getMermaid()
       .then((mermaid) => {
-        mermaid.initialize(createMermaidConfig(isCompact));
-        return mermaid.render(`mermaid-${diagramId}`, chart);
+        mermaid.initialize(createMermaidConfig(isCompact, isDark));
+        return mermaid.render(`mermaid-${diagramId}-${isDark ? 'd' : 'l'}`, chart);
       })
       .then(({ svg: renderedSvg }) => {
         if (isMounted) {
@@ -101,7 +140,7 @@ export function MermaidBlock({ chart }: MermaidBlockProps) {
     return () => {
       isMounted = false;
     };
-  }, [chart, diagramId]);
+  }, [chart, diagramId, colorScheme]);
 
   if (error) {
     return (
