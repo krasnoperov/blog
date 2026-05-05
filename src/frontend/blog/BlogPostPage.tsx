@@ -97,12 +97,16 @@ const markdownComponents: Components = {
     }
 
     if (!inline) {
+      const language = languageMatch?.[1];
       return (
-        <pre className={markdownStyles.codeFrame}>
-          <code className={className} {...props}>
-            {code}
-          </code>
-        </pre>
+        <div className={markdownStyles.codeBlock}>
+          {language && <span className={markdownStyles.codeLabel}>{language}</span>}
+          <pre className={markdownStyles.codeFrame}>
+            <code className={className} {...props}>
+              {code}
+            </code>
+          </pre>
+        </div>
       );
     }
 
