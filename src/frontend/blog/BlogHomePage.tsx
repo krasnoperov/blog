@@ -10,6 +10,7 @@ function formatPublishedDate(value: string) {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
+    timeZone: 'UTC',
   }).format(new Date(`${value}T00:00:00Z`));
 }
 
