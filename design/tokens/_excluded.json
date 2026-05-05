@@ -1,0 +1,168 @@
+{
+  "description": "Canonical CSS tokens whose source value uses CSS constructs with no DTCG-conformant shape (color-mix, clamp, calc, CSS shorthand). They remain authoritative in src/frontend/styles/ and are deliberately omitted from the DTCG snapshot.",
+  "generatedBy": "scripts/snapshot-design-tokens.mjs",
+  "tokens": [
+    {
+      "cssVar": "--brand-gradient-start",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#1d5b52",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--brand-gradient-end",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#49674f",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--gradient-brand",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "linear-gradient(135deg, rgba(251, 248, 242, 0.82), rgba(242, 234, 220, 0.92))",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--text-on-brand-strong",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#1c2820",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--text-on-brand-muted",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#56645a",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--text-on-brand-subtle",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#7f816f",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--surface-glass",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(255, 252, 247, 0.72)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--surface-glass-strong",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(248, 243, 234, 0.92)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--surface-code-bg",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#efe4d1",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--border-glass",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(46, 54, 43, 0.12)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--button-primary-bg",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "linear-gradient(135deg, #1d5b52, #49674f)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--button-primary-bg-hover",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "linear-gradient(135deg, #246e63, #597b5f)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--button-primary-border",
+      "sourceFile": "theme.css",
+      "inferredType": "border",
+      "rawValue": "1px solid rgba(29, 91, 82, 0.18)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--button-ghost-bg",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(255, 255, 255, 0.6)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`).",
+      "recommendation": "Legacy compat token (the new design system uses segments, not buttons). Remove from theme.css when AppHeader.module.css migrates to .seg-style chrome."
+    },
+    {
+      "cssVar": "--button-ghost-bg-hover",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(255, 255, 255, 0.82)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--status-info-text",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#1d5b52",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-frame-border",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(46, 54, 43, 0.12)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-node-fill",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#f8ede0",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-node-stroke",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#24594f",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-cluster-fill",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "rgba(227, 238, 231, 0.88)",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-cluster-stroke",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#8ba397",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-line",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#4a6559",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    },
+    {
+      "cssVar": "--diagram-text",
+      "sourceFile": "theme.css",
+      "inferredType": "color",
+      "rawValue": "#1d2b25",
+      "reason": "CSS construct has no DTCG-conformant shape (color-mix, clamp/calc, shorthand, multi-layer with `none`)."
+    }
+  ]
+}

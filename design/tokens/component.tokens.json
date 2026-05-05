@@ -1,0 +1,104 @@
+{
+  "$description": "Component-scale tokens (page, section, header, post, codeBlock, quietLabel). Mirrors the --blog- namespace in src/frontend/styles/tokens.css with the prefix stripped.",
+  "$extensions": {
+    "me.krasnoperov.blog.source": "tokens.css",
+    "me.krasnoperov.blog.generatedBy": "scripts/snapshot-design-tokens.mjs",
+    "me.krasnoperov.blog.note": "Generated from CSS. Do not edit by hand. Run `npm run tokens:snapshot` after changing the canonical CSS."
+  },
+  "page": {
+    "padding": {
+      "$value": "{space.s.8}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-page-padding",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-8)"
+      }
+    },
+    "paddingMobile": {
+      "$value": "{space.s.6}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-page-padding-mobile",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-6)"
+      }
+    }
+  },
+  "section": {
+    "gap": {
+      "$value": "{space.s.9}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-section-gap",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-9)"
+      }
+    }
+  },
+  "post": {
+    "rowGap": {
+      "$value": "{space.s.7}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-post-row-gap",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-7)"
+      }
+    },
+    "metaSize": {
+      "$value": "{fontSize.t.sm}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-post-meta-size",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--t-sm)"
+      }
+    }
+  },
+  "codeBlock": {
+    "paddingX": {
+      "$value": "{space.s.4}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-code-block-padding-x",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-4)"
+      }
+    },
+    "paddingY": {
+      "$value": "{space.s.3}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-code-block-padding-y",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--s-3)"
+      }
+    }
+  },
+  "codeInline": {
+    "padding": {
+      "$value": {
+        "value": 2,
+        "unit": "px"
+      },
+      "$type": "dimension",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-code-inline-padding",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "2px"
+      }
+    }
+  },
+  "quietLabel": {
+    "size": {
+      "$value": "{fontSize.t.sm}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-quiet-label-size",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--t-sm)"
+      }
+    },
+    "tracking": {
+      "$value": "{tracking.quiet}",
+      "$extensions": {
+        "me.krasnoperov.blog.cssVar": "--blog-quiet-label-tracking",
+        "me.krasnoperov.blog.sourceFile": "tokens.css",
+        "me.krasnoperov.blog.cssValue": "var(--track-quiet)"
+      }
+    }
+  }
+}

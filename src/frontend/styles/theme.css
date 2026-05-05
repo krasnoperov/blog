@@ -1,4 +1,65 @@
+/* New system semantic tokens — code, status colours, overlay, scroll.
+   Layered on top of the paper/ink/accent foundation in tokens.css. All
+   values author in OKLCH inside light-dark() pairs.
+
+   The legacy tokens at the bottom are preserved verbatim from the
+   pre-existing CSS so existing public-route page modules keep rendering
+   identically while pages opt into the new tokens incrementally. */
+
 :root {
+  /* ─── Status / data tokens (quiet hue-coded text + tints) ─── */
+  --color-success-bg:     light-dark(oklch(95% 0.02 145), oklch(24% 0.025 150));
+  --color-success-text:   light-dark(oklch(38% 0.06 150), oklch(82% 0.06 150));
+  --color-success-border: light-dark(oklch(80% 0.05 145), oklch(46% 0.05 150));
+
+  --color-info-bg:        light-dark(oklch(94% 0.018 250), oklch(24% 0.022 250));
+  --color-info-text:      light-dark(oklch(40% 0.05 250), oklch(82% 0.05 250));
+  --color-info-border:    light-dark(oklch(80% 0.05 250), oklch(46% 0.05 250));
+
+  --color-warning-bg:     var(--accent-soft);
+  --color-warning-text:   var(--accent-deep);
+  --color-warning-border: var(--accent-line);
+
+  --color-neutral-bg:     var(--paper-deep);
+  --color-neutral-text:   var(--ink-soft);
+
+  --color-link:           var(--accent);
+  --color-error:          var(--accent);
+
+  /* ─── Code blocks ─── */
+  --code-bg:   light-dark(oklch(95% 0.008 90), oklch(18% 0.008 55));
+  --code-text: light-dark(oklch(36% 0.005 95), oklch(86% 0.012 80));
+
+  /* ─── Overlay (mobile menu backdrop, future modals) ─── */
+  --overlay-backdrop: light-dark(oklch(20% 0 0 / 0.42), oklch(0% 0 0 / 0.62));
+
+  /* ─── Custom scrollbars ─── */
+  --scroll-track:       light-dark(oklch(95% 0.008 90 / 0.6), oklch(20% 0.008 60 / 0.6));
+  --scroll-thumb:       light-dark(oklch(80% 0.012 88 / 0.8), oklch(40% 0.010 60 / 0.8));
+  --scroll-thumb-hover: light-dark(oklch(58% 0.008 90),       oklch(56% 0.012 70));
+
+  /* ─── Layout (semantic aliases) ─── */
+  --max-width-content: var(--col-wide);
+  --header-height:     var(--bar-top);
+  --layout-gap:        var(--s-4);
+  --panel-spacing:     var(--s-4);
+
+  /* ─── Semantic surface aliases — keep the language consumer-readable ─── */
+  --surface-page:      var(--paper);
+  --surface-muted:     var(--paper-deep);
+  --text-default:      var(--ink);
+  --text-muted:        var(--ink-soft);
+  --text-subtle:       var(--ink-quiet);
+  --text-link:         var(--accent);
+  --border-subtle:     var(--paper-rule);
+  --border-strong:     var(--ink-faint);
+  --focus-ring:        var(--accent);
+
+  /* ════════════════════════════════════════════════════════════════════
+     Pre-existing tokens — preserved verbatim from the prior theme.css so
+     existing page modules keep rendering identically. New code should
+     consume the foundation/system tokens above. */
+
   --brand-gradient-start: #1d5b52;
   --brand-gradient-end: #49674f;
   --gradient-brand: linear-gradient(135deg, rgba(251, 248, 242, 0.82), rgba(242, 234, 220, 0.92));

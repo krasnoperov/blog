@@ -1,3 +1,8 @@
+/* Global resets and base styles. Design tokens live in tokens.css and
+   theme.css and are available to consumers; this file preserves the
+   established public-route visual surface. Page modules opt into the new
+   tokens incrementally. */
+
 * {
   margin: 0;
   padding: 0;
