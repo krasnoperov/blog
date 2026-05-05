@@ -24,6 +24,10 @@ export default defineConfig({
   timeout: 60_000,
   retries: 0,
   fullyParallel: true,
+  // Single-writer index.html emission. Runs once after every worker and
+  // project finishes, so the gallery always reflects the complete set of
+  // PNGs even when projects run in parallel.
+  globalTeardown: './tests/style-reference/global-teardown.ts',
   reporter: [
     ['list'],
     ['html', { outputFolder: 'audit-out/style-reference-report', open: 'never' }],
