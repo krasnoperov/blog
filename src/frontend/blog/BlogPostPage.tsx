@@ -85,43 +85,49 @@ const markdownComponents: Components = {
       </a>
     );
   },
-  // react-markdown v10 dropped the `inline` prop. The contract is now: a
-  // language-* className identifies a fenced block, anything else is inline.
-  code({ className, children, ...props }: HTMLAttributes<HTMLElement>) {
-    const languageMatch = /language-([\w-]+)/.exec(className ?? '');
-
-    if (!languageMatch) {
-      return (
-        <code className={markdownStyles.inlineCode} {...props}>
-          {children}
-        </code>
-      );
+  // Inline code highlight. Fenced blocks are handled by the `pre` renderer
+  // below — `pre` inspects the raw hast node so it works for both labelled
+  // fences (```ts) and bare fences (```).
+  code({ children, ...props }: HTMLAttributes<HTMLElement>) {
+    return (
+      <code className={markdownStyles.inlineCode} {...props}>
+        {children}
+      </code>
+    );
+  },
+  pre({ node }) {
+    const codeNode = node?.children?.[0];
+    if (!codeNode || codeNode.type !== 'element' || codeNode.tagName !== 'code') {
+      return <pre />;
     }
 
-    const language = languageMatch[1];
-    const code = String(children).replace(/\n$/, '');
+    const rawClass = codeNode.properties?.className;
+    const className = Array.isArray(rawClass)
+      ? rawClass.join(' ')
+      : typeof rawClass === 'string'
+        ? rawClass
+        : '';
+    const codeText = (codeNode.children ?? [])
+      .filter((child): child is { type: 'text'; value: string } => child.type === 'text')
+      .map((child) => child.value)
+      .join('')
+      .replace(/\n$/, '');
+
+    const languageMatch = /language-([\w-]+)/.exec(className);
+    const language = languageMatch?.[1];
 
     if (language === 'mermaid') {
-      return <MermaidBlock chart={code} />;
+      return <MermaidBlock chart={codeText} />;
     }
 
     return (
       <div className={markdownStyles.codeBlock}>
-        <span className={markdownStyles.codeLabel}>{language}</span>
+        {language && <span className={markdownStyles.codeLabel}>{language}</span>}
         <pre className={markdownStyles.codeFrame}>
-          <code className={className} {...props}>
-            {code}
-          </code>
+          <code className={className}>{codeText}</code>
         </pre>
       </div>
     );
-  },
-  // The block-code renderer above emits its own <pre>. react-markdown still
-  // wraps the <code> element in <pre> by default for fenced blocks, which
-  // would nest <pre><div><pre>...</pre></div></pre>. Pass-through to drop
-  // the outer wrapper.
-  pre({ children }) {
-    return <>{children}</>;
   },
 };
 
