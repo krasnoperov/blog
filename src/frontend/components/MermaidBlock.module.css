@@ -80,11 +80,15 @@
 .diagramSvg :global(.edgeLabel) {
   color: var(--ink);
   font-family: var(--font-mono);
-  font-size: var(--t-meta);
+  font-size: var(--t-md);
+  font-weight: 500;
+  line-height: var(--leading-snug);
 }
 
 .diagramSvg :global(.edgeLabel) {
   background: var(--paper);
+  font-size: var(--t-meta);
+  color: var(--ink-soft);
 }
 
 .diagramSvg :global(.edgeLabel rect) {
@@ -94,15 +98,16 @@
 
 .diagramSvg :global(.cluster rect) {
   fill: transparent;
-  stroke: var(--ink-faint);
+  stroke: var(--ink-soft);
   stroke-width: 1px;
 }
 
 .diagramSvg :global(.cluster-label text),
 .diagramSvg :global(.cluster text) {
-  fill: var(--ink-quiet);
+  fill: var(--ink);
   font-family: var(--font-mono);
   font-size: var(--t-sm);
+  font-weight: 600;
   letter-spacing: var(--track-quiet);
   text-transform: uppercase;
 }
