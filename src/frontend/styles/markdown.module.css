@@ -1,10 +1,14 @@
+/* Post body — long-form reading surface. Inter for prose, JetBrains Mono
+   for chrome (kickers, code, anchors), Fraunces reserved for the article
+   H1 in BlogPostPage.module.css. All values flow from tokens.css /
+   theme.css; no literal hex/px scattered through this file. */
+
 .markdown {
-  color: #2e3731;
-  font-family:
-    'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', 'URW Palladio L',
-    'Georgia', serif;
-  font-size: 1.08rem;
-  line-height: 1.9;
+  color: var(--ink);
+  font-family: var(--font-prose);
+  font-size: var(--t-prose);
+  line-height: var(--leading-relaxed);
+  max-width: var(--col-text);
 }
 
 .markdown h1,
@@ -13,40 +17,36 @@
 .markdown h4,
 .markdown h5,
 .markdown h6 {
-  color: #18231c;
-  font-family:
-    'Avenir Next', 'Segoe UI', 'Helvetica Neue', sans-serif;
-  font-weight: 700;
-  margin: 0 0 0.8rem 0;
-  letter-spacing: -0.03em;
-  line-height: 1.08;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: var(--track-tight);
+  line-height: var(--leading-snug);
+  margin: 0 0 var(--s-3) 0;
   position: relative;
-  scroll-margin-top: 6rem;
+  scroll-margin-top: var(--s-9);
 }
 
-.markdown h1 {
-  font-size: 2.2rem;
-}
+.markdown h1 { font-size: var(--t-display); }
+.markdown h2 { font-size: var(--t-md); }
+.markdown h3 { font-size: var(--t-lg); }
 
-.markdown h2 {
-  font-size: 1.7rem;
-}
-
-.markdown h3 {
-  font-size: 1.32rem;
-}
-
-.markdown h1:not(:first-child),
 .markdown h2:not(:first-child),
 .markdown h3:not(:first-child),
 .markdown h4:not(:first-child),
 .markdown h5:not(:first-child),
 .markdown h6:not(:first-child) {
-  margin-top: 2.5rem;
+  border-top: 1px solid var(--paper-rule);
+  margin-top: var(--s-7);
+  padding-top: var(--s-6);
+}
+
+.markdown h1:not(:first-child) {
+  margin-top: var(--s-7);
 }
 
 .markdown p {
-  margin: 0 0 1.25rem 0;
+  margin: 0 0 var(--s-4) 0;
 }
 
 .markdown p:last-child {
@@ -55,8 +55,8 @@
 
 .markdown ul,
 .markdown ol {
-  margin: 0 0 1.25rem 0;
-  padding-left: 1.4rem;
+  margin: 0 0 var(--s-4) 0;
+  padding-left: var(--s-5);
 }
 
 .markdown ul:last-child,
@@ -65,84 +65,74 @@
 }
 
 .markdown li {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--s-2);
 }
 
 .markdown li:last-child {
   margin-bottom: 0;
 }
 
-.markdown ul > li {
-  list-style-type: disc;
-}
-
-.markdown ol > li {
-  list-style-type: decimal;
-}
+.markdown ul > li { list-style-type: disc; }
+.markdown ol > li { list-style-type: decimal; }
 
 .markdown li::marker {
-  color: #7a6345;
+  color: var(--ink-quiet);
 }
 
 .markdown strong {
-  color: #17211b;
-  font-weight: 700;
+  color: var(--ink);
+  font-weight: 600;
 }
 
 .markdown em {
   font-style: italic;
-  color: #5a645a;
+  color: var(--ink-soft);
 }
 
 .inlineCode {
-  background: #efe4d1;
-  padding: 0.18rem 0.45rem;
-  border-radius: 0.45rem;
-  font-family: 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
-  font-size: 0.86em;
-  color: #2c3d32;
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  color: var(--accent-deep);
 }
 
 .codeFrame {
-  background: linear-gradient(180deg, #f3e8d6, #ece0cb);
-  padding: 1.1rem 1.2rem;
-  border-radius: 1.25rem;
-  border: 1px solid rgba(46, 54, 43, 0.1);
+  background: var(--code-bg);
+  border-top: 1px solid var(--paper-rule);
+  border-bottom: 1px solid var(--paper-rule);
+  margin: 0 0 var(--s-4) 0;
   overflow-x: auto;
-  margin: 0 0 1.35rem 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  padding: var(--blog-code-block-padding-y) var(--blog-code-block-padding-x);
 }
 
 .codeFrame code {
   background: none;
   padding: 0;
-  color: #27332b;
-  font-family: 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
-  font-size: 0.95rem;
-  line-height: 1.75;
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: var(--t-body);
+  line-height: var(--leading-mono);
 }
 
 .markdown a {
-  color: #1d5b52;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.15em;
+  color: inherit;
+  border-bottom: 1px solid var(--paper-rule);
+  transition: border-color var(--d-quick) var(--ease), color var(--d-quick) var(--ease);
 }
 
 .markdown a:hover {
-  color: #17473f;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .headingAnchor {
-  color: rgba(29, 91, 82, 0.44);
+  color: var(--ink-quiet);
   display: inline-block;
-  font-family: 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
+  font-family: var(--font-mono);
   font-size: 0.8em;
-  margin-right: 0.5rem;
+  margin-right: var(--s-2);
   opacity: 0;
   text-decoration: none;
-  transform: translateY(-0.03em);
-  transition: opacity 120ms ease;
+  transition: opacity var(--d-quick) var(--ease);
 }
 
 .markdown h1:hover .headingAnchor,
@@ -157,18 +147,16 @@
 
 .markdown hr {
   border: none;
-  border-top: 1px solid rgba(46, 54, 43, 0.12);
-  margin: 2.2rem 0;
+  border-top: 1px solid var(--paper-rule);
+  margin: var(--s-7) 0;
 }
 
 .markdown blockquote {
-  margin: 1.8rem 0;
-  padding: 1.2rem 1.4rem;
-  border-left: 4px solid rgba(29, 91, 82, 0.28);
-  border-radius: 0 1.2rem 1.2rem 0;
-  background: rgba(248, 243, 234, 0.92);
-  color: #445147;
+  border-left: 2px solid var(--accent);
+  color: var(--ink-soft);
   font-style: italic;
+  margin: var(--s-6) 0;
+  padding: 0 var(--s-5);
 }
 
 .markdown blockquote:last-child {
@@ -176,11 +164,11 @@
 }
 
 .markdown table {
-  display: block;
   border-collapse: collapse;
-  width: 100%;
+  display: block;
+  margin: 0 0 var(--s-4) 0;
   overflow-x: auto;
-  margin: 0 0 1.35rem 0;
+  width: 100%;
 }
 
 .markdown table:last-child {
@@ -189,32 +177,16 @@
 
 .markdown th,
 .markdown td {
-  border: 1px solid rgba(46, 54, 43, 0.12);
-  padding: 0.65rem 0.8rem;
+  border-bottom: 1px solid var(--paper-rule);
+  padding: var(--s-3) var(--s-4);
   text-align: left;
 }
 
 .markdown th {
-  background: rgba(248, 243, 234, 0.92);
-  font-family:
-    'Avenir Next', 'Segoe UI', 'Helvetica Neue', sans-serif;
-  font-weight: 700;
-}
-
-@media (max-width: 768px) {
-  .markdown {
-    font-size: 1rem;
-  }
-
-  .markdown h1 {
-    font-size: 1.8rem;
-  }
-
-  .markdown h2 {
-    font-size: 1.45rem;
-  }
-
-  .markdown h3 {
-    font-size: 1.2rem;
-  }
+  color: var(--ink-quiet);
+  font-family: var(--font-mono);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  letter-spacing: var(--track-quiet);
+  text-transform: uppercase;
 }
