@@ -24,9 +24,8 @@
 
 .badge {
   font-family: var(--font-mono);
-  font-size: 0.875rem;
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--accent);
 }
 
@@ -38,7 +37,7 @@
 
 .hint {
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--ink-quiet);
   text-align: right;
 }
@@ -85,7 +84,7 @@
 
 .diagramSvg :global(.edgeLabel) {
   background: var(--paper);
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--ink-soft);
 }
 
@@ -104,10 +103,8 @@
 .diagramSvg :global(.cluster text) {
   fill: var(--ink);
   font-family: var(--font-mono);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: var(--track-quiet);
-  text-transform: uppercase;
 }
 
 .diagramSvg :global(.edgePath path),
