@@ -24,6 +24,14 @@
   font-family: var(--font-mono);
   font-size: var(--t-meta);
   color: var(--ink-soft);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.pageHead > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pageHeadLabel {
@@ -44,6 +52,10 @@
 @media (max-width: 768px) {
   .pageHead {
     padding: 0 var(--s-5);
+  }
+
+  .pageHeadHideOnMobile {
+    display: none;
   }
 }
 

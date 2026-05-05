@@ -6,6 +6,7 @@ import styles from './BlogShell.module.css';
 export interface PageHeadSegment {
   label?: string;
   value: string;
+  hideOnMobile?: boolean;
 }
 
 interface BlogShellProps {
@@ -38,7 +39,10 @@ export function BlogShell({ children, statusText, pageHead }: BlogShellProps) {
       {pageHead && pageHead.length > 0 && (
         <div className={styles.pageHead}>
           {pageHead.map((segment, index) => (
-            <span key={index}>
+            <span
+              key={index}
+              className={segment.hideOnMobile ? styles.pageHeadHideOnMobile : undefined}
+            >
               {index > 0 && <span className={styles.pageHeadSep}> · </span>}
               {segment.label && <span className={styles.pageHeadLabel}>{segment.label} </span>}
               <span className={styles.pageHeadValue}>{segment.value}</span>

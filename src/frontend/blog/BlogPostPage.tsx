@@ -149,7 +149,7 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
         { value: 'post' },
         { value: formatPublishedDate(post.publishedAt) },
         { value: post.readingTime },
-        { value: post.title },
+        { value: post.title, hideOnMobile: true },
       ]}
     >
       <section className={styles.intro}>
