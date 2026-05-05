@@ -109,9 +109,9 @@
   --blog-page-padding-mobile: var(--s-6);
   --blog-section-gap:         var(--s-9);
 
-  --blog-header-height:       var(--bar-top);
-  --blog-page-head-height:    var(--bar-page);
-  --blog-foot-bar-height:     var(--bar-foot);
+  /* Chrome heights are kept in the foundation as --bar-top/--bar-page/--bar-foot;
+     consumers reference those directly to avoid two parallel names for one
+     dimension. */
 
   --blog-post-row-gap:        var(--s-7);
   --blog-post-meta-size:      var(--t-sm);

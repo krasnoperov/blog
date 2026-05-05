@@ -471,7 +471,16 @@ function pickThemeCoreSplit(decls) {
 export function snapshotFromCss({ globalCss, themeCss, componentCss }) {
   const globalDecls = parseDeclsFromCss(globalCss, null);
   const themeDecls = parseDeclsFromCss(themeCss, null);
-  const componentDecls = parseDeclsFromCss(componentCss, '--blog-');
+  const tokensDecls = parseDeclsFromCss(componentCss, '--blog-');
+
+  // tokens.css carries two layers: the paper/ink/accent/typography/spacing/
+  // chrome/geometry/motion/layout foundation (no prefix) AND the component
+  // scale (`--blog-*`). Split them so the foundation lands in core.tokens.json
+  // and the component scale lands in component.tokens.json — otherwise the
+  // documented "core has palette + type + spacing primitives" contract is
+  // violated.
+  const tokensFoundation = tokensDecls.filter((d) => !d.cssVar.startsWith('--blog-'));
+  const tokensComponent = tokensDecls.filter((d) => d.cssVar.startsWith('--blog-'));
 
   const seen = new Map();
   const checkUnique = (decls, sourceFile) => {
@@ -487,17 +496,21 @@ export function snapshotFromCss({ globalCss, themeCss, componentCss }) {
   };
   checkUnique(globalDecls, 'global.css');
   checkUnique(themeDecls, 'theme.css');
-  checkUnique(componentDecls, 'tokens.css');
+  checkUnique(tokensDecls, 'tokens.css');
 
   const { core: themeCore, semantic: themeSemantic } = pickThemeCoreSplit(themeDecls);
 
-  const allDecls = [...globalDecls, ...themeDecls, ...componentDecls];
+  const allDecls = [...globalDecls, ...themeDecls, ...tokensDecls];
   const pathMap = buildPathMap(allDecls);
 
   const tag = (decls, sourceFile) => decls.map((d) => ({ ...d, sourceFile }));
-  const taggedCore = [...tag(globalDecls, 'global.css'), ...tag(themeCore, 'theme.css')];
+  const taggedCore = [
+    ...tag(globalDecls, 'global.css'),
+    ...tag(themeCore, 'theme.css'),
+    ...tag(tokensFoundation, 'tokens.css'),
+  ];
   const taggedSemantic = tag(themeSemantic, 'theme.css');
-  const taggedComponent = tag(componentDecls, 'tokens.css');
+  const taggedComponent = tag(tokensComponent, 'tokens.css');
 
   const core = buildJson(taggedCore, pathMap);
   const semantic = buildJson(taggedSemantic, pathMap);
