@@ -1,6 +1,7 @@
 import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
+import mergeTreesMarkdown from './posts/merge-trees.md';
 import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
 import reviewQuillMarkdown from './posts/review-quill.md';
@@ -20,6 +21,7 @@ const RAW_POSTS = {
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
   'hello-world-formatting-the-factory-notes': helloWorldMarkdown,
   'merge-steward': mergeStewardMarkdown,
+  'merge-trees': mergeTreesMarkdown,
   'patchrelay': patchrelayMarkdown,
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
   'review-quill': reviewQuillMarkdown,
