@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'merge-trees',
+    title: 'Merge trees: a mental model for the factory',
+    summary:
+      'Three services running, three vocabularies, and a long tail of observed waste — re-reviews on rebase, ci_repair on flaky branch CI, cosmetic pushes that dismissed approvals. The fix was not more orchestration glue. It was a shared mental model built from four Git primitives.',
+    publishedAt: '2026-05-06',
+    readingTime: '8 min read',
+    tags: ['software-factory', 'patchrelay', 'merge-steward', 'review-quill', 'mental-model'],
+    featured: false,
+  },
+  {
     slug: 'from-yolo-to-patchrelay',
     title: 'From YOLO to patchrelay',
     summary:
