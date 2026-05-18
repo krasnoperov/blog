@@ -11,6 +11,8 @@ After `patchrelay`, `review-quill`, and `merge-steward` were all running, a stra
 
 An already-approved PR could be rebased onto fresh `main`, get a new head SHA, lose its approval, and go back through review even though the diff had not changed. A branch could have red CI while the merge queue was already testing a speculative SHA that did not hit the same flake. A cosmetic push could dismiss a fresh approval. Two parallel PRs could touch the same lock file and only discover the problem when one reached the queue.
 
+The model that helped was simple: review, CI, branch protection, and the merge queue each care about a different Git object.
+
 When I said "the PR," I might have meant:
 
 - the branch ref GitHub currently calls the PR head

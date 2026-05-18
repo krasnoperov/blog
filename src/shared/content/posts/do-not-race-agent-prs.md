@@ -7,11 +7,13 @@ tags: software-factory, patchrelay, review-quill, merge-steward
 featured: false
 ---
 
-The first PatchRelay problems were gates. `review-quill` made review strict. `merge-steward` made landing deterministic. Once those pieces were working, the next problem moved earlier in the lifecycle.
+The first PatchRelay problems were gates. `review-quill` made review strict. `merge-steward` made landing deterministic. Once review and landing were automated, the next failure mode was coordination: preventing agent PRs from invalidating each other before they reach the queue.
 
 Starting ten coding agents is the easy demo. The harder part begins when their branches all come back looking reasonable. CI is mostly green, the diffs look plausible, and then the cost appears at the end: two PRs touched the same migration, one branch was green against yesterday's `main`, a clean rebase dismissed an approval. The merge queue becomes the first place where planning mistakes are visible.
 
-Most of the time, nothing dramatic happens. Most agent PRs do not conflict. That matters for the design: this should not turn every branch into a stack. It should keep normal work flowing normally, and intervene only when a conflict is predictable, expensive, or likely to create churn.
+Most of the time, nothing dramatic happens. Most agent PRs do not conflict. That matters for the design: this should not turn every branch into a stack. A stack is just a PR opened against another PR instead of `main`; it is useful when the dependency is real, and noise everywhere else.
+
+The general pattern is: keep independent work independent, and sequence only the branches with visible coupling.
 
 ## The Shape
 
@@ -25,7 +27,7 @@ If half of the branches needed stacking, planning would be broken. If none of th
 
 The first rule is ordinary planning. If two tasks are obviously dependent, I do not want them racing in GitHub. PatchRelay respects Linear dependencies, so `B blockedBy A` means B does not start until A is done. The cheapest conflict is the one that never enters GitHub.
 
-The second rule happens after an agent has produced a real diff. Some conflicts are only visible once there is code to compare. Right before PR creation, the workflow runs `patchrelay sequence-check`. It compares the finished branch against in-flight PRs with `git merge-tree`. If another PR is likely to land first and the two branches conflict, the new branch stacks on that PR instead of racing it.
+The second rule happens after an agent has produced a real diff. Some conflicts are only visible once there is code to compare. Right before PR creation, the workflow runs `patchrelay sequence-check`. It compares the finished branch against in-flight PRs with `git merge-tree`. If another PR is likely to land first and the two branches conflict, the new branch opens against that PR instead of `main`.
 
 The third rule belongs to the merge queue. `merge-steward` does not trust branch CI alone. It builds a speculative integration branch, runs CI on that integrated tree, and only fast-forwards `main` when the tested SHA is still valid. Branch CI says "this PR works by itself." Speculative CI says "this PR works in the world it is about to enter."
 
