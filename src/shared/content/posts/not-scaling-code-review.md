@@ -29,4 +29,4 @@ So the question I care about is changing from "how do I review all this code?" t
 
 That part is still open. With `usertold.ai` still in beta, I am not quite there yet. I do not expect one perfect eval to solve it. I expect layers: automated checks, screenshots, flow tests, human taste, user feedback, and enough captured intent that agents optimize for the actual product instead of merely producing plausible diffs.
 
-In the meantime, better PR review tooling would still help. Not another file-by-file diff viewer, but a way to surface what actually matters. GitHub is good at showing what changed. At agent scale, I mostly want help seeing whether the change matters.
+In the meantime, better PR review tooling would still help. GitHub is already a rough review surface for large diffs: laggy, file-by-file, and too eager to hide parts of the change. At agent scale, I want help seeing what matters, not another way to page through what changed.
