@@ -1,17 +1,17 @@
 ---
-title: 'After the merge queue, traffic control'
-summary: Strict review and deterministic landing solve the gate. The next problem is traffic control: keeping independent agent work independent, and sequencing the few branches that would otherwise collide.
+title: 'Do not race agent PRs'
+summary: PatchRelay mostly runs independent issues, but a few branches should never race. Sequence the predictable conflicts, let normal PRs stay normal, and keep merge-steward as the safety net.
 publishedAt: 2026-05-18
 readingTime: 4 min read
 tags: software-factory, patchrelay, review-quill, merge-steward
 featured: false
 ---
 
-The first round of the factory was about gates. `review-quill` made review strict. `merge-steward` made landing deterministic. Once those pieces were working, the next problem moved earlier in the lifecycle.
+The first PatchRelay problems were gates. `review-quill` made review strict. `merge-steward` made landing deterministic. Once those pieces were working, the next problem moved earlier in the lifecycle.
 
 Starting ten coding agents is the easy demo. The harder part begins when their branches all come back looking reasonable. CI is mostly green, the diffs look plausible, and then the cost appears at the end: two PRs touched the same migration, one branch was green against yesterday's `main`, a clean rebase dismissed an approval. The merge queue becomes the first place where planning mistakes are visible.
 
-Most of the time, nothing dramatic happens. Most agent PRs do not conflict. That matters for the design: traffic control should not turn every branch into a stack. It should keep normal work flowing normally, and intervene only when a conflict is predictable, expensive, or likely to create churn.
+Most of the time, nothing dramatic happens. Most agent PRs do not conflict. That matters for the design: this should not turn every branch into a stack. It should keep normal work flowing normally, and intervene only when a conflict is predictable, expensive, or likely to create churn.
 
 ## The Shape
 
@@ -39,6 +39,6 @@ This is only part of the problem. Patch-id does not prevent bad planning, prove 
 
 The rollout is still young. In my current database, `review-quill` has computed patch-id for 1,552 attempts. Only 42 attempts had a prior approval for the same PR and the same patch-id. All 42 were carried forward. That is not a giant throughput number. It is a correctness rule: same approved patch, no repeat review.
 
-The broader pattern is traffic control. Dependencies prevent obvious races. Sequence-check catches finished branches that should become stacks. The merge queue tests the integrated tree instead of trusting isolated branch CI. Patch-id keeps rebases from becoming review churn.
+The broader pattern is simple: do not race when you can sequence. Dependencies prevent obvious races. Sequence-check catches finished branches that should become stacks. The merge queue tests the integrated tree instead of trusting isolated branch CI. Patch-id keeps rebases from becoming review churn.
 
 None of these rules proves the product is right. They only keep the factory from manufacturing its own chaos while the real validation problem remains open.

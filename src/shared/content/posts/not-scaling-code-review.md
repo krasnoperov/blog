@@ -1,6 +1,6 @@
 ---
-title: 'I do not want to scale code review'
-summary: When agents produce most of the code, review volume is not the loop to scale. The useful work is moving humans from diff reading toward product validation.
+title: 'Review volume is the wrong bottleneck'
+summary: PatchRelay can produce enough PRs that review volume looks scary. review-quill handles much of the mechanical review; the harder problem is product validation.
 publishedAt: 2026-05-18
 readingTime: 3 min read
 tags: software-factory, patchrelay, review-quill, code-review
