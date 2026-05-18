@@ -11,7 +11,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'not-scaling-code-review',
     title: 'Review volume is the wrong bottleneck',
     summary:
-      'PatchRelay can produce enough PRs that review volume looks scary. review-quill handles much of the mechanical review; the harder problem is product validation.',
+      'PatchRelay can keep agents busy, and that quickly makes manual review feel impossible. The review-quill repair loop absorbs much of the code-review work, but it does not answer the more important question: whether the product still looks, feels, and behaves right.',
     publishedAt: '2026-05-18',
     readingTime: '3 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],
