@@ -7,7 +7,7 @@ tags: software-factory, patchrelay, review-quill, merge-steward
 featured: false
 ---
 
-The first PatchRelay problems were gates. `review-quill` made review strict. `merge-steward` made landing deterministic. Once review and landing were automated, the next failure mode was coordination: preventing agent PRs from invalidating each other before they reach the queue.
+At first, the PatchRelay problem was simple: make sure bad PRs do not land. `review-quill` checked the work before merge, and PatchRelay could send the agent back through a few repair rounds until the found issues were fixed. `merge-steward` made sure an approved PR was tested against the latest `main` tip before it landed. Once that independent review-and-repair loop was working, a different problem showed up: several agents could each produce a reasonable PR, but those PRs could still interfere with each other.
 
 Starting ten coding agents is the easy demo. The harder part begins when their branches all come back looking reasonable. CI is mostly green, the diffs look plausible, and then the cost appears at the end: two PRs touched the same migration, one branch was green against yesterday's `main`, a clean rebase dismissed an approval. The merge queue becomes the first place where planning mistakes are visible.
 
