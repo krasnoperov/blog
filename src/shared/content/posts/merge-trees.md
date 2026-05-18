@@ -62,7 +62,7 @@ git merge-tree --write-tree main HEAD
 
 On success, it prints a tree object id. On conflict, it fails. No working directory, no merge commit, no side effects.
 
-That tree is the integration truth: the repository state that would exist if the PR landed on the current `main`. `merge-steward` turns it into a speculative commit, runs CI on it, and only lands the PR if that tested commit is still valid.
+That tree is the integration truth: the repository state that would exist if the PR landed on the current `main`. `merge-steward` builds a speculative commit representing that integration result, runs CI on it, and only lands the PR if that tested commit is still valid.
 
 Branch CI says "this PR works by itself." Speculative CI says "this PR works in the world it is about to enter."
 
