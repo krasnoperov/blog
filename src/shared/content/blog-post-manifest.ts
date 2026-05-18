@@ -8,12 +8,32 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'not-scaling-code-review',
+    title: 'I do not want to scale code review',
+    summary:
+      'Manual review is the wrong loop to scale when agents are producing the code. The useful question is how to scale verification: product checks, review automation, and enough captured intent that agents keep moving in the right direction.',
+    publishedAt: '2026-05-18',
+    readingTime: '3 min read',
+    tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],
+    featured: false,
+  },
+  {
+    slug: 'agents-need-traffic-control',
+    title: 'After the merge queue, traffic control',
+    summary:
+      'review-quill made review strict and merge-steward made landing deterministic. The next problem moved earlier: keep the few conflicting agent branches from racing, invalidating each other, and turning integration into fake work.',
+    publishedAt: '2026-05-18',
+    readingTime: '4 min read',
+    tags: ['software-factory', 'patchrelay', 'review-quill', 'merge-steward'],
+    featured: false,
+  },
+  {
     slug: 'merge-trees',
     title: 'Merge trees: a mental model for the factory',
     summary:
-      'Three services running, three vocabularies, and a long tail of observed waste — re-reviews on rebase, ci_repair on flaky branch CI, cosmetic pushes that dismissed approvals. The fix was not more orchestration glue. It was a shared mental model built from four Git primitives.',
+      'review-quill, merge-steward, and patchrelay stopped fighting once they shared a small Git vocabulary: commit trees, patch-id, merge-tree, and fast-forward landing. None of it is new. The useful part was applying established primitives consistently.',
     publishedAt: '2026-05-06',
-    readingTime: '8 min read',
+    readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'merge-steward', 'review-quill', 'mental-model'],
     featured: false,
   },

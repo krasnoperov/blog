@@ -1,7 +1,9 @@
 import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
+import agentsNeedTrafficControlMarkdown from './posts/agents-need-traffic-control.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
 import mergeTreesMarkdown from './posts/merge-trees.md';
+import notScalingCodeReviewMarkdown from './posts/not-scaling-code-review.md';
 import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
 import reviewQuillMarkdown from './posts/review-quill.md';
@@ -18,10 +20,12 @@ import {
 } from './blog-post-manifest';
 
 const RAW_POSTS = {
+  'agents-need-traffic-control': agentsNeedTrafficControlMarkdown,
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
   'hello-world-formatting-the-factory-notes': helloWorldMarkdown,
   'merge-steward': mergeStewardMarkdown,
   'merge-trees': mergeTreesMarkdown,
+  'not-scaling-code-review': notScalingCodeReviewMarkdown,
   'patchrelay': patchrelayMarkdown,
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
   'review-quill': reviewQuillMarkdown,
