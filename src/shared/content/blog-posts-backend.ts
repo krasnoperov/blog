@@ -1,5 +1,5 @@
 import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
-import agentsNeedTrafficControlMarkdown from './posts/agents-need-traffic-control.md';
+import doNotRaceAgentPrsMarkdown from './posts/do-not-race-agent-prs.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
 import mergeTreesMarkdown from './posts/merge-trees.md';
@@ -20,7 +20,7 @@ import {
 } from './blog-post-manifest';
 
 const RAW_POSTS = {
-  'agents-need-traffic-control': agentsNeedTrafficControlMarkdown,
+  'do-not-race-agent-prs': doNotRaceAgentPrsMarkdown,
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
   'hello-world-formatting-the-factory-notes': helloWorldMarkdown,
   'merge-steward': mergeStewardMarkdown,

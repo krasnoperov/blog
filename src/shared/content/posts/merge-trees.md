@@ -90,7 +90,7 @@ Once those primitives are named, the service rules get simpler:
 | Green PR breaks after merge | Test the integration tree, not only the PR head. |
 | Predictable conflicts reach the queue | Sequence dependent work before PRs race. |
 
-This is the mental model behind the later traffic-control work. Most PRs do not need anything special. The value is in making the rare expensive cases explicit: same patch, no repeat review; changed patch, fresh review; same integration tree, no queue churn; conflicting integration tree, repair before landing.
+This is the mental model behind the later agent-PR sequencing work. Most PRs do not need anything special. The value is in making the rare expensive cases explicit: same patch, no repeat review; changed patch, fresh review; same integration tree, no queue churn; conflicting integration tree, repair before landing.
 
 None of these primitives are mine. That is the point. The factory got simpler when I stopped inventing workflow concepts and started agreeing on the Git objects that were already there.
 

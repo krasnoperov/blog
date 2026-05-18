@@ -18,7 +18,7 @@ export const BLOG_POST_MANIFEST = [
     featured: false,
   },
   {
-    slug: 'agents-need-traffic-control',
+    slug: 'do-not-race-agent-prs',
     title: 'Do not race agent PRs',
     summary:
       'PatchRelay mostly runs independent issues, but a few branches should never race. Sequence the predictable conflicts, let normal PRs stay normal, and keep merge-steward as the safety net.',
