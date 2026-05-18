@@ -1,6 +1,6 @@
 ---
 title: 'review-quill: a strict reviewer for your coding agent'
-summary: Agentic sessions focus on the task and forget the surroundings — docs drift, tests stale, sibling files keep old assumptions. review-quill is the strict reviewer that catches the misalignments, and because two AI agents iterate at machine speed, the loop converges fast.
+summary: Coding agents focus on the task and forget the surroundings: docs drift, tests go stale, sibling files keep old assumptions. review-quill is the strict reviewer that keeps sending the PR back until the repo is aligned again.
 publishedAt: 2026-04-29
 readingTime: 5 min read
 tags: software-factory, patchrelay, review-quill, code-review
@@ -13,7 +13,7 @@ I lived with that pattern for maybe a month before I had to do something about i
 
 Anthropic ships an official Claude reviewer GitHub Action that catches some of this. It works fine for "review every head, comment on what you find." Anything more conditional — review only when CI is green, only on certain paths, only after the linked issue is in a particular state — and the policy has to live in GitHub Actions YAML, which is a path that ends in tears. (I tried.)
 
-**review-quill** is what I built instead. A self-hosted reviewer that checks out the real head SHA in a local worktree, runs the review logic in TypeScript where it reads like normal code, and posts ordinary GitHub `APPROVE` / `REQUEST_CHANGES` reviews. Because it works against real code rather than diff text, it can grep, read tests in sibling files, check whether the docs page that mentions the function still matches the implementation. It is strict on purpose — it does not rubber-stamp — and it keeps pointing at what's misaligned until the agent has actually aligned it.
+**review-quill** is what I built instead. It checks out the real head SHA in a local worktree, runs the review policy in TypeScript where it reads like normal code, and posts ordinary GitHub `APPROVE` / `REQUEST_CHANGES` reviews. Because it works against real code rather than diff text, it can grep, read tests in sibling files, and check whether the docs page that mentions a function still matches the implementation. It is strict on purpose: it does not rubber-stamp, and it keeps pointing at what's misaligned until the agent has actually aligned it.
 
 The thing that makes that strictness affordable is that two AI agents have a really fast hand-off. A review-and-fix loop that would burn out a human reviewer in three rounds runs cheerfully for ten or fifteen at agent pace. The agent doesn't get to ship the PR until the surroundings are checked.
 
@@ -25,7 +25,7 @@ A real checkout means the reviewer can grep, can read tests in adjacent files, c
 
 Real checkouts also fix stale-review noise. review-quill keys every review by head SHA. If a push lands while a review is in flight, the in-flight review is invalidated and the new SHA gets a fresh one. The old SHA's review never ships.
 
-## The architecture nobody is coordinating
+## GitHub Is The Bus
 
 review-quill, merge-steward, and patchrelay live in the same monorepo and share zero runtime knowledge of each other.
 
@@ -33,7 +33,7 @@ Patchrelay does not call review-quill. review-quill does not call merge-steward.
 
 This wasn't a clever architectural decision. It is what happened when I extracted services one at a time and refused to add direct coupling between them. It is also why each piece is independently usable — review-quill runs alone against any repo, no patchrelay required, no merge-steward required.
 
-The pattern is the most useful structural takeaway of the whole stack. GitHub state is the bus. Services are reconcilers. Every effect is a public artifact on the PR timeline. Debugging a stuck PR is "open the timeline and follow the events," not "find which of three services has the wrong opinion about this thing."
+That is the structural takeaway of the whole stack: GitHub state is the bus. Services are reconcilers. Every effect is a public artifact on the PR timeline. Debugging a stuck PR is "open the timeline and follow the events," not "find which of three services has the wrong opinion about this thing."
 
 ## The surprise — the reviewer is mostly right
 
@@ -47,7 +47,7 @@ What I expected to find when I dug in was that review-quill was being unreasonab
 
 What I mostly found, though, is that the reviewer was right. Codex was glossing things — invariants the rest of the file enforced, contracts the test suite assumed, edge cases the recent commits had introduced and the implementation had quietly ignored. The review wasn't bikeshedding; it was catching the kind of thing a careful human reviewer catches. The agent's first attempt was actually wrong. The second attempt was less wrong. The third addressed the underlying class of issue rather than the surface complaint, and that's why the third one passed.
 
-Stated abstractly that sounds obvious. Sitting in front of it the first time, watching two AI services go back and forth six times on the same PR, my reflex was that the system was broken. It wasn't. The iteration was the work. And the value review-quill delivers is exactly that: it forces the iteration to happen *before* the PR lands rather than three weeks later when someone hits the bug in production.
+That sounds obvious after the fact. Sitting in front of it the first time, watching two AI services go back and forth six times on the same PR, my reflex was that the system was broken. It wasn't. The iteration was the work. The value of review-quill is that it forces the iteration to happen *before* the PR lands rather than three weeks later when someone hits the bug in production.
 
 ## Why strict review works with agents in particular
 
@@ -65,7 +65,7 @@ The current mitigation is crude. Patchrelay caps the number of `review_fix` roun
 
 The real fix is something neither service can do on its own: noticing that the iteration shape itself has gone wrong — same files touched five times, same class of comment from the reviewer five times, no progress on the underlying issue — and breaking out of "address the comment" mode into "step back, identify the root cause, address that." I don't know how to make that happen reliably yet.
 
-What I can say is that these cases are rare, and they're not invisible. Every churn loop leaves a complete trail in the logs — every review, every diff, every commit, every elapsed second. Each instance can be opened up after the fact, the pattern named, and the prompts or review heuristics tuned so the next case of the same shape doesn't repeat. The dark side isn't a black box; it's a known quadrant that gets smaller every time I sit down with one.
+These cases are rare, and they're not invisible. Every churn loop leaves a complete trail in the logs — every review, every diff, every commit, every elapsed second. I can open one after the fact, name the pattern, and tune prompts or review heuristics so the next case of the same shape is less likely to repeat.
 
 ## What this opens up
 
@@ -73,7 +73,7 @@ If the reviewer is mostly right and the implementation is mostly close-but-wrong
 
 I have data on the iteration patterns now. 63 issues with `review_fix` runs, mean 3.67 rounds, median around 2, and a long tail of issues that took 12 or 14 or 25 rounds to converge. The shape of that tail is where the next round of work goes. I want to know what makes a long-tail issue different from a short one — is it size, ambiguity, repo, time of day, prompt cold-start, something I have not measured yet.
 
-That's the next thing, and it is a real research direction rather than a feature I know how to ship. I will write about it when I know enough to be wrong on the record.
+That's the next thing. It is more research direction than feature I know how to ship. I will write about it when I know enough to be wrong on the record.
 
 ## Try it
 

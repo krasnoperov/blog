@@ -51,7 +51,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'patchrelay',
     title: 'patchrelay: a Linear-driven harness for Codex',
     summary:
-      'Running coding agents on real work turned me into their full-time conductor — copying task IDs, watching CI, switching terminals, rebasing branches. patchrelay is what I built to stop being the bottleneck: Linear becomes the control surface, runs survive restarts, and operator takeover is one command.',
+      'Running coding agents on real work turned me into their full-time conductor. patchrelay is what I built to stop being the bottleneck: Linear is the control surface, runs survive restarts, and takeover is one command.',
     publishedAt: '2026-04-29',
     readingTime: '7 min read',
     tags: ['software-factory', 'patchrelay', 'agentic-development', 'codex', 'harness-engineering'],
@@ -61,7 +61,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'merge-steward',
     title: 'merge-steward: a self-hosted merge queue without the Enterprise gate',
     summary:
-      'Parallel agents produce parallel pull requests that break each other on integration. merge-steward is a self-hosted serial speculative merge queue — every merge tested against the live tip of main, no Enterprise gate, structured failure reasons an agent can read.',
+      'Parallel agents produce parallel pull requests that can break each other on integration. merge-steward is a self-hosted serial merge queue: test the integrated SHA, fast-forward only when it is still valid, and publish failure reasons an agent can read.',
     publishedAt: '2026-04-29',
     readingTime: '6 min read',
     tags: ['software-factory', 'patchrelay', 'merge-steward', 'merge-queue'],
@@ -71,7 +71,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'review-quill',
     title: 'review-quill: a strict reviewer for your coding agent',
     summary:
-      'Agentic sessions focus on the task and forget the surroundings — docs drift, tests stale, sibling files keep old assumptions. review-quill is the strict reviewer that catches the misalignments, and because two AI agents iterate at machine speed, the loop converges fast.',
+      'Coding agents focus on the task and forget the surroundings: docs drift, tests go stale, sibling files keep old assumptions. review-quill is the strict reviewer that keeps sending the PR back until the repo is aligned again.',
     publishedAt: '2026-04-29',
     readingTime: '5 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],
