@@ -1,6 +1,6 @@
 ---
 title: 'patchrelay: a Linear-driven harness for Codex'
-summary: Running coding agents on real work turned me into their full-time conductor — copying task IDs, watching CI, switching terminals, rebasing branches. patchrelay is what I built to stop being the bottleneck: Linear becomes the control surface, runs survive restarts, and operator takeover is one command.
+summary: Running coding agents on real work turned me into their full-time conductor. patchrelay is what I built to stop being the bottleneck: Linear is the control surface, runs survive restarts, and takeover is one command.
 publishedAt: 2026-04-29
 readingTime: 7 min read
 tags: software-factory, patchrelay, agentic-development, codex, harness-engineering
@@ -9,11 +9,11 @@ featured: true
 
 Sometime in March I caught myself, again, copying a Linear ticket ID into a terminal so I could paste it into a Codex prompt — for the fourth or fifth time that morning. I'd already opened tmux, switched between four worktrees, restarted two failed builds, and rebased one branch against a `main` that had moved twice while I wasn't looking. The agents were faster than me at writing code. I was the bottleneck.
 
-patchrelay is what I built to stop being the bottleneck. I assign a Linear issue to it, walk away, and come back to a pull request that is implemented, reviewed, and either merged or honestly stuck with the reason in writing. Same agent I'd run myself; the orchestration around it — durable workspace per issue, distinct repair loops, Linear glue — runs on its own.
+patchrelay is what I built to stop being the bottleneck. I assign a Linear issue to it, walk away, and come back to a pull request that is implemented, reviewed, and either merged or honestly stuck with the reason in writing. Same agent I'd run myself; the surrounding machinery — durable workspace per issue, distinct repair loops, Linear glue — runs on its own.
 
-This post is what's inside, plus a few things that have happened in the months since the engine-choice post that would have sharpened the analysis.
+This post is what's inside, plus the engine-choice context I wish I had when I started.
 
-## The architecture I grew on top
+## The Harness
 
 The Codex app-server gives me a stable JSON-RPC protocol with `codex resume` semantics. Threads persist on the server side. Turns, items, and approvals are primitives I can subscribe to. Everything else — what to run, when to run it, how to keep state across failures — patchrelay owns.
 
@@ -49,7 +49,7 @@ This was the feature that pushed me toward the Codex app-server in the first pla
 
 ## What changed since the engine-choice post
 
-Two events in April are worth noting on top of the architecture above. They didn't change my mind about the engine. They sharpened it.
+Two events in April are worth noting. They didn't change my mind about the engine. They sharpened it.
 
 The first is the OpenClaw incident. On April 4, 2026, Anthropic emailed Claude subscribers that subscription quotas would no longer apply to "third-party harnesses," named OpenClaw — Peter Steinberger's open-source Claude Code-style harness — explicitly, and offered a one-month credit by way of compensation. Continued programmatic use of subscription auth required turning on "extra usage," which is API-tier pricing under another name. Six days later Steinberger's account was briefly suspended for "suspicious activity" and reinstated within hours after his post went viral.
 
@@ -61,7 +61,7 @@ There's also a third option I keep being asked about: [pi](https://pi.dev/), Mar
 
 ## What's not in this post
 
-The orchestration story above is half the system. The other half is two services that got pulled out of patchrelay over the last six weeks because they were not, on closer inspection, agent work at all. [merge-steward](/posts/merge-steward) puts chaotic parallel-PR work into an order. [review-quill](/posts/review-quill) is the strict reviewer that drills the agent until the PR is right. They share no API surface with patchrelay or with each other; they coordinate only through GitHub statuses. The next two posts are about how each one came out.
+The orchestration story above is half the system. The other half is two services that got pulled out of patchrelay because they were not, on closer inspection, agent work at all. [merge-steward](/posts/merge-steward) puts chaotic parallel-PR work into an order. [review-quill](/posts/review-quill) is the strict reviewer that drills the agent until the PR is right. They share no API surface with patchrelay or with each other; they coordinate only through GitHub statuses.
 
 ## Try it
 
