@@ -11,7 +11,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'not-scaling-code-review',
     title: 'I do not want to scale code review',
     summary:
-      'Manual review is the wrong loop to scale when agents are producing the code. The useful question is how to scale verification: product checks, review automation, and enough captured intent that agents keep moving in the right direction.',
+      'When agents produce most of the code, review volume is not the loop to scale. The useful work is moving humans from diff reading toward product validation.',
     publishedAt: '2026-05-18',
     readingTime: '3 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],
@@ -21,7 +21,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'agents-need-traffic-control',
     title: 'After the merge queue, traffic control',
     summary:
-      'review-quill made review strict and merge-steward made landing deterministic. The next problem moved earlier: keep the few conflicting agent branches from racing, invalidating each other, and turning integration into fake work.',
+      'Strict review and deterministic landing solve the gate. The next problem is traffic control: keeping independent agent work independent, and sequencing the few branches that would otherwise collide.',
     publishedAt: '2026-05-18',
     readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'merge-steward'],
@@ -31,7 +31,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'merge-trees',
     title: 'Merge trees: a mental model for the factory',
     summary:
-      'review-quill, merge-steward, and patchrelay stopped fighting once they shared a small Git vocabulary: commit trees, patch-id, merge-tree, and fast-forward landing. None of it is new. The useful part was applying established primitives consistently.',
+      'The factory got simpler once review, repair, and landing shared the same Git vocabulary: commit trees, patch-id, merge-tree, and fast-forward landing.',
     publishedAt: '2026-05-06',
     readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'merge-steward', 'review-quill', 'mental-model'],
