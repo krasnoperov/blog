@@ -9,9 +9,9 @@ import {
 export const BLOG_POST_MANIFEST = [
   {
     slug: 'not-scaling-code-review',
-    title: 'I do not want to scale code review',
+    title: 'Review volume is the wrong bottleneck',
     summary:
-      'When agents produce most of the code, review volume is not the loop to scale. The useful work is moving humans from diff reading toward product validation.',
+      'PatchRelay can produce enough PRs that review volume looks scary. review-quill handles much of the mechanical review; the harder problem is product validation.',
     publishedAt: '2026-05-18',
     readingTime: '3 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],
@@ -19,9 +19,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'agents-need-traffic-control',
-    title: 'After the merge queue, traffic control',
+    title: 'Do not race agent PRs',
     summary:
-      'Strict review and deterministic landing solve the gate. The next problem is traffic control: keeping independent agent work independent, and sequencing the few branches that would otherwise collide.',
+      'PatchRelay mostly runs independent issues, but a few branches should never race. Sequence the predictable conflicts, let normal PRs stay normal, and keep merge-steward as the safety net.',
     publishedAt: '2026-05-18',
     readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'merge-steward'],
@@ -29,9 +29,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'merge-trees',
-    title: 'Merge trees: a mental model for the factory',
+    title: 'Merge trees: a clean mental model',
     summary:
-      'The factory got simpler once review, repair, and landing shared the same Git vocabulary: commit trees, patch-id, merge-tree, and fast-forward landing.',
+      'A PatchRelay model for changes, reviews, and landings, built from primitives Git already gives you: commit trees, patch-id, merge-tree, and fast-forward landing.',
     publishedAt: '2026-05-06',
     readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'merge-steward', 'review-quill', 'mental-model'],

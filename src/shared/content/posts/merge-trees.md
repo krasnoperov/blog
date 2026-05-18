@@ -1,6 +1,6 @@
 ---
-title: 'Merge trees: a mental model for the factory'
-summary: The factory got simpler once review, repair, and landing shared the same Git vocabulary: commit trees, patch-id, merge-tree, and fast-forward landing.
+title: 'Merge trees: a clean mental model'
+summary: A PatchRelay model for changes, reviews, and landings, built from primitives Git already gives you: commit trees, patch-id, merge-tree, and fast-forward landing.
 publishedAt: 2026-05-06
 readingTime: 4 min read
 tags: software-factory, patchrelay, merge-steward, review-quill, mental-model
