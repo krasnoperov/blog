@@ -7,18 +7,18 @@ tags: software-factory, patchrelay, merge-steward, review-quill, mental-model
 featured: false
 ---
 
-After `patchrelay`, `review-quill`, and `merge-steward` were all running, a strange kind of waste appeared. The services were not failing. They were disagreeing about identity.
+After `patchrelay`, `review-quill`, and `merge-steward` were all running, a strange kind of waste appeared. Nothing looked obviously broken. Each service was doing the thing it was built to do. The trouble was that they were using the same word, "PR," for different objects.
 
 An already-approved PR could be rebased onto fresh `main`, get a new head SHA, lose its approval, and go back through review even though the diff had not changed. A branch could have red CI while the merge queue was already testing a speculative SHA that did not hit the same flake. A cosmetic push could dismiss a fresh approval. Two parallel PRs could touch the same lock file and only discover the problem when one reached the queue.
 
-The imprecise word was "PR." It was hiding several different objects:
+When I said "the PR," I might have meant:
 
 - the branch ref GitHub currently calls the PR head
 - the logical change represented by the diff
 - the tree that would exist if the PR landed on `main`
 - the reviewed or approved state attached to a particular commit SHA
 
-The fix was not a new workflow theory. It was a smaller vocabulary built out of Git primitives that already exist.
+The fix was not a new workflow theory. I needed a smaller vocabulary built out of Git primitives that already exist.
 
 ## The Pattern
 
@@ -34,7 +34,7 @@ Git stores snapshots. A commit points to a tree, which is the full repository st
 tree(child) - tree(parent)
 ```
 
-Those views are related, but they are not interchangeable. A reviewer cares whether the change changed. A merge queue cares whether `main + change` works. GitHub branch protection cares about the exact commit SHA.
+Those views are related, but they are not interchangeable. A reviewer cares whether the change changed. A merge queue cares whether `main + change` works. GitHub branch protection cares about the exact commit SHA. Treating all of that as "the PR" is where the waste came from.
 
 ## Patch-id
 
@@ -48,7 +48,7 @@ The first field of the output is the patch id.
 
 Same `patch-id` means the diff is the same, even if the branch was rebased, amended, cherry-picked, or rebuilt into a different commit graph. Commit messages, dates, authors, and parent SHAs do not matter. The diff does.
 
-That is the identity review needs. If `review-quill` approved a patch and a later head has the same patch-id, it can carry the approval forward instead of reviewing the same change again. If resolving a conflict changes the diff, the patch-id changes too. That is good; the change really is different.
+That is the identity review needs. If `review-quill` approved a patch and a later head has the same patch-id, it can carry the approval forward instead of reviewing the same change again. If resolving a conflict changes the diff, the patch-id changes too. That is exactly what I want; the change really is different.
 
 ## Merge-tree
 
@@ -92,7 +92,7 @@ Once those primitives are named, the service rules get simpler:
 
 This is the mental model behind the later traffic-control work. Most PRs do not need anything special. The value is in making the rare expensive cases explicit: same patch, no repeat review; changed patch, fresh review; same integration tree, no queue churn; conflicting integration tree, repair before landing.
 
-None of these primitives are mine. That is the point. The factory got simpler when it stopped inventing workflow concepts and started agreeing on the Git objects that were already there.
+None of these primitives are mine. That is the point. The factory got simpler when I stopped inventing workflow concepts and started agreeing on the Git objects that were already there.
 
 ## Related
 
