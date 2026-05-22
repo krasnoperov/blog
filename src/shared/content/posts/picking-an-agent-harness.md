@@ -17,8 +17,6 @@ There are five real options for the harness underneath a system like this: Claud
 
 Anthropic's flagship terminal agent. It's the best interactive agent I've used. It's also designed for an interactive human at a terminal, not for being driven by a parent process that wants to ingest its event stream. You can run it in non-interactive mode and parse its output, and people do, but you fight the tool the whole way: the JSON output schema isn't a stable contract, the tool-call rendering is meant for humans, and there's no first-class story for "another process wants to inspect what the agent is doing right now."
 
-For an interactive workflow on your own laptop, Claude Code is the right tool. For a custom harness that wants to own the orchestration and treat the agent as a worker, it's the wrong shape.
-
 ### 2. Codex CLI
 
 OpenAI's open-source counterpart. Structurally similar to Claude Code: written in Rust, designed for terminal use, runs the agent loop you'd expect (user input → model → tool use → observation → response). For a long time it was the default way to run Codex from a script, and patchrelay's first runner — the version that lived under the `zmx` PTY wrapper — was effectively a child-process driver around `codex` invocations.
@@ -36,8 +34,6 @@ I'm not a lawyer and I'm explicitly not making a legal claim. I'm making a perso
 ### 4. Codex MCP server
 
 OpenAI also ships an MCP (Model Context Protocol) interface that exposes Codex through the same tool-server contract as any other MCP integration. This is the cleanest fit if you already have an MCP-based workflow and want Codex to slot into it. The OpenAI App Server article is honest about what it gives up: the richer Codex-specific session semantics — turns, items, persistent thread state, approvals — don't map naturally onto MCP's request/response shape.
-
-If you're building something MCP-shaped, this is your lane. If you're building something that wants to *be* an agent runtime rather than consume one, it isn't.
 
 ### 5. Codex App Server
 
