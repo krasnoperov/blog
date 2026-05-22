@@ -50,6 +50,18 @@ test.describe('SSR smoke', () => {
     expect(body).toContain('property="og:type" content="article"');
     expect(body).toContain('name="twitter:card" content="summary"');
     expect(body).toContain('"@type":"BlogPosting"');
+    // Audit-driven SEO additions — keep them locked in.
+    expect(body).toContain('property="og:locale" content="en_US"');
+    expect(body).toContain('property="article:modified_time"');
+    expect(body).toContain('property="article:author"');
+    // Multiple `article:tag` entries get deduped by the head merger; the workaround
+    // is a single comma-joined value plus a `name="keywords"` meta.
+    expect(body).toMatch(/<meta property="article:tag" content="[^"]+,[^"]+"/);
+    expect(body).toContain('name="keywords"');
+    // Person publisher JSON-LD with sameAs (E-A-T signal).
+    expect(body).toContain('"sameAs":["https://github.com/krasnoperov"]');
+    // Regression guard: react-markdown was leaking the hast AST node as a DOM attr.
+    expect(body).not.toContain('node="[object Object]"');
   });
 
   test('mermaid svg lab returns server-rendered HTML', async ({ request }) => {
