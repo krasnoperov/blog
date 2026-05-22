@@ -31,7 +31,7 @@ review-quill, merge-steward, and patchrelay live in the same monorepo and share 
 
 Patchrelay doesn't call review-quill. review-quill doesn't call merge-steward. None of them know the others exist as services. The only thing they share is the GitHub state that PRs already publish: review state, check status, head SHA. New PR opens, GitHub webhook fires, review-quill picks it up. review-quill posts an approving review, GitHub webhook fires, merge-steward picks it up if checks are also green. merge-steward fast-forwards `main`, GitHub webhook fires, patchrelay marks the issue closed.
 
-This wasn't a clever architectural decision. It's what happened when I extracted services one at a time and refused to add direct coupling between them. It's also why each piece is independently usable — review-quill runs alone against any repo, no patchrelay required, no merge-steward required.
+This wasn't a clever architectural decision. It's what happened when I extracted services one at a time and refused to add direct coupling between them. It's also why each piece is independently usable — review-quill runs alone against any repo, no patchrelay required, no merge-steward required, and it doesn't know or care whether the PR was written by a human or an agent.
 
 The structural takeaway of the whole stack: GitHub state is the bus. Services are reconcilers. Every effect is a public artifact on the PR timeline. Debugging a stuck PR is "open the timeline and follow the events," not "find which of three services has the wrong opinion about this thing."
 

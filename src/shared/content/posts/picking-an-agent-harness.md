@@ -58,7 +58,7 @@ The initial attempts weren't reliable. Spawning was fine; cleanly recovering fro
 
 The conservative move was to let the agent runtime own the thread state instead. Once patchrelay started talking to the Codex App Server, threads became durable on the App Server's side, not patchrelay's. There was no terminal session to attach to, because there was no terminal — there was a JSON-RPC stream and a thread id. Attaching to a running agent stopped being a session-management problem and became a "fetch the latest items by thread id" problem. The App Server is built for exactly this use case.
 
-The operator UX I ended up with is small. From any device with a Tailscale connection to the box, I `ssh` in, run a small CLI command (`patchrelay watch <issue-id>`), and a TUI renders the current turn, command output, plan, and any pending approval. Closing the SSH session does nothing to the agent — the agent is held by the App Server, and the TUI is a stateful renderer reading items off a thread. If the network blinks I run the command again and pick up where I was. zmx is still my interactive baseline; it just isn't the agent-attach layer.
+The operator UX I ended up with is small. I `ssh` into the box over Tailscale — from a MacBook, or from a phone running Echo — run `patchrelay watch <issue-id>`, and a TUI renders the current turn, command output, plan, and any pending approval. Closing the SSH session does nothing to the agent — the agent is held by the App Server, and the TUI is a stateful renderer reading items off a thread. If the network blinks I run the command again and pick up where I was. zmx is still my interactive baseline; it just isn't the agent-attach layer.
 
 ## Why the App Server won
 

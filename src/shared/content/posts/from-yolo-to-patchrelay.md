@@ -53,6 +53,8 @@ Linear stayed as the tracker. I started small, with webhooks reacting to status 
 
 patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle. I don't know yet whether it's going to be the thing or a stepping stone to the thing. I'm going to keep building it and find out.
 
+Two lanes on the same box now: interactive zmx sessions where Claude or Codex sits next to me as I triage and shape, and delegated work through patchrelay, where I write a Linear issue and walk away. The interactive lane is where direction gets set; the delegated lane is where routine work goes.
+
 ## PS
 
 This post was drafted by the [Ghostwriter](https://github.com/estruyf/ghostwriter-agents-ai) skill in Claude Code from an interview I did with it, and then rewritten by hand because the first draft sounded too much like an AI doing an impression of a person. The opinions are mine throughout.
