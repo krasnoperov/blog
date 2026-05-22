@@ -33,7 +33,7 @@ The point of the box isn't power. It's that there's nothing on it. No SSH keys t
 
 ## Four agents at once
 
-Running multiple agents in parallel wasn't really an experiment — it's what naturally falls out of a proper setup. bash + tmux + git worktrees gives you several shells side by side, each on its own branch in its own directory, and spinning up four agents on four worktrees is no harder than opening four terminals. The first time I had it working I just sat there for a minute looking at it.
+Running multiple agents in parallel wasn't really an experiment — it's what falls out of a proper setup. zmx sessions plus git worktrees give you persistent shells, one per branch in its own directory, each attachable from its own terminal window, and spinning up four agents on four worktrees is no harder than opening four terminals. The first time I had it working I just sat there for a minute looking at it.
 
 I'd also moved my task tracking off GitHub Issues to [Linear](https://linear.app/) by then, which is dramatically nicer for spinning up well-scoped tasks quickly. I broke the work into four lanes, fed one to each terminal, and watched.
 

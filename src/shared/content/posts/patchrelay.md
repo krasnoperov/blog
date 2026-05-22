@@ -7,7 +7,7 @@ tags: software-factory, patchrelay, agentic-development, codex, harness-engineer
 featured: true
 ---
 
-Sometime in March I caught myself, again, copying a Linear ticket ID into a terminal so I could paste it into a Codex prompt — for the fourth or fifth time that morning. I'd already opened tmux, switched between four worktrees, restarted two failed builds, and rebased one branch against a `main` that had moved twice while I wasn't looking. The agents were faster than me at writing code. I was the bottleneck.
+Sometime in March I caught myself, again, copying a Linear ticket ID into a terminal so I could paste it into a Codex prompt — for the fourth or fifth time that morning. I'd already switched between four zmx sessions in four worktrees, restarted two failed builds, and rebased one branch against a `main` that had moved twice while I wasn't looking. The agents were faster than me at writing code. I was the bottleneck.
 
 patchrelay is what I built to stop being the bottleneck. I assign a Linear issue to it, walk away, and come back to a pull request that's implemented, reviewed, and either merged or honestly stuck with the reason in writing. Same agent I'd run myself; the surrounding machinery — durable workspace per issue, distinct repair loops, Linear glue — runs on its own.
 

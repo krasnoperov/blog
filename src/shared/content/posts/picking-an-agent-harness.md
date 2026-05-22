@@ -1,6 +1,6 @@
 ---
 title: Picking an agent harness when the SDK terms are murky
-summary: The five real options for embedding a coding agent into a custom factory, why the SDK licensing question pushed me to the Codex App Server, and why I stopped fighting tmux for session attach.
+summary: The five real options for embedding a coding agent into a custom factory, why the SDK licensing question pushed me to the Codex App Server, and why session-attach belongs in the agent runtime, not the terminal layer.
 publishedAt: 2026-04-07
 readingTime: 11 min read
 tags: software-factory, patchrelay, harness-engineering, codex, claude-code
@@ -86,7 +86,7 @@ Three things would make me revisit this.
 
 The shape of the interface, in patchrelay's code, is roughly: spawn a thread, drive a turn, observe items, satisfy approvals, persist the thread id. That contract is what I'd preserve in a swap. The implementation behind the contract is the part that would change.
 
-For the session-attach side: the rule I'd keep is that the agent runtime owns the thread state, not the terminal layer. Whatever multiplexer or attach mechanism I use is an opinion about the operator UX, not a load-bearing part of the agent's lifecycle. If I went back to tmux tomorrow, the agents wouldn't notice.
+For the session-attach side: the rule I'd keep is that the agent runtime owns the thread state, not the terminal layer. Whatever attach mechanism I use is an opinion about the operator UX, not a load-bearing part of the agent's lifecycle. If I moved attach back into the terminal layer tomorrow, the agents wouldn't notice.
 
 Patchrelay's harness is the most important choice in the whole factory, and it's also the one I've changed my mind about most. The current answer is "Codex App Server, with the operator attaching by thread id over a small TUI." The next answer might be different. The interface is what I'm trying to keep stable.
 
