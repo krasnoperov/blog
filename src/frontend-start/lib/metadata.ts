@@ -6,6 +6,9 @@ import {
   SITE_DESCRIPTION,
   SITE_FEED_PATH,
   SITE_AUTHOR_NAME,
+  SITE_AUTHOR_SAME_AS,
+  SITE_AUTHOR_URL,
+  SITE_LOCALE,
   SITE_NAME,
   SITE_TAGLINE,
   absoluteUrl,
@@ -42,6 +45,7 @@ function baseMetadata({
       { property: 'og:type', content: ogType },
       { property: 'og:url', content: canonicalUrl },
       { property: 'og:site_name', content: SITE_NAME },
+      { property: 'og:locale', content: SITE_LOCALE },
       { name: 'twitter:card', content: 'summary' },
       { name: 'twitter:title', content: title },
       { name: 'twitter:description', content: description },
@@ -118,6 +122,14 @@ export function archivePageHead() {
 
 export function postPageHead(post: BlogPostSummary) {
   const publishedAtIso = `${post.publishedAt}T00:00:00.000Z`;
+  const modifiedAt = post.updatedAt ?? post.publishedAt;
+  const modifiedAtIso = `${modifiedAt}T00:00:00.000Z`;
+  const author = {
+    '@type': 'Person' as const,
+    name: SITE_AUTHOR_NAME,
+    url: SITE_AUTHOR_URL,
+    sameAs: SITE_AUTHOR_SAME_AS,
+  };
 
   return baseMetadata({
     title: `${post.title} | ${SITE_NAME}`,
@@ -126,7 +138,14 @@ export function postPageHead(post: BlogPostSummary) {
     ogType: 'article',
     metaExtras: [
       { property: 'article:published_time', content: publishedAtIso },
-      ...post.tags.map((tag) => ({ property: 'article:tag', content: tag })),
+      { property: 'article:modified_time', content: modifiedAtIso },
+      { property: 'article:author', content: SITE_AUTHOR_URL },
+      // The head merger in @tanstack/react-router (headContentUtils.js) dedupes
+      // meta entries by name/property, so multiple `article:tag` entries collapse
+      // to the last one. Emit a single comma-joined value, and surface the full
+      // tag list via `keywords` + the BlogPosting JSON-LD below.
+      { property: 'article:tag', content: post.tags.join(', ') },
+      { name: 'keywords', content: post.tags.join(', ') },
     ],
     linkExtras: [
       {
@@ -142,7 +161,7 @@ export function postPageHead(post: BlogPostSummary) {
         headline: post.title,
         description: post.summary,
         datePublished: post.publishedAt,
-        dateModified: post.publishedAt,
+        dateModified: modifiedAt,
         url: absoluteUrl(post.path),
         mainEntityOfPage: absoluteUrl(post.path),
         isPartOf: {
@@ -150,14 +169,8 @@ export function postPageHead(post: BlogPostSummary) {
           name: SITE_NAME,
           url: absoluteUrl('/'),
         },
-        author: {
-          '@type': 'Person',
-          name: SITE_AUTHOR_NAME,
-        },
-        publisher: {
-          '@type': 'Person',
-          name: SITE_AUTHOR_NAME,
-        },
+        author,
+        publisher: author,
         keywords: post.tags,
         articleSection: SITE_TAGLINE,
         inLanguage: 'en',

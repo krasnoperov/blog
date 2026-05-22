@@ -28,7 +28,7 @@ export default function BlogArchivePage() {
         {BLOG_POSTS.map((post) => (
           <Link key={post.slug} to={`/posts/${post.slug}`} className={styles.postLink}>
             <div className={styles.postMeta}>
-              <span>{formatPublishedDate(post.publishedAt)}</span>
+              <time dateTime={post.publishedAt}>{formatPublishedDate(post.publishedAt)}</time>
               <span>{post.readingTime}</span>
             </div>
             <h2 className={styles.postTitle}>{post.title}</h2>

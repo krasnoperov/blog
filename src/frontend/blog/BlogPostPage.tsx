@@ -42,8 +42,9 @@ function renderHeading(level: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6') {
   return function Heading({
     children,
     className,
+    node: _node,
     ...props
-  }: HTMLAttributes<HTMLHeadingElement>) {
+  }: HTMLAttributes<HTMLHeadingElement> & { node?: unknown }) {
     const label = extractText(children);
     const id = slugifyHeading(label);
     const Tag = level;
@@ -72,7 +73,7 @@ const markdownComponents: Components = {
   h4: renderHeading('h4'),
   h5: renderHeading('h5'),
   h6: renderHeading('h6'),
-  a({ href, children, ...props }) {
+  a({ href, children, node: _node, ...props }) {
     const isExternal = typeof href === 'string' && /^https?:\/\//.test(href);
 
     return (
@@ -89,7 +90,7 @@ const markdownComponents: Components = {
   // Inline code highlight. Fenced blocks are handled by the `pre` renderer
   // below — `pre` inspects the raw hast node so it works for both labelled
   // fences (```ts) and bare fences (```).
-  code({ children, ...props }: HTMLAttributes<HTMLElement>) {
+  code({ children, node: _node, ...props }: HTMLAttributes<HTMLElement> & { node?: unknown }) {
     return (
       <code className={markdownStyles.inlineCode} {...props}>
         {children}
@@ -159,7 +160,7 @@ export function BlogPostPage({ post }: BlogPostPageProps) {
           <span>back to archive</span>
         </Link>
         <div className={styles.meta}>
-          <span>{formatPublishedDate(post.publishedAt)}</span>
+          <time dateTime={post.publishedAt}>{formatPublishedDate(post.publishedAt)}</time>
           <span>{post.readingTime}</span>
         </div>
         <h1 className={styles.title}>{post.title}</h1>

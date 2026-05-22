@@ -46,7 +46,7 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['link']).toContain('/posts/hello-world-formatting-the-factory-notes.md');
     const body = await response.text();
     expect(body).toContain('Hello World for Factory Notes');
-    expect(body).toContain('This is the first real post shape for the blog.');
+    expect(body).toContain('This is the first post, and its only job is to prove the format');
     expect(body).toContain('property="og:type" content="article"');
     expect(body).toContain('name="twitter:card" content="summary"');
     expect(body).toContain('"@type":"BlogPosting"');

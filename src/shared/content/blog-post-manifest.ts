@@ -81,7 +81,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'picking-an-agent-harness',
     title: 'Picking an agent harness when the SDK terms are murky',
     summary:
-      'The five honest options for embedding a coding agent into a custom factory, why the SDK licensing question pushed me to the Codex App Server, and why I stopped fighting tmux for session attach.',
+      'The five real options for embedding a coding agent into a custom factory, why the SDK licensing question pushed me to the Codex App Server, and why session-attach belongs in the agent runtime, not the terminal layer.',
     publishedAt: '2026-04-07',
     readingTime: '11 min read',
     tags: ['software-factory', 'patchrelay', 'harness-engineering', 'codex', 'claude-code'],
