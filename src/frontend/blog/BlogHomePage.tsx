@@ -44,7 +44,7 @@ export default function BlogHomePage() {
           {BLOG_POSTS.map((post) => (
             <Link key={post.slug} to={`/posts/${post.slug}`} className={styles.postCard}>
               <div className={styles.postMeta}>
-                <span>{formatPublishedDate(post.publishedAt)}</span>
+                <time dateTime={post.publishedAt}>{formatPublishedDate(post.publishedAt)}</time>
                 <span>{post.readingTime}</span>
               </div>
               <h3 className={styles.postCardTitle}>{post.title}</h3>

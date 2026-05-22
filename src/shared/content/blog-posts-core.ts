@@ -5,6 +5,12 @@ export interface BlogPostSummary {
   title: string;
   summary: string;
   publishedAt: string;
+  /**
+   * Optional ISO date (YYYY-MM-DD) for substantive edits after first publish.
+   * Surfaces as `dateModified` in JSON-LD and `article:modified_time` in OG.
+   * If unset, falls back to `publishedAt`.
+   */
+  updatedAt?: string;
   readingTime: string;
   tags: string[];
   featured: boolean;
@@ -20,6 +26,7 @@ export interface BlogPostManifestEntry {
   title: string;
   summary: string;
   publishedAt: string;
+  updatedAt?: string;
   readingTime?: string;
   tags?: string[] | string;
   featured?: boolean | string;
@@ -104,6 +111,10 @@ function assertSummaryMatchesSource(summary: BlogPostSummary, metadata: Record<s
   compareField(summary.slug, 'publishedAt', summary.publishedAt, metadata.publishedAt ?? '');
   compareField(summary.slug, 'readingTime', summary.readingTime, metadata.readingTime ?? '5 min read');
 
+  if ((summary.updatedAt ?? '') !== (metadata.updatedAt ?? '')) {
+    throw new Error(`Blog post "${summary.slug}" has mismatched updatedAt metadata.`);
+  }
+
   const sourceTags = normalizeTags(metadata.tags);
   if (summary.tags.join('|') !== sourceTags.join('|')) {
     throw new Error(`Blog post "${summary.slug}" has mismatched tags metadata.`);
@@ -127,6 +138,7 @@ export function createBlogPostSummary(entry: Readonly<BlogPostManifestEntry>): B
     title: entry.title,
     summary: entry.summary,
     publishedAt: entry.publishedAt,
+    updatedAt: entry.updatedAt,
     readingTime: entry.readingTime ?? '5 min read',
     tags: normalizeTags(entry.tags),
     featured: normalizeBoolean(entry.featured),
