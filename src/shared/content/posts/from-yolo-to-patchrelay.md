@@ -13,7 +13,7 @@ Sometime in late 2025 I stopped writing code by hand, and it crept up on me. I d
 
 Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I didn't have to babysit every decision. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
 
-Something about that is unsettling, and I'm trying to be honest with myself about it. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. What I plan to do about it is train the intuition the way I always have — build things, see where I land, correct, iterate, try different approaches and see which ones hold up. The shape of "writing software" is moving and the only honest way to map the new shape is to keep working in it.
+Something about that is unsettling, and I'm trying not to wave it off. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. The plan is to train the intuition the way I always have — build things, see where I land, correct, iterate, try different approaches, see which ones hold up. The shape of "writing software" is moving, and the way I map it is the way I always have: by working in it.
 
 ## Permission prompts
 
