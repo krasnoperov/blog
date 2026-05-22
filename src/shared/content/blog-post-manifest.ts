@@ -19,9 +19,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'do-not-race-agent-prs',
-    title: 'When to sequence parallel agent PRs',
+    title: "Don't pay for the same review twice",
     summary:
-      'Running many agents in parallel mostly produces independent PRs that can land in any order. A few touch the same migration or lock file and need to be sequenced. Three places where the factory catches the coupling — Linear dependencies, a pre-PR sequence-check, and the merge queue itself.',
+      'Every review-quill round costs time and tokens. Two patterns waste them — parallel agents whose PRs should have been sequenced, and clean rebases that produce a new SHA without changing the diff. The factory plans to avoid the first and uses `patch-id` to skip the second.',
     publishedAt: '2026-05-18',
     readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'merge-steward'],
