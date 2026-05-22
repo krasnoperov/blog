@@ -1,5 +1,6 @@
 import {
   BLOG_POSTS,
+  HOMEPAGE_POSTS,
   type BlogPostSummary,
 } from '../../shared/content/blog-posts';
 import {
@@ -68,7 +69,7 @@ function baseMetadata({
 export function homePageHead() {
   return baseMetadata({
     title: SITE_NAME,
-    description: 'Notes on building a software factory: control planes, execution systems, and turning ideas into delivered software.',
+    description: 'Notes on agent-driven development, harness design, and the small services that keep a coding-agent factory honest.',
     path: '/',
     jsonLd: {
       '@context': 'https://schema.org',
@@ -76,7 +77,9 @@ export function homePageHead() {
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: absoluteUrl('/'),
-      blogPost: BLOG_POSTS.map((post) => ({
+      // Mirror the visible homepage list so structured data and the rendered
+      // shop-window stay in sync. Archive (CollectionPage) keeps the full list.
+      blogPost: HOMEPAGE_POSTS.map((post) => ({
         '@type': 'BlogPosting',
         headline: post.title,
         url: absoluteUrl(post.path),

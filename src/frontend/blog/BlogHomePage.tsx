@@ -1,9 +1,9 @@
 import { Link } from '../components/Link';
-import { BLOG_POSTS } from '../../shared/content/blog-posts';
+import { HOMEPAGE_POSTS } from '../../shared/content/blog-posts';
 import { BlogShell } from './BlogShell';
 import styles from './BlogHomePage.module.css';
 
-const featuredPost = BLOG_POSTS.find((post) => post.featured) ?? BLOG_POSTS[0];
+const featuredPost = HOMEPAGE_POSTS.find((post) => post.featured) ?? HOMEPAGE_POSTS[0];
 
 function formatPublishedDate(value: string) {
   return new Intl.DateTimeFormat('en', {
@@ -16,14 +16,14 @@ function formatPublishedDate(value: string) {
 
 export default function BlogHomePage() {
   return (
-    <BlogShell pageHead={[{ value: 'home' }, { label: '', value: `${BLOG_POSTS.length} posts` }]}>
+    <BlogShell pageHead={[{ value: 'home' }, { label: '', value: `${HOMEPAGE_POSTS.length} posts` }]}>
       <section className={styles.hero}>
         <h1 className={styles.headline}>
           Notes from building a software factory.
         </h1>
         <p className={styles.subtitle}>
           A personal tech blog about agent-driven development, harness design, and the small
-          systems that move ideas toward delivered, measured outcomes.
+          services that keep a coding-agent factory honest.
         </p>
         <div className={styles.actions}>
           <Link to={`/posts/${featuredPost.slug}`} className={styles.actionPrimary}>read the latest</Link>
@@ -35,13 +35,13 @@ export default function BlogHomePage() {
         <header className={styles.sectionHeader}>
           <div>
             <span className={styles.sectionEyebrow}>Recent posts</span>
-            <h2 className={styles.sectionTitle}>{BLOG_POSTS.length} entries</h2>
+            <h2 className={styles.sectionTitle}>{HOMEPAGE_POSTS.length} entries</h2>
           </div>
           <Link to="/posts" className={styles.sectionLink}>see all</Link>
         </header>
 
         <div className={styles.archiveList}>
-          {BLOG_POSTS.map((post) => (
+          {HOMEPAGE_POSTS.map((post) => (
             <Link key={post.slug} to={`/posts/${post.slug}`} className={styles.postCard}>
               <div className={styles.postMeta}>
                 <time dateTime={post.publishedAt}>{formatPublishedDate(post.publishedAt)}</time>

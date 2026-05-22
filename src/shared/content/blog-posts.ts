@@ -11,6 +11,14 @@ import {
   getBlogPostSummary,
 } from './blog-post-manifest';
 
+// Slugs hidden from the homepage shop-window — still reachable by URL and
+// listed in the archive, sitemap, feed, and llms.txt.
+const HIDDEN_FROM_HOMEPAGE = new Set(['hello-world-formatting-the-factory-notes']);
+
+export const HOMEPAGE_POSTS: BlogPostSummary[] = BLOG_POSTS.filter(
+  (post) => !HIDDEN_FROM_HOMEPAGE.has(post.slug),
+);
+
 const RAW_POST_LOADERS = import.meta.glob('./posts/*.md', {
   query: '?raw',
   import: 'default',
@@ -34,3 +42,4 @@ export async function getBlogPost(slug: string): Promise<BlogPost | undefined> {
 export type { BlogPost, BlogPostSummary };
 export { getBlogPostMarkdownPath, getBlogPostPath };
 export { BLOG_POSTS, BLOG_PUBLIC_PATHS, getBlogPostSummary };
+// HOMEPAGE_POSTS is already exported via its declaration above.
