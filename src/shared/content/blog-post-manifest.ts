@@ -11,7 +11,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'not-scaling-code-review',
     title: 'Review volume is the wrong bottleneck',
     summary:
-      'PatchRelay can keep agents busy, and that quickly makes manual review feel impossible. The review-quill repair loop absorbs much of the code-review work, but it does not answer the more important question: whether the product still looks, feels, and behaves right.',
+      'PatchRelay can keep agents busy, and that quickly makes manual review feel impossible. The review-quill repair loop absorbs much of the code-review work. The harder question — whether the agents are still steering the product in the right direction — is still open.',
     publishedAt: '2026-05-18',
     readingTime: '3 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],
@@ -19,9 +19,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'do-not-race-agent-prs',
-    title: 'Do not race agent PRs',
+    title: 'When to sequence parallel agent PRs',
     summary:
-      'PatchRelay mostly runs independent issues, but a few branches should never race. Sequence the predictable conflicts, let normal PRs stay normal, and keep merge-steward as the safety net.',
+      'Running many agents in parallel mostly produces independent PRs that can land in any order. A few touch the same migration or lock file and need to be sequenced. Three places where the factory catches the coupling — Linear dependencies, a pre-PR sequence-check, and the merge queue itself.',
     publishedAt: '2026-05-18',
     readingTime: '4 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'merge-steward'],

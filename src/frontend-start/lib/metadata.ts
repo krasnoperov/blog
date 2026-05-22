@@ -68,7 +68,7 @@ function baseMetadata({
 export function homePageHead() {
   return baseMetadata({
     title: SITE_NAME,
-    description: 'Notes on building a software factory: control planes, execution systems, and turning ideas into delivered software.',
+    description: 'Notes on agent-driven development, harness design, and the small services that keep a coding-agent factory honest.',
     path: '/',
     jsonLd: {
       '@context': 'https://schema.org',

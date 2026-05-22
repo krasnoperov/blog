@@ -1,6 +1,6 @@
 ---
 title: 'Review volume is the wrong bottleneck'
-summary: PatchRelay can keep agents busy, and that quickly makes manual review feel impossible. The review-quill repair loop absorbs much of the code-review work, but it does not answer the more important question: whether the product still looks, feels, and behaves right.
+summary: PatchRelay can keep agents busy, and that quickly makes manual review feel impossible. The review-quill repair loop absorbs much of the code-review work. The harder question — whether the agents are still steering the product in the right direction — is still open.
 publishedAt: 2026-05-18
 readingTime: 3 min read
 tags: software-factory, patchrelay, review-quill, code-review

@@ -1,6 +1,6 @@
 ---
-title: 'Do not race agent PRs'
-summary: PatchRelay mostly runs independent issues, but a few branches should never race. Sequence the predictable conflicts, let normal PRs stay normal, and keep merge-steward as the safety net.
+title: 'When to sequence parallel agent PRs'
+summary: Running many agents in parallel mostly produces independent PRs that can land in any order. A few touch the same migration or lock file and need to be sequenced. Three places where the factory catches the coupling — Linear dependencies, a pre-PR sequence-check, and the merge queue itself.
 publishedAt: 2026-05-18
 readingTime: 4 min read
 tags: software-factory, patchrelay, review-quill, merge-steward
