@@ -1,11 +1,8 @@
 import { Link } from '../components/Link';
-import { BLOG_POSTS } from '../../shared/content/blog-posts';
+import { HOMEPAGE_POSTS } from '../../shared/content/blog-posts';
 import { BlogShell } from './BlogShell';
 import styles from './BlogHomePage.module.css';
 
-// Hello-world is a format-demo; useful at its URL but not on the shop window.
-const HIDDEN_FROM_HOMEPAGE = new Set(['hello-world-formatting-the-factory-notes']);
-const HOMEPAGE_POSTS = BLOG_POSTS.filter((post) => !HIDDEN_FROM_HOMEPAGE.has(post.slug));
 const featuredPost = HOMEPAGE_POSTS.find((post) => post.featured) ?? HOMEPAGE_POSTS[0];
 
 function formatPublishedDate(value: string) {

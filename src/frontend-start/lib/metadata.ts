@@ -1,5 +1,6 @@
 import {
   BLOG_POSTS,
+  HOMEPAGE_POSTS,
   type BlogPostSummary,
 } from '../../shared/content/blog-posts';
 import {
@@ -76,7 +77,9 @@ export function homePageHead() {
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: absoluteUrl('/'),
-      blogPost: BLOG_POSTS.map((post) => ({
+      // Mirror the visible homepage list so structured data and the rendered
+      // shop-window stay in sync. Archive (CollectionPage) keeps the full list.
+      blogPost: HOMEPAGE_POSTS.map((post) => ({
         '@type': 'BlogPosting',
         headline: post.title,
         url: absoluteUrl(post.path),
