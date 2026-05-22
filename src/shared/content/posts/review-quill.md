@@ -19,7 +19,7 @@ What makes that strictness affordable is that two AI agents have a really fast h
 
 ## Reviewing on real code
 
-The thing review-quill does that I didn't expect to matter as much as it does is checking out the head SHA in a real worktree before reviewing. Most LLM PR reviewers I've used or read about feed the diff text into the model and ask it to comment. That works for surface-level things — naming, obvious bugs, missing types. It misses anything that depends on knowing what the rest of the codebase looks like.
+What I didn't expect to matter as much as it does: review-quill checks out the head SHA in a real worktree before reviewing. Most LLM PR reviewers I've used or read about feed the diff text into the model and ask it to comment. That works for surface-level things — naming, obvious bugs, missing types. It misses anything that depends on knowing what the rest of the codebase looks like.
 
 A real checkout means the reviewer can grep, can read tests in adjacent files, can check whether the function being modified is called from somewhere with assumptions the diff would violate. The cost is a few seconds of clone-and-checkout per review. The benefit is catches the diff alone wouldn't have surfaced.
 
@@ -51,7 +51,7 @@ If a human reviewer sat on the other end of this loop, "twenty-five rounds befor
 
 A coding agent doesn't burn out, and neither does the reviewer when the reviewer is also a service. The hand-off between review and fix takes seconds, not days. No Slack DM, no "can we sync about this," no waiting for somebody to swap context back in. The agent reads the structured review on a `REQUEST_CHANGES` exit, opens the worktree it's been working in, addresses the comments, pushes, and the loop runs again.
 
-That property — fast hand-off, no fatigue — is what lets review-quill afford to be strict. With a slow loop, this kind of strictness would just be a bottleneck wearing a different hat. With a fast loop, it works: review-quill points at what's wrong, the implementer takes another swing, the cycle takes seconds, and convergence is cheap. The PR that finally lands has been through enough rounds that the obvious wrong answers are already gone.
+That property — fast hand-off, no fatigue — is what lets review-quill afford to be strict: it points at what's wrong, the implementer takes another swing, the cycle takes seconds, and convergence is cheap. The PR that finally lands has been through enough rounds that the obvious wrong answers are already gone.
 
 ## When iteration becomes churn
 

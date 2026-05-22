@@ -11,8 +11,6 @@ Sometime in March I caught myself, again, copying a Linear ticket ID into a term
 
 patchrelay is what I built to stop being the bottleneck. I assign a Linear issue to it, walk away, and come back to a pull request that's implemented, reviewed, and either merged or honestly stuck with the reason in writing. Same agent I'd run myself; the surrounding machinery — durable workspace per issue, distinct repair loops, Linear glue — runs on its own.
 
-This post is what's inside, plus the engine-choice context I wish I'd had when I started.
-
 ## The harness
 
 The Codex app-server gives me a stable JSON-RPC protocol with `codex resume` semantics. Threads persist on the server side. Turns, items, and approvals are primitives I can subscribe to. Everything else — what to run, when to run it, how to keep state across failures — patchrelay owns.
@@ -21,7 +19,7 @@ The Codex app-server gives me a stable JSON-RPC protocol with `codex resume` sem
 
 Every Linear issue gets a git worktree on disk that lives across runs. When the agent starts an implementation, that worktree is its scratch space. When CI fails an hour later and a `ci_repair` run kicks off, it resumes against the same worktree — the agent sees the code it just wrote, not a fresh checkout of `main`. Run state, observations, and thread IDs all persist in SQLite alongside the worktree.
 
-The alternative is the stateless model: clone, work, throw away. That's the right model for a one-shot agent and the wrong model for an agent that should learn from its own previous turns inside an issue's lifecycle. I want the latter.
+The alternative is the stateless model: clone, work, throw away. That's the right model for a one-shot agent and the wrong model for an agent that should learn from its own previous turns inside an issue's lifecycle.
 
 ### Run types are not "try again"
 
@@ -49,7 +47,7 @@ This was the feature that pushed me toward the Codex app-server in the first pla
 
 ## What changed since the engine-choice post
 
-Two things happened in April that I want to flag, because they didn't change my mind about the engine — they sharpened the reasons I'd made the call.
+Two things happened in April that didn't change my mind about the engine — they sharpened the reasons I'd made the call.
 
 The first was the OpenClaw thing. On April 4, 2026, [Anthropic emailed Claude subscribers](https://techcrunch.com/2026/04/04/anthropic-says-claude-code-subscribers-will-need-to-pay-extra-for-openclaw-support/) that subscription quotas wouldn't cover "third-party harnesses" anymore, named OpenClaw — Peter Steinberger's open-source Claude Code-style harness — explicitly, and offered a one-month subscription credit as compensation. Continued programmatic use of subscription auth meant turning on ["extra usage"](https://support.claude.com/en/articles/12429409-manage-extra-usage-for-paid-claude-plans), which is API-tier pricing wearing a different jacket. Six days later [Steinberger's account got briefly suspended](https://techcrunch.com/2026/04/10/anthropic-temporarily-banned-openclaws-creator-from-accessing-claude/) for "suspicious signals" and reinstated a few hours after his post went viral. The previous patchrelay post was deliberately careful about Anthropic's licensing — not a legal claim, just a personal-risk claim. The OpenClaw thing was that risk turning into a bill. Anyone who'd built a service on Claude subscription auth woke up to a forced migration. The cost question — what does it actually cost to run a service on Claude — got a very specific answer: API tier, or nothing.
 

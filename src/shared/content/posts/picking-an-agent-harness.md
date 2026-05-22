@@ -84,7 +84,7 @@ The shape of the interface, in patchrelay's code, is roughly: spawn a thread, dr
 
 For the session-attach side: the rule I'd keep is that the agent runtime owns the thread state, not the terminal layer. Whatever attach mechanism I use is an opinion about the operator UX, not a load-bearing part of the agent's lifecycle. If I moved attach back into the terminal layer tomorrow, the agents wouldn't notice.
 
-Patchrelay's harness is the most important choice in the whole factory, and it's also the one I've changed my mind about most. The current answer is "Codex App Server, with the operator attaching by thread id over a small TUI." The next answer might be different. The interface is what I'm trying to keep stable.
+Patchrelay's harness is the most important choice in the whole factory, and it's also the one I've changed my mind about most. The current answer is "Codex App Server, with the operator attaching by thread id over a small TUI."
 
 ## Related
 

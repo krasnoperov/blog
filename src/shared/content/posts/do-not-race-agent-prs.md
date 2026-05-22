@@ -11,7 +11,7 @@ The first version of the patchrelay problem was simple: keep bad PRs from landin
 
 Starting ten coding agents is the easy demo. The harder part shows up when their branches all come back looking reasonable. CI is mostly green, the diffs look plausible, and the bill arrives at the end: two PRs touched the same migration, one branch was green against yesterday's `main`, a clean rebase quietly dismissed someone's approval. The merge queue ends up being the first place anyone notices the planning was wrong.
 
-Most of the time nothing dramatic happens — most agent PRs don't conflict. That matters for the design. I don't want every branch turning into a stack to defend against the ones that do. A stack is just a PR opened against another PR instead of `main`, useful when the dependency is real and noise everywhere else. Keep independent work independent, sequence only the branches with visible coupling.
+Most of the time nothing dramatic happens — most agent PRs don't conflict. I don't want every branch turning into a stack to defend against the ones that do. A stack is just a PR opened against another PR instead of `main`, useful when the dependency is real and noise everywhere else. Keep independent work independent, sequence only the branches with visible coupling.
 
 ## The shape
 

@@ -11,7 +11,7 @@ featured: true
 
 Sometime in late 2025 I stopped writing code by hand, and it crept up on me. I didn't decide to — there was no manifesto, no talk that converted me. I just noticed, a few weeks in, that I'd been describing what I wanted in prose and reading the diff afterwards, and that this had been working well enough that picking up the keyboard again felt like a downgrade.
 
-Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I didn't have to babysit every decision. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
+Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
 
 Something about that is unsettling, and I'm trying not to wave it off. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. The plan is to train the intuition the way I always have — build things, see where I land, correct, iterate, try different approaches, see which ones hold up. The shape of "writing software" is moving, and the way I map it is the way I always have: by working in it.
 
@@ -51,7 +51,7 @@ The shape of the answer was clear enough: something that could pull a task from 
 
 Linear stayed as the tracker. I started small, with webhooks reacting to status changes, and worked outward from there into Linear's agent integrations, which let you delegate a task to an agent directly. Each new piece pulled the loop closer to running on its own: task in, branch out, review and CI iterating in the middle, all of it visible from the tracker.
 
-patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle. I don't know yet whether it's going to be the thing or a stepping stone to the thing. I'm going to keep building it and find out.
+patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle.
 
 Two lanes on the same box now: interactive zmx sessions where Claude or Codex sits next to me as I triage and shape, and delegated work through patchrelay, where I write a Linear issue and walk away. The interactive lane is where direction gets set; the delegated lane is where routine work goes.
 

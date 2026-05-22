@@ -11,7 +11,7 @@ The first time I had four agents running in parallel against the same repo, I lo
 
 The fix is well-understood: a merge queue. Land each PR after a fresh CI run on the *integrated* SHA — `main` plus the PR's diff — not on the branch in isolation. GitHub ships a native one. For private repos it requires GitHub Enterprise Cloud, and "buy GitHub Enterprise Cloud so my one-person micro-corporation can land merges cleanly" was not a sentence I was going to say.
 
-So I built one. **merge-steward** is a serial, self-hosted speculative merge queue. It puts chaotic parallel work into an order, tests every merge against the live tip of `main`, and only fast-forwards when that tested SHA is still valid. The measurement that pushed it out of patchrelay is the reason it exists as its own service.
+So I built one. **merge-steward** is a serial, self-hosted speculative merge queue. It puts chaotic parallel work into an order, tests every merge against the live tip of `main`, and only fast-forwards when that tested SHA is still valid.
 
 ## The landing contract
 
