@@ -69,9 +69,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'review-quill',
-    title: 'review-quill: real-checkout review, stateless attempts, carry-forward approvals',
+    title: 'review-quill: a strict reviewer for your coding agent',
     summary:
-      'Coding agents focus on the task and forget the surroundings. review-quill checks out the head SHA in a real worktree, runs each attempt as a fresh stateless Codex thread, and re-publishes prior approvals when a rebase doesn\'t change the diff.',
+      'Coding agents focus on the task and forget the surroundings: docs drift, tests go stale, sibling files keep old assumptions. review-quill is the strict reviewer that keeps sending the PR back until the repo is aligned again.',
     publishedAt: '2026-04-29',
     readingTime: '5 min read',
     tags: ['software-factory', 'patchrelay', 'review-quill', 'code-review'],

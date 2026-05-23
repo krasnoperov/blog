@@ -73,4 +73,4 @@ Source, docs, and self-hosting instructions: [github.com/krasnoperov/patchrelay]
 - [From YOLO to patchrelay](/posts/from-yolo-to-patchrelay)
 - [Picking an agent harness when the SDK terms are murky](/posts/picking-an-agent-harness)
 - [merge-steward: speculative integration, parallel validation, fast-forward landing](/posts/merge-steward)
-- [review-quill: real-checkout review, stateless attempts, carry-forward approvals](/posts/review-quill)
+- [review-quill: a strict reviewer for your coding agent](/posts/review-quill)
