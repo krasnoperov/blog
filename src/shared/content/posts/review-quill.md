@@ -27,7 +27,7 @@ Most LLM PR reviewers I've used or read about feed the diff text into the model 
 
 review-quill keeps a persistent bare clone of each attached repo. Each attempt is `git worktree add` off that cache plus a `git fetch` for new refs — cheap, doesn't fight the cache for the working directory. The reviewer runs against the materialized tree at the exact head SHA, so it can grep, can read tests in adjacent files, can check whether the function being modified is called from somewhere with assumptions the diff would violate.
 
-The review policy itself isn't in TypeScript; it's in repo markdown — `REVIEW_WORKFLOW.md` and `AGENTS.md`, loaded into a prompt envelope and run through Codex App Server. The TypeScript surface is the harness around it: when to attempt, how to materialize the worktree, how to handle stale attempts, how to publish.
+The repo-specific review guidance is markdown — `REVIEW_WORKFLOW.md` and `AGENTS.md` by default — loaded into a TypeScript-built prompt envelope and run through Codex App Server. The built-in output contract/review rubric and the harness logic stay in TypeScript: when to attempt, how to materialize the worktree, how to handle stale attempts, how to publish.
 
 ## Decision 2 — Stateless attempts keyed by head SHA
 
