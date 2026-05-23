@@ -2,6 +2,8 @@
 
 Reference for writing in Aleksei Krasnoperov's voice on this blog. Distilled from the editorial pass on `from-yolo-to-patchrelay`, `picking-an-agent-harness`, `patchrelay`, `merge-steward`, `review-quill`, and `hello-world-formatting-the-factory-notes` (April 2026).
 
+This is the canonical voice reference. Authoring process, grounding rules, and markdown/rendering constraints live in `src/shared/content/AUTHORING.md`; where the two overlap on voice, this file wins.
+
 ## Reference points
 
 The closest published voice is Mitchell Hashimoto on `mitchellh.com/writing`, particularly *Ghostty Is Leaving GitHub*. First-person, slightly vulnerable, anchored in specific dates and numbers, no marketing-shaped language. The voice on this blog is calibrated against that reference. When in doubt, read a Hashimoto post and check whether the draft sounds like the same person could have written it.
@@ -22,7 +24,7 @@ Tone register: somewhere between an internal engineering memo and a private jour
 | Long compound sentences with em-dashes and parentheticals; mix in occasional short ones | Staccato fragments for fake drama ("Every time. Not once. Over and over.") |
 | State observations directly | Land observations as paired aphorisms ("Faster output, less authorship." / "The parallelism bought speed and sold control.") |
 | Concrete numbers and sources ("173 of 232 runs", "April 4, 2026", "$200/month each") | Vague intensifiers without a number ("dramatically faster", "much more expensive", "incredibly cheap") |
-| Admit uncertainty plainly ("I don't know yet how to make that happen reliably") | Empty closers ("Let's find out!", "Still figuring it out.", "Time will tell.") |
+| Admit uncertainty plainly, then a flat closer is fine once the question is named ("…over a few months of real work. Let's find out.") | Closers that gesture at uncertainty without naming it ("Still figuring it out.", "Time will tell.", a bare "Let's find out!") |
 | Conversational asides in parens ("(I tried.)") | Memes that clash with the surrounding register ("Agents go brrrr") |
 | Drop a metaphor as soon as it has to work to keep up | Stretch a metaphor to land a point ("a strict reviewer with a fast loop is a coach") |
 | Cut bios for people the reader already knows | Pad with credentials ("Peter Steinberger, recently joined OpenAI...") |
@@ -81,11 +83,12 @@ Use backticks. Prefer the exact tool/command/file/run-type name from the codebas
 
 ### Closers
 
-A forward-looking line that names what's still uncertain. Never a summary, never a call to action. Examples that work:
+A forward-looking line that names what's still uncertain. Never a summary, never a call to action. The line itself can be flat and even colloquial ("Let's find out.") as long as the sentences just before it have already named the specific thing that's uncertain — what's banned is the closer that gestures at uncertainty without naming it, not the plain phrasing. Examples that work:
 
 - "I'll write about it when I know enough to be wrong on the record."
 - "The 74.6% number is doing better."
 - "I'm going to keep building it and find out."
+- "Does writing a Linear issue and walking away actually beat steering it turn by turn? […] watch which instinct holds up over a few months of real work. Let's find out." (the question is stated first; the closer just caps it)
 
 ## Failure modes to watch for
 
@@ -94,13 +97,14 @@ These are mistakes the editorial pass had to fix repeatedly. Watch for them when
 1. **Pronoun pivot in the lede.** "If you've spent time… You'll find that…" then a switch to "I". The Hashimoto pattern is "I" from the first sentence.
 2. **Pseudo-aphorisms.** Two parallel sentences engineered to land a sound-bite. "Security through absence." "The parallelism bought speed and sold control." Cut these.
 3. **Fragment drama.** Two-word sentences for false emphasis. "Not once." "Over and over." Use sparingly, only when earned.
-4. **Empty closers.** "Time will tell." "Let's find out!" Replace with a specific uncertainty.
+4. **Empty closers.** "Time will tell." A bare "Let's find out!" that names nothing. The fix isn't to ban the words — it's to state the specific uncertainty first, after which a flat closer ("Let's find out.") is fine. `from-yolo-to-patchrelay` does this: it names the open question, then ends on the plain line.
 5. **Marketing flourishes.** *genuinely*, *seamlessly*, *literally*, *the right answer is X* (without a number).
 6. **Self-rating.** "decent code quality", "well-architected", "clean implementation." Let the work be its own evidence.
 7. **Bio-padding for known names.** Don't introduce people the reader knows by reputation.
 8. **Metaphor that works too hard.** "A strict reviewer with a slow loop is a bottleneck. A strict reviewer with a fast loop is a coach." Drop the metaphor; describe the mechanism.
 9. **Vault-path leaks.** `~/vault/...`, `/home/...`, internal Linear issue IDs that leak from interview transcripts. The reader can't follow these. Cut.
 10. **Promotional structure with promotional voice.** The structure can be pain → solution; the voice should still be first-person and specific. Don't translate the structure into "you'll save time" copy.
+11. **Loose chaining.** Long compound sentences are on-voice when their shape carries the argument — suspension, accumulation, a claim chained to its evidence. They go loose when the clauses are joined by an additive "and" or a trailing relative clause that adds nothing. Test: cut the sentence at the join. If both halves stand on their own and the logical link survives, it was loose — split it. If one half is a setup with no payoff, or a claim severed from its evidence, the length was load-bearing — keep it.
 
 ## Sample paragraphs (in-voice)
 

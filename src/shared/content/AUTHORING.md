@@ -29,12 +29,14 @@ This shape exists because the entire blog refuses to manifest a single right ans
 
 ## Voice rules
 
+For full voice calibration — sentence rhythm, lexicon, the closer rules, the failure-mode checklist — see `VOICE.md` at the repo root. The rules below are the load-bearing subset; `VOICE.md` is the authority where they overlap.
+
 - **First person singular.** "I rented a Hetzner box" not "we rented a Hetzner box". The blog is personal. There is no "we" unless there really is a we.
 - **Plain past tense for things that happened, plain present for things that are.** Don't dramatise. The story is interesting because the technical observation is interesting, not because the prose insists you should care.
 - **Short paragraphs.** Two to five sentences. One idea per paragraph. If a paragraph runs longer than five sentences it's usually two paragraphs.
 - **Banned words and phrases.** No `delve`, `leverage`, `robust`, `seamless`, `unlock`, `landscape` as filler, `journey` as marketing, "in conclusion", "at the end of the day", "it's important to note that", "let's dive in". These are AI tells; the reader's brain skips them.
-- **Em-dash budget: one per paragraph max.** Em-dashes are AI's favourite punctuation. Use commas, parentheses, or new sentences instead.
-- **No marketing closers.** End on the technical observation. Don't write a conclusion that summarises what the reader just read.
+- **Em-dashes are part of the voice — use them, but watch for loose chaining.** Long compound sentences with em-dashes are signature here (see `VOICE.md`). The failure isn't the dash; it's a clause joined by an additive "and" or a trailing relative that adds nothing. Test: cut the sentence at the join — if both halves stand alone and the link survives, split it; if the length carries the argument, keep it.
+- **No marketing closers, and no empty ones.** End on the technical observation or a specifically-named uncertainty. Don't summarise what the reader just read, and don't gesture vaguely ("time will tell"). A flat forward line ("Let's find out.") is fine once the open question has been stated explicitly.
 - **Code identifiers in backticks.** Function names, file paths, commit shas. Don't bold them and don't italicise them.
 - **Cite by name, not by adjective.** "Hetzner CPX21" not "an affordable VPS". "Codex App Server" not "a modern agent runtime". Readers want to fact-check.
 
