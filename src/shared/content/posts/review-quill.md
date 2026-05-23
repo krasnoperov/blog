@@ -33,14 +33,14 @@ The review policy itself isn't in TypeScript; it's in repo markdown — `REVIEW_
 
 Every review attempt is a fresh Codex thread keyed to the PR's current head SHA. The harness doesn't carry conversation state across attempts. When a new push lands, the in-flight attempt is marked `superseded`, any already-published decisive review on the old SHA is dismissed, and the new SHA gets a fresh attempt.
 
-The agent reading the result blocks on `review-quill pr status --wait`, which has stable exit codes:
+The agent reading the result blocks on `review-quill pr status --wait`, which has stable exit codes scoped to the review attempt itself:
 
-- `0` — approved
-- `2` — `REQUEST_CHANGES` published, or required checks failed
+- `0` — approved (or intentionally skipped)
+- `2` — `REQUEST_CHANGES` published, or the attempt errored / was cancelled
 - `3` — still in flight
 - `4` — wait timed out
 
-The implementing agent reacts to `2` by reading the inline comments and review body, applying the fix, pushing. The new SHA triggers a new attempt. The old review never re-enters the conversation. No reviewer drift, no "I said this last time," no compounding context the new attempt has to fight.
+The implementing agent reacts to `2` by reading the inline comments and review body, applying the fix, pushing. The new SHA triggers a new attempt. The old review never re-enters the conversation. No reviewer drift, no "I said this last time," no compounding context the new attempt has to fight. (Required-check status is `merge-steward`'s domain in the next phase, not review-quill's.)
 
 This is what makes strict review affordable. A human reviewer carrying state across ten rounds would burn out; a stateless service keyed by SHA has no rounds to carry — each attempt sees the current head and reasons from scratch.
 
@@ -48,7 +48,7 @@ This is what makes strict review affordable. A human reviewer carrying state acr
 
 Some pushes change the head SHA but not the diff: a clean rebase onto fresh `main` is the common case. review-quill computes the `patch_id` of the new head and compares against the cached `patch_id` of the prior approved attempt. If they match — same diff, different parent — the prior approval is re-published against the new SHA without spending a fresh Codex review.
 
-In `integration_tree` review mode — where review-quill reviews against the synthetic merge commit advertised by `merge-steward/spec-ready` instead of the PR head — the comparison key is `integration_tree_id` rather than just `patch_id`. Same idea, more conservative.
+In `integration_tree` review mode — where review-quill synthesizes a merge commit locally on top of `main` and reviews that tree instead of the PR head — the comparison key is `(patch_id, integration_tree_id)` rather than just `patch_id`. Same idea, more conservative: the cached approval only carries forward when both the diff *and* the merged tree are unchanged.
 
 The result: shuffling against a moving `main` doesn't cost review cycles. Real code changes do.
 
@@ -58,12 +58,9 @@ review-quill, merge-steward, and patchrelay live in the same monorepo and share 
 
 Patchrelay doesn't call review-quill. review-quill doesn't call merge-steward. None of them know the others exist as services. The only thing they share is the GitHub state that PRs already publish: review state, check status, head SHA. New PR opens, GitHub webhook fires, review-quill picks it up. review-quill posts an approving review, GitHub webhook fires, merge-steward picks it up if checks are also green. merge-steward fast-forwards `main`, GitHub webhook fires, patchrelay marks the issue closed.
 
-Two concrete artifacts make this work for the review half:
+This wasn't a clever architectural decision. It's what happened when I extracted services one at a time and refused to add direct coupling between them. It's also why each piece is independently usable — review-quill runs alone against any repo, no patchrelay required, no merge-steward required, and it doesn't know or care whether the PR was written by a human or an agent.
 
-- **`review-quill/verdict`** — the named check review-quill publishes against the PR head. If you want machine review to count toward merge admission, include `review-quill/verdict` in the repo's required checks; branch protection then enforces it like any other CI gate.
-- **`merge-steward/spec-ready`** — the named check merge-steward publishes when a speculative branch is ready. When review-quill runs in `integration_tree` mode, it reads this to find the spec SHA to review against.
-
-Neither service has the other's URL or API token. The coupling is one named check publishing into the GitHub event stream and the other listening.
+The structural takeaway of the whole stack: GitHub state is the bus. Services are reconcilers. Every effect is a public artifact on the PR timeline. Debugging a stuck PR is "open the timeline and follow the events," not "find which of three services has the wrong opinion about this thing."
 
 ## The surprise — the reviewer is mostly right
 
