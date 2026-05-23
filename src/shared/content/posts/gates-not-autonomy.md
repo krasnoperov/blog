@@ -4,7 +4,7 @@ summary: 'Living with patchrelay, the autonomy turned out to be the part I reach
 publishedAt: 2026-05-23
 readingTime: 5 min read
 tags: software-factory, patchrelay, agentic-development, review-quill, merge-steward
-featured: false
+featured: true
 ---
 
 I ended [the last post](/posts/from-yolo-to-patchrelay) on a question I couldn't answer yet: does writing a Linear issue and walking away actually beat sitting next to the agent and steering it turn by turn? I had a v1 and a hunch. This is what living in it taught me.

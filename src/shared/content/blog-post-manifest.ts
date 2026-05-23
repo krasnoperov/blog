@@ -15,7 +15,7 @@ export const BLOG_POST_MANIFEST = [
     publishedAt: '2026-05-23',
     readingTime: '5 min read',
     tags: ['software-factory', 'patchrelay', 'agentic-development', 'review-quill', 'merge-steward'],
-    featured: false,
+    featured: true,
   },
   {
     slug: 'not-scaling-code-review',
