@@ -117,5 +117,5 @@ Source and docs: [github.com/krasnoperov/patchrelay/tree/main/packages/merge-ste
 ## Related
 
 - [patchrelay: a Linear-driven harness for Codex](/posts/patchrelay)
-- [review-quill: a strict reviewer for your coding agent](/posts/review-quill)
+- [review-quill: real-checkout review, stateless attempts, carry-forward approvals](/posts/review-quill)
 - [From YOLO to patchrelay](/posts/from-yolo-to-patchrelay)

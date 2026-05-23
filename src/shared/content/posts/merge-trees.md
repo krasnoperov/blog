@@ -88,4 +88,4 @@ The factory got simpler when I stopped inventing workflow concepts and started a
 
 - [patchrelay: a Linear-driven harness for Codex](/posts/patchrelay)
 - [merge-steward: speculative integration, parallel validation, fast-forward landing](/posts/merge-steward)
-- [review-quill: a strict reviewer for your coding agent](/posts/review-quill)
+- [review-quill: real-checkout review, stateless attempts, carry-forward approvals](/posts/review-quill)
