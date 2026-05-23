@@ -89,4 +89,4 @@ Patchrelay's harness is the most important choice in the whole factory, and it's
 ## Related
 
 - [From YOLO to patchrelay](/posts/from-yolo-to-patchrelay)
-- [patchrelay: a Linear-driven harness for Codex](/posts/patchrelay)
+- [patchrelay: Linear issues in, pull requests out](/posts/patchrelay)

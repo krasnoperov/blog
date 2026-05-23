@@ -49,9 +49,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'patchrelay',
-    title: 'patchrelay: a Linear-driven harness for Codex',
+    title: 'patchrelay: Linear issues in, pull requests out',
     summary:
-      'Running coding agents on real work turned me into their full-time conductor. patchrelay is what I built to stop being the bottleneck: Linear is the control surface, runs survive restarts, and takeover is one command.',
+      'patchrelay is the deterministic orchestration layer that turns a delegated Linear issue into a linked pull request and keeps that PR healthy until merge or close.',
     publishedAt: '2026-04-29',
     readingTime: '7 min read',
     tags: ['software-factory', 'patchrelay', 'agentic-development', 'codex', 'harness-engineering'],

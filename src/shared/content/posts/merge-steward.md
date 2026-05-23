@@ -116,6 +116,6 @@ Source and docs: [github.com/krasnoperov/patchrelay/tree/main/packages/merge-ste
 
 ## Related
 
-- [patchrelay: a Linear-driven harness for Codex](/posts/patchrelay)
+- [patchrelay: Linear issues in, pull requests out](/posts/patchrelay)
 - [review-quill: a strict reviewer for your coding agent](/posts/review-quill)
 - [From YOLO to patchrelay](/posts/from-yolo-to-patchrelay)

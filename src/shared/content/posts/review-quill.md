@@ -104,6 +104,6 @@ Source and docs: [github.com/krasnoperov/patchrelay/tree/main/packages/review-qu
 
 ## Related
 
-- [patchrelay: a Linear-driven harness for Codex](/posts/patchrelay)
+- [patchrelay: Linear issues in, pull requests out](/posts/patchrelay)
 - [merge-steward: speculative integration, parallel validation, fast-forward landing](/posts/merge-steward)
 - [From YOLO to patchrelay](/posts/from-yolo-to-patchrelay)
