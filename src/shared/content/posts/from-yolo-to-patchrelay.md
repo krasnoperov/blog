@@ -53,7 +53,7 @@ Linear stayed as the tracker. I started small, with webhooks reacting to status 
 
 patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle.
 
-Two lanes on the same box now: interactive zmx sessions where Claude or Codex sits next to me as I triage and shape, and delegated work through patchrelay, where I write a Linear issue and walk away. The interactive lane is where direction gets set; the delegated lane is where routine work goes.
+So that's where I start: a v1 that works enough to delegate to, and one open question. Does writing a Linear issue and walking away actually beat sitting next to the agent, steering it turn by turn? My hunch is that it depends on the task — but a hunch isn't a workflow. The only way to know is to live in it: delegate what looks delegable, keep the rest interactive, and watch which instinct holds up over a few months of real work. Let's find out.
 
 ## PS
 

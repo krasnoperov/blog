@@ -1,4 +1,5 @@
 import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
+import gatesNotAutonomyMarkdown from './posts/gates-not-autonomy.md';
 import doNotRaceAgentPrsMarkdown from './posts/do-not-race-agent-prs.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
@@ -22,6 +23,7 @@ import {
 const RAW_POSTS = {
   'do-not-race-agent-prs': doNotRaceAgentPrsMarkdown,
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
+  'gates-not-autonomy': gatesNotAutonomyMarkdown,
   'hello-world-formatting-the-factory-notes': helloWorldMarkdown,
   'merge-steward': mergeStewardMarkdown,
   'merge-trees': mergeTreesMarkdown,

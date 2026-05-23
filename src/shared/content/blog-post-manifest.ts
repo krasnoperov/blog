@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'gates-not-autonomy',
+    title: 'The gates, not the autonomy',
+    summary:
+      'Living with patchrelay, the autonomy turned out to be the part I reach for least deliberately. What actually changed how I ship are two gates — a reviewer and a merge queue — that do not care whether a human or an agent wrote the code.',
+    publishedAt: '2026-05-23',
+    readingTime: '5 min read',
+    tags: ['software-factory', 'patchrelay', 'agentic-development', 'review-quill', 'merge-steward'],
+    featured: false,
+  },
+  {
     slug: 'not-scaling-code-review',
     title: 'Review volume is the wrong bottleneck',
     summary:
