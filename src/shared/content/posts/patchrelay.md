@@ -72,5 +72,5 @@ Source, docs, and self-hosting instructions: [github.com/krasnoperov/patchrelay]
 
 - [From YOLO to patchrelay](/posts/from-yolo-to-patchrelay)
 - [Picking an agent harness when the SDK terms are murky](/posts/picking-an-agent-harness)
-- [merge-steward: a self-hosted merge queue without the Enterprise gate](/posts/merge-steward)
+- [merge-steward: speculative integration, parallel validation, fast-forward landing](/posts/merge-steward)
 - [review-quill: a strict reviewer for your coding agent](/posts/review-quill)

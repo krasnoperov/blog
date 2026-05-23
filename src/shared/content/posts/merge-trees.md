@@ -87,5 +87,5 @@ The factory got simpler when I stopped inventing workflow concepts and started a
 ## Related
 
 - [patchrelay: a Linear-driven harness for Codex](/posts/patchrelay)
-- [merge-steward: a self-hosted merge queue without the Enterprise gate](/posts/merge-steward)
+- [merge-steward: speculative integration, parallel validation, fast-forward landing](/posts/merge-steward)
 - [review-quill: a strict reviewer for your coding agent](/posts/review-quill)
