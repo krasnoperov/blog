@@ -53,7 +53,7 @@ export const BLOG_POST_MANIFEST = [
     summary:
       'patchrelay is the deterministic orchestration layer that turns a delegated Linear issue into a linked pull request and keeps that PR healthy until merge or close.',
     publishedAt: '2026-04-29',
-    readingTime: '7 min read',
+    readingTime: '5 min read',
     tags: ['software-factory', 'patchrelay', 'agentic-development', 'codex', 'harness-engineering'],
     featured: true,
   },
