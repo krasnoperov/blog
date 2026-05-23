@@ -59,9 +59,9 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'merge-steward',
-    title: 'merge-steward: a self-hosted merge queue without the Enterprise gate',
+    title: 'merge-steward: speculative integration, parallel validation, fast-forward landing',
     summary:
-      'Parallel agents produce parallel pull requests that can break each other on integration. merge-steward is a self-hosted serial merge queue: test the integrated SHA, fast-forward only when it is still valid, and publish failure reasons an agent can read.',
+      'merge-steward is a self-hosted merge queue with three decisions — test every PR on `main + diff`, validate cumulative speculative chains in parallel, and fast-forward `main` to the exact tree CI ran against.',
     publishedAt: '2026-04-29',
     readingTime: '6 min read',
     tags: ['software-factory', 'patchrelay', 'merge-steward', 'merge-queue'],

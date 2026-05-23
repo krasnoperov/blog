@@ -1,25 +1,54 @@
 ---
-title: 'merge-steward: a self-hosted merge queue without the Enterprise gate'
-summary: Parallel agents produce parallel pull requests that can break each other on integration. merge-steward is a self-hosted serial merge queue: test the integrated SHA, fast-forward only when it is still valid, and publish failure reasons an agent can read.
+title: 'merge-steward: speculative integration, parallel validation, fast-forward landing'
+summary: merge-steward is a self-hosted merge queue with three decisions — test every PR on `main + diff`, validate cumulative speculative chains in parallel, and fast-forward `main` to the exact tree CI ran against.
 publishedAt: 2026-04-29
 readingTime: 6 min read
 tags: software-factory, patchrelay, merge-steward, merge-queue
 featured: false
 ---
 
-The first time I had four agents running in parallel against the same repo, I lost an afternoon to merge collisions. Three branches were each green on their own and `main` wouldn't compile after I merged them. The fourth had been rebasing against a `main` that moved twice while it was rebasing. "Green yesterday, broken today" stopped being a saying and became Tuesday.
+The first time I had four agents running in parallel against the same repo, I lost an afternoon to merge collisions. Three branches were each green on their own and `main` wouldn't compile after I merged them. The fourth had been rebasing against a `main` that moved twice while it was rebasing. Each branch had passed CI on its own diff; nothing had tested the combined state.
 
-The fix is well-understood: a merge queue. Land each PR after a fresh CI run on the *integrated* SHA — `main` plus the PR's diff — not on the branch in isolation. GitHub ships a native one. For private repos it requires GitHub Enterprise Cloud, and "buy GitHub Enterprise Cloud so my one-person micro-corporation can land merges cleanly" was not a sentence I was going to say.
+The fix is well-understood: a merge queue. Land each PR after a fresh CI run on the *integrated* SHA — `main` plus the PR's diff — not on the branch in isolation. GitHub ships a native one, but for private repos it requires GitHub Enterprise Cloud, which was out of reach for a one-person setup.
 
-So I built one. **merge-steward** is a serial, self-hosted speculative merge queue. It puts chaotic parallel work into an order, tests every merge against the live tip of `main`, and only fast-forwards when that tested SHA is still valid.
+So I built one. **merge-steward** is a self-hosted merge queue, and its design comes down to three decisions:
 
-## The landing contract
+1. **Test the integrated tree, not the branch.** CI runs on `main + PR diff`, never on the PR branch alone. A green review on the branch is necessary but not sufficient.
+2. **Validate in parallel through a cumulative spec chain.** Landing is serial; validation isn't. The head's spec is `main + A`, the next is `main + A + B`, the next is `main + A + B + C`. All of them run CI concurrently. When A lands, B's spec is already the tested tree.
+3. **Fast-forward `main` to the spec.** The "merge" is `git push origin <spec-sha>:main`. What lands on `main` is byte-for-byte the tree CI validated, and `main`'s history stays linear.
 
-When a PR is approved and its required checks are green, merge-steward admits it to the queue. Once it reaches the head, the steward builds a *speculative branch* — `main` plus the PR's diff, on a new SHA, pushed up. CI runs on that integrated SHA. Only if the tested SHA is still valid — `main` hasn't moved out from under it, the integrated build is green — does the steward fast-forward `main` to the speculative SHA.
+## Decision 1 — Test the integrated tree
 
-That single property fixes "green yesterday, broken today." Two PRs that both pass CI individually can still break each other on integration. Speculative integration asks "what would the world look like if this PR landed right now?" and only lands it if the answer is green.
+When a PR is approved and its required checks are green, merge-steward admits it to the queue. Once it reaches the head, the steward builds a *speculative branch* — `main` plus the PR's diff, on a new SHA, pushed up. CI runs on that integrated SHA. Only if the tested SHA is still valid — `main` hasn't moved out from under it, the integrated build is green — does the steward fast-forward `main` to it.
+
+Two PRs that both pass CI individually can still break each other on integration. Speculative integration asks "what would the world look like if this PR landed right now?" and lands the PR only if the answer is green.
 
 Going to a real merge queue paid off bigger than I expected. Most of the day-to-day failures I used to handle by hand — rebases, speculative re-fetches, "flake or real fail?" branching — are now handled by the steward as a side effect of being a queue at all.
+
+## Decision 2 — Validate in parallel
+
+The queue is serial, but validation isn't. Each entry is tested on a **cumulative speculative branch** that stacks every entry ahead of it in the queue: the head's spec is `main + A`, the next is `main + A + B`, the next is `main + A + B + C`. CI runs on each spec independently and concurrently.
+
+That gives the queue two properties that matter:
+
+- **Throughput.** A strictly serial validate-then-land queue tops out at one CI cycle per merge. The cumulative chain lets a five-deep queue have five CI runs in flight simultaneously, with the next merge ready the moment the head's spec finishes.
+- **No re-validation when the queue advances.** When A lands, B's spec is already `main + A + B`, which is now `current main + B`. That's the tree that just finished CI. The steward fast-forwards through it without rebuilding.
+
+When A *fails* mid-queue, B and C invalidate and rebuild without it (**cascade invalidation**). The cost of that is one CI cycle per downstream entry — paid only when the head fails, not on every merge.
+
+One refinement worth naming: when a queue entry's PR head is force-pushed to a SHA that produces the same `patch_id` and the same integration tree as the prior head — most often, a clean rebase onto fresh `main` with no real change — the steward skips the spec-rebuild path and reuses the cached spec content on a new commit. CI itself still runs (check runs are anchored to SHAs), but the merge-and-conflict-check work is short-circuited.
+
+## Decision 3 — Fast-forward is the merge
+
+When CI is green on the spec, the steward revalidates: the PR isn't already merged externally, the reviewer approval still holds on the original PR head, the spec SHA is still a fast-forward from current `main`, and `main`'s required checks are still passing. If all four hold, the merge is a single command:
+
+```
+git push origin mq-spec-<entry-id>:main
+```
+
+That is the actual merge. No `gh pr merge` button is ever pressed. What lands on `main` is byte-for-byte the tree CI validated, and `main`'s history is linear — no merge commits introduced by the queue itself, no "Merge branch 'feature' into 'main'" noise. Bisecting `main` later means walking a chain of tested commits with no synthetic vertices in the way.
+
+This is also why the steward needs `Contents: Read and write` on the GitHub App and must be allowed to push to protected branches.
 
 ## Why this had to be its own service
 
@@ -41,7 +70,7 @@ The merge queue is one of the most-rebuilt pieces of infrastructure in our indus
 - **Uber's SubmitQueue / [BLRD](https://www.uber.com/blog/bypassing-large-diffs-in-submitqueue/).** Speculation engine with probabilistic models and a target-hash conflict analyzer. After enabling BLRD in late May 2023, Uber's June P95 was 74% lower than April's. Heavyweight and inspirational; not what I'd build first.
 - **Mergify, Aviator, Trunk Merge Queue, Graphite.** Various commercial takes — speculative checks, batch bisection, affected-targets parallel mode, stack-aware queues. Each has at least one idea worth stealing. ([Kodiak](https://github.com/chdsbd/kodiak) is the closest open-source contender to bors-ng in this lane.)
 
-The decision collapsed quickly. I needed self-hosted, restart-safe, and structured failure reasons an agent can read and react to. None of the SaaS options fit the self-hosting requirement. bors-ng was the closest existing fit, but I wanted speculative integration, and bolting that onto the bors-ng staging-branch model felt worse than building from scratch with the right shape from the start.
+The decision collapsed quickly. I needed self-hosted, restart-safe, and structured failure reasons an agent can read and react to. None of the SaaS options fit the self-hosting requirement. bors-ng was the closest existing fit, but I wanted cumulative speculative integration, and bolting that onto the bors-ng staging-branch model felt worse than building from scratch with the right shape from the start.
 
 ## What's inside merge-steward
 
@@ -61,11 +90,15 @@ When a PR can't make it through the queue — speculative CI fails, retry budget
 
 The agent decides what to do with that. A flake gets a retry. A real failure gets a code change. A conflict gets a rebase. The steward doesn't care; it just publishes facts an agent can act on.
 
-## What it doesn't try to be
+## Known gaps
 
-The thing that's kept merge-steward stable is that it doesn't attempt anything I can't already debug at 11pm. It's serial, not parallel. The only speculation is one PR at a time. There's no batch bisection, no affected-targets analysis, no probabilistic conflict prediction. Those are good ideas in the survey above. They're not in v1, and most of them won't be in v2 either.
+The queue supports cumulative speculative validation, cascade invalidation, bounded retry, durable incidents, eviction check runs, and re-admission from fresh GitHub truth. What it doesn't do yet:
 
-The cost of going serial is throughput. A strictly serial queue with 15-minute CI tops out around 32 merges in an 8-hour window. That's fine for me today and would be fine for a small team. The day a repo on this queue starts pushing past that ceiling is the day to revisit batching.
+- no binary bisection when a long speculative chain fails — the steward rebuilds the chain entry-by-entry instead of finding the bad entry by halving
+- no independent queue lanes by path or target — one queue per repo
+- flake handling is retry-budget based, not historical learning — the steward doesn't know that a given test has been flaky for a month
+
+None of these have hit hard enough on my own repos to warrant building yet.
 
 ## Try it
 
