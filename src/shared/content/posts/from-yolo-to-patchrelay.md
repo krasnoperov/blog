@@ -13,7 +13,7 @@ Sometime in late 2025 I stopped writing code by hand, and it crept up on me. I d
 
 Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
 
-Something about that is unsettling, and I'm trying not to wave it off. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. The plan is to train the intuition the way I always have — build things, see where I land, correct, iterate, try different approaches, see which ones hold up. The shape of "writing software" is moving, and the way I map it is the way I always have: by working in it.
+Something about that is unsettling, and I'm trying not to wave it off. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. The plan is to train the intuition the way I always have — build things, see where I land, keep the approaches that hold up. The shape of "writing software" is moving, and the way I map it is the way I always have: by working in it.
 
 ## Permission prompts
 
@@ -49,11 +49,11 @@ The real reason I started patchrelay wasn't typing. It was that running four age
 
 The shape of the answer was clear enough: something that could pull a task from Linear, kick off an agentic session against it, listen for webhooks from CI and review, and keep steering the agent until the PR was green, conflict-free, and merged. Not a copy-paste helper — actual orchestration around an agent session.
 
-Linear stayed as the tracker. I started small, with webhooks reacting to status changes, and worked outward from there into Linear's agent integrations, which let you delegate a task to an agent directly. Each new piece pulled the loop closer to running on its own: task in, branch out, review and CI iterating in the middle, all of it visible from the tracker.
+Linear stayed as the tracker. I started small: webhooks reacting to status changes. From there I worked outward into Linear's agent integrations, which let you delegate a task to an agent directly. Each new piece pulled the loop closer to running on its own: task in, branch out, review and CI iterating in the middle, all of it visible from the tracker.
 
 patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle.
 
-Two lanes on the same box now: interactive zmx sessions where Claude or Codex sits next to me as I triage and shape, and delegated work through patchrelay, where I write a Linear issue and walk away. The interactive lane is where direction gets set; the delegated lane is where routine work goes.
+So that's where I start: a v1 that works enough to delegate to, and one open question. Does writing a Linear issue and walking away actually beat sitting next to the agent, steering it turn by turn? My hunch is that it depends on the task — but a hunch isn't a workflow. The only way to know is to live in it: delegate what looks delegable, keep the rest interactive, and watch which instinct holds up over a few weeks of real work. Let's find out.
 
 ## PS
 
