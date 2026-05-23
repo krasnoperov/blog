@@ -48,7 +48,7 @@ This is what makes strict review affordable. A human reviewer carrying state acr
 
 Some pushes change the head SHA but not the diff: a clean rebase onto fresh `main` is the common case. review-quill computes the `patch_id` of the new head and compares against the cached `patch_id` of the prior approved attempt. If they match — same diff, different parent — the prior approval is re-published against the new SHA without spending a fresh Codex review.
 
-In `integration_tree` review mode — where review-quill synthesizes a merge commit locally on top of `main` and reviews that tree instead of the PR head — the comparison key is `(patch_id, integration_tree_id)` rather than just `patch_id`. Same idea, more conservative: the cached approval only carries forward when both the diff *and* the merged tree are unchanged.
+In `integration_tree` review mode — where review-quill builds a synthetic merge commit locally from the PR head and its merge-base against the base branch, then reviews that tree instead of the PR head — the comparison key is `(patch_id, integration_tree_id)` rather than just `patch_id`. Same idea, more conservative: the cached approval only carries forward when both the diff *and* the merged tree are unchanged.
 
 The result: shuffling against a moving `main` doesn't cost review cycles. Real code changes do.
 
