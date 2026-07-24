@@ -1,7 +1,7 @@
 import type { Context } from 'hono';
 import type { Env } from '../core/types';
 import { buildHtmlLinkHeader } from './discovery';
-// Built by `npm run build` before worker deploy.
+// Built by `pnpm run build` before worker deploy.
 // @ts-expect-error Generated TanStack Start server bundle lives outside src/.
 import startServer from '../../dist/frontend-start/server/server.js';
 

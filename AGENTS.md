@@ -29,12 +29,12 @@ Post source files live in `src/shared/content/posts/`.
 ## Core Commands
 
 ```bash
-npm run dev
-npm run build
-npm test
-npm run typecheck
-npm run lint
-npm run test:ui:local
+pnpm run dev
+pnpm run build
+pnpm test
+pnpm run typecheck
+pnpm run lint
+pnpm run test:ui:local
 ```
 
 ## Hard Rules

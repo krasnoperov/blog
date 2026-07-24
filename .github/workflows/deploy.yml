@@ -82,21 +82,24 @@ jobs:
     environment: stage
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.resolve.outputs.deploy_ref }}
 
-      - uses: actions/cache@v4
+      - uses: actions/setup-node@v6
         with:
-          path: node_modules
-          key: deploy-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          node-version-file: .node-version
+          package-manager-cache: false
 
-      - run: npm ci --include=dev --loglevel=error
+      - name: Enable pnpm via corepack
+        run: corepack enable pnpm
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Deploy application worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npm run deploy:stage
+        run: pnpm run deploy:stage
 
   deploy-production:
     name: Deploy production
@@ -110,21 +113,24 @@ jobs:
     environment: production
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ needs.resolve.outputs.deploy_ref }}
 
-      - uses: actions/cache@v4
+      - uses: actions/setup-node@v6
         with:
-          path: node_modules
-          key: deploy-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          node-version-file: .node-version
+          package-manager-cache: false
 
-      - run: npm ci --include=dev --loglevel=error
+      - name: Enable pnpm via corepack
+        run: corepack enable pnpm
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Deploy application worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npm run deploy:production
+        run: pnpm run deploy:production
 
   deployment-result:
     name: Deployment result

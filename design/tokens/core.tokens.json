@@ -3,7 +3,7 @@
   "$extensions": {
     "me.krasnoperov.blog.source": "global.css and the structural slice of theme.css",
     "me.krasnoperov.blog.generatedBy": "scripts/snapshot-design-tokens.mjs",
-    "me.krasnoperov.blog.note": "Generated from CSS. Do not edit by hand. Run `npm run tokens:snapshot` after changing the canonical CSS."
+    "me.krasnoperov.blog.note": "Generated from CSS. Do not edit by hand. Run `pnpm run tokens:snapshot` after changing the canonical CSS."
   },
   "layout": {
     "maxWidth": {

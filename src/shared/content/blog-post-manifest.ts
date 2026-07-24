@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'linear-agent-past-the-pr',
+    title: "A Linear agent that doesn't stop at the pull request",
+    summary:
+      "On Linear's surface, patchrelay is indistinguishable from Cursor or Devin — same protocol, same streaming thoughts, the same linked PR and diff. Two things set it apart: the work runs in my own repos, and the session doesn't end when the PR opens — it keeps reacting to review, CI, and the merge queue until the change actually lands.",
+    publishedAt: '2026-05-29',
+    readingTime: '5 min read',
+    tags: ['software-factory', 'patchrelay', 'agentic-development', 'linear', 'codex'],
+    featured: true,
+  },
+  {
     slug: 'gates-not-autonomy',
     title: 'The gates, not the autonomy',
     summary:

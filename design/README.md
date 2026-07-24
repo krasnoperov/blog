@@ -28,9 +28,9 @@ DTCG 2025.10 requires every token's `$value` to match the structural shape of it
 ## Round-trip
 
 ```bash
-npm run tokens:snapshot         # regenerate after editing the canonical CSS
-npm run tokens:snapshot:check   # CI guard — fails on drift
-npm run tokens:roundtrip        # CI guard — re-emit CSS from DTCG, re-snapshot, diff
+pnpm run tokens:snapshot         # regenerate after editing the canonical CSS
+pnpm run tokens:snapshot:check   # CI guard — fails on drift
+pnpm run tokens:roundtrip        # CI guard — re-emit CSS from DTCG, re-snapshot, diff
 ```
 
 The pipeline is **CSS → DTCG → CSS → DTCG**, and the second DTCG must equal the first. That contract is what `tokens:roundtrip` enforces — it proves the snapshot + sidecar pair is a complete, lossless mirror of the canonical `:root` block.
@@ -44,4 +44,4 @@ Each token entry carries vendor extensions that make this work:
 
 ## Visual surface for handoff
 
-Static gallery: `npx playwright test -c playwright.style-reference.config.ts` writes `audit-out/style-reference/index.html` — a per-route gallery of every public surface (home, archive, post detail) at four breakpoints in light + dark. Output is gitignored.
+Static gallery: `pnpm exec playwright test -c playwright.style-reference.config.ts` writes `audit-out/style-reference/index.html` — a per-route gallery of every public surface (home, archive, post detail) at four breakpoints in light + dark. Output is gitignored.

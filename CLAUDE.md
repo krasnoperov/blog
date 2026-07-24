@@ -15,10 +15,10 @@ This repository is a markdown-driven personal tech blog.
 ## Development
 
 ```bash
-npm run dev
-npm run build
-npm run typecheck
-npm test
+pnpm run dev
+pnpm run build
+pnpm run typecheck
+pnpm test
 ```
 
 Frontend dev runs on `http://localhost:3001`.

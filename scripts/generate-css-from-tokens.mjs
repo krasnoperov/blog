@@ -113,7 +113,7 @@ function checkRoundTrip() {
     $extensions: {
       [`${NS}.source`]: source,
       [`${NS}.generatedBy`]: 'scripts/snapshot-design-tokens.mjs',
-      [`${NS}.note`]: 'Generated from CSS. Do not edit by hand. Run `npm run tokens:snapshot` after changing the canonical CSS.',
+      [`${NS}.note`]: 'Generated from CSS. Do not edit by hand. Run `pnpm run tokens:snapshot` after changing the canonical CSS.',
     },
     ...root,
   });

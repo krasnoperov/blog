@@ -23,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run test:ui:serve',
+    command: 'pnpm run test:ui:serve',
     port,
     reuseExistingServer: true,
     timeout: 120_000,

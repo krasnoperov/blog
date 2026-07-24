@@ -17,9 +17,9 @@ The first wave of posts is about building a software factory: the systems, autom
 ## Quick Start
 
 ```bash
-npm install
-npm run dev
+pnpm install --frozen-lockfile --prefer-offline
+pnpm run dev
 ```
 
-`npm run dev` prepares the SSR bundle for the worker, then starts the frontend and worker dev servers.
+`pnpm run dev` prepares the SSR bundle for the worker, then starts the frontend and worker dev servers.
 The local frontend opens at `http://localhost:3001`.
