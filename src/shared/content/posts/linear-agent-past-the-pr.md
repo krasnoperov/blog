@@ -13,30 +13,30 @@ That sameness isn't an accident, and it isn't a problem. It's the whole shape of
 
 ## The integration is a commodity
 
-When Linear shipped its Agent Interaction Guidelines and SDK last July, it didn't ship a Zapier-style "connect your tool" panel. It shipped a way for an external program to *inhabit the workspace as a participant*. You install an OAuth app in app-actor mode (`actor=app`), and Linear mints a real workspace user to stand in for your agent — one that shows up in the assignee dropdown and in `@`-mention autocomplete, marked clearly as an agent so nobody mistakes it for a colleague.
+When Linear shipped its [Agent Interaction Guidelines and SDK](https://linear.app/changelog/2025-07-30-agent-interaction-guidelines-and-sdk) last July, it didn't ship a Zapier-style "connect your tool" panel. It shipped a way for an external program to *inhabit the workspace as a participant*. You install an [OAuth app in app-actor mode](https://linear.app/developers/oauth-actor-authorization) (`actor=app`), and Linear creates a workspace-scoped app identity to stand in for your agent.
 
-From there the protocol is small and opinionated:
+From there the [agent protocol](https://linear.app/developers/agent-interaction) is small and opinionated:
 
-- You don't get *assigned* an issue, you get **delegated** one. The human stays the assignee — the one accountable for the outcome — and your agent rides along as a contributor. Linear's founding axiom for all of this is blunt: *an agent cannot be held accountable.* So it never lets one hold the bag.
-- Delegation (or an `@`-mention) opens an **agent session** and fires a webhook. You have ten seconds to emit your first activity or you're shown as unresponsive — so the first thing every agent does is post a `thought` to say *I'm on it.*
+- You don't get *assigned* an issue, you get **delegated** one. The human stays the assignee — the one accountable for the outcome — and your agent rides along as a contributor. Linear's [guidelines](https://linear.app/developers/aig) put the premise plainly: an agent cannot be held accountable.
+- Delegation (or an `@`-mention) opens an **agent session** and fires a webhook. You have ten seconds to emit your first activity or update the session URL before Linear shows it as unresponsive — so the first thing every agent does is post a `thought` to say *I'm on it.*
 - You report progress as typed **activities** — `thought`, `action`, `elicitation` (a question back), `response` (done), `error` — and Linear *infers* the session's state from whichever one you sent last. You never set a status field. Emit a question, the session shows "needs input"; emit a response, it shows "done."
 - When you open a pull request, you attach its URL to the session's `externalUrls`. And Linear's GitHub integration does the rest on its own — it mirrors the PR onto the issue, with the status checks, the review state, and the diff all viewable without leaving Linear.
 
-Every coding agent in Linear's marketplace — Cursor, Devin, Codex, Copilot, Charlie, a couple dozen others — implements exactly this surface. That's why they're interchangeable in the UI. Building it well is real work, but it isn't a *differentiator*, any more than speaking HTTP distinguishes a web server. It's the socket. The interesting part is what you plug into it.
+That visible surface is deliberately shared: a user delegates, the agent session reports state, and activities fill in the detail. Building it well is real work, but it isn't a *differentiator*, any more than speaking HTTP distinguishes a web server. It's the socket. The interesting part is what you plug into it.
 
 I plug in two things the others mostly don't.
 
 ## One: the work runs on my box
 
-The marketplace agents are services. You delegate an issue and the work happens in *their* cloud — a fresh sandbox that clones your repo, runs, and disappears. That's a perfectly good design, and for most people it's the right one.
+The usual hosted-agent shape is familiar: delegate an issue and the work happens in a fresh remote sandbox that clones your repo, runs, and disappears. That's a perfectly good design, and for most people it's the right one.
 
 patchrelay runs the other way around. The agent is a [Codex session in my actual repository](/posts/patchrelay), on a machine I own, in a [durable git worktree](/posts/picking-an-agent-harness) that survives across runs — with my toolchain, my secrets, my half-finished branch still sitting there from the last run. That *execution environment* is the one thing Linear genuinely can't see, and doesn't need to: from its side, an agent named patchrelay posts thoughts and opens a PR like everyone else.
 
-I won't oversell this as unique — a handful of other agents self-host too. But it's the first real fork from the marketplace default, and it's the reason the *second* difference is even possible.
+I won't oversell this as unique. But it is the first real fork from the hosted default, and it's the reason the *second* difference is even possible.
 
 ## Two: the session doesn't end at the PR
 
-Here's the tell. Watch a marketplace coding agent's session and it almost always terminates on the same beat: a `response` activity that says *Opened pull request #123* and a green check. Session complete. The agent did its job — it turned an issue into a PR.
+Here's the tell. In the hosted sessions I had watched, the run terminated on the same beat: a `response` activity that said *Opened pull request #123* and a green check. Session complete. The agent did its job — it turned an issue into a PR.
 
 And then Linear keeps showing the rest *anyway*. Its GitHub integration mirrors the PR onto the issue — the checks that go red an hour later, the review that asks for changes, the merge that does or doesn't happen. The signals are all sitting right there on the issue. The agent has just stopped listening for them; its session closed at "PR opened."
 
@@ -55,3 +55,9 @@ That's the difference that matters to me. The marketplace model is **issue → p
 It would be easy to read this as *Linear's API is generic, so I had to build the real value myself.* I read it the opposite way. Linear made the participation layer a standard on purpose — clearly-marked identity, delegation over assignment, sessions and typed activities — so that a session looks and behaves the same no matter who's behind it. That consistency is what lets me drop in an agent that's wildly different underneath without teaching anyone a new way to work. They delegate an issue and watch the thoughts roll in, same as always.
 
 Which freed me to spend my effort in the two places the protocol deliberately leaves open: *below* it, where the work runs in my own repos, and *after* the PR, where the change still has to survive its way onto `main`. A well-behaved Linear agent that just happens not to let go until the thing is actually shipped.
+
+## The caveat
+
+This only makes sense while the post-PR tail is mine to own. If Linear grows a durable coding-session lifecycle that can listen to review, CI, merge-queue, and deploy events in the same way, I would reconsider keeping that loop in patchrelay. I would also revisit it if Linear changes the session/activity contract enough that maintaining the adapter becomes more work than the control it buys me.
+
+The replaceable boundary is small: accept an issue and agent-session webhook, emit activities, attach the PR URL, and preserve the session id while repair runs happen. The current implementation behind that boundary is patchrelay plus review-quill and merge-steward. A hosted runner, a Linear-native lifecycle, or another agent runtime could replace it without changing how a person delegates work or follows its progress.
