@@ -5,8 +5,8 @@
 // Style Dictionary consumers) have a machine-readable surface to read from.
 //
 // Usage:
-//   npm run tokens:snapshot           # write design/tokens/*.tokens.json
-//   npm run tokens:snapshot:check     # fail if files are out of date
+//   pnpm run tokens:snapshot           # write design/tokens/*.tokens.json
+//   pnpm run tokens:snapshot:check     # fail if files are out of date
 //
 // The light-dark() CSS function is preserved through a vendor extension:
 //   { "$value": "<light-branch>", "$extensions": { "me.krasnoperov.blog.lightDark": ["<light>", "<dark>"] } }
@@ -560,7 +560,7 @@ function main({ checkOnly }) {
       $extensions: {
         [`${NS}.source`]: source,
         [`${NS}.generatedBy`]: 'scripts/snapshot-design-tokens.mjs',
-        [`${NS}.note`]: 'Generated from CSS. Do not edit by hand. Run `npm run tokens:snapshot` after changing the canonical CSS.',
+        [`${NS}.note`]: 'Generated from CSS. Do not edit by hand. Run `pnpm run tokens:snapshot` after changing the canonical CSS.',
       },
       ...json,
     };
@@ -597,7 +597,7 @@ function main({ checkOnly }) {
   }
 
   if (checkOnly && drift > 0) {
-    console.error(`\n${drift} file(s) out of date. Run \`npm run tokens:snapshot\` to refresh.`);
+    console.error(`\n${drift} file(s) out of date. Run \`pnpm run tokens:snapshot\` to refresh.`);
     process.exit(1);
   }
 }

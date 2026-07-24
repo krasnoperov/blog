@@ -18,6 +18,7 @@ concurrency:
 
 env:
   NODE_OPTIONS: --dns-result-order=ipv4first
+  COREPACK_HOME: /tmp/corepack
 
 permissions:
   contents: read
@@ -32,41 +33,59 @@ jobs:
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
       options: --user 1000:1000
+      volumes:
+        - /home/alv/.local/share/pnpm/store:/pnpm-store
+    env:
+      pnpm_config_store_dir: /pnpm-store
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/cache@v4
+      - uses: actions/setup-node@v6
         with:
-          path: node_modules
-          key: npm-${{ hashFiles('package-lock.json') }}
+          node-version-file: .node-version
+          package-manager-cache: false
 
-      - run: npm ci --include=dev --loglevel=error
-      - run: npm run typecheck
-      - run: npm run lint
-      - run: npm run build
-      - run: npm test -- --test-reporter=dot
+      - name: Enable pnpm via corepack
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin" pnpm
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm run typecheck
+      - run: pnpm run lint
+      - run: pnpm run build
+      - run: pnpm test --test-reporter=dot
 
   test-ui:
     name: UI Tests
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/mq-spec-')
-    needs:
-      - checks
     runs-on:
       - self-hosted
       - self-hosted-container
     container:
       image: mcr.microsoft.com/playwright:v1.58.2-noble
       options: --user 1000:1000
+      volumes:
+        - /home/alv/.local/share/pnpm/store:/pnpm-store
+    env:
+      pnpm_config_store_dir: /pnpm-store
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/cache@v4
+      - uses: actions/setup-node@v6
         with:
-          path: node_modules
-          key: npm-${{ hashFiles('package-lock.json') }}
+          node-version-file: .node-version
+          package-manager-cache: false
 
-      - run: npm ci --include=dev --loglevel=error
-      - run: npm run test:ui:local
+      - name: Enable pnpm via corepack
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin" pnpm
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: pnpm install --frozen-lockfile --prefer-offline
+      - run: pnpm run test:ui:local
 
   Tests:
     name: Tests

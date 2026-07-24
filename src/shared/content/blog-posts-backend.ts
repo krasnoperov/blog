@@ -2,6 +2,7 @@ import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
 import gatesNotAutonomyMarkdown from './posts/gates-not-autonomy.md';
 import doNotRaceAgentPrsMarkdown from './posts/do-not-race-agent-prs.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
+import linearAgentPastThePrMarkdown from './posts/linear-agent-past-the-pr.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
 import mergeTreesMarkdown from './posts/merge-trees.md';
 import notScalingCodeReviewMarkdown from './posts/not-scaling-code-review.md';
@@ -25,6 +26,7 @@ const RAW_POSTS = {
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
   'gates-not-autonomy': gatesNotAutonomyMarkdown,
   'hello-world-formatting-the-factory-notes': helloWorldMarkdown,
+  'linear-agent-past-the-pr': linearAgentPastThePrMarkdown,
   'merge-steward': mergeStewardMarkdown,
   'merge-trees': mergeTreesMarkdown,
   'not-scaling-code-review': notScalingCodeReviewMarkdown,

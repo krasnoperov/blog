@@ -7,11 +7,11 @@ import { defineConfig, devices } from '@playwright/test';
 //
 // Run against the live deployment:
 //   AUDIT_BASE_URL=https://blog.krasnoperov.me \
-//     npx playwright test -c playwright.style-reference.config.ts
+//     pnpm exec playwright test -c playwright.style-reference.config.ts
 //
-// Run against a local dev server (start `npm run dev` separately):
+// Run against a local dev server (start `pnpm run dev` separately):
 //   AUDIT_BASE_URL=http://localhost:3001 \
-//     npx playwright test -c playwright.style-reference.config.ts
+//     pnpm exec playwright test -c playwright.style-reference.config.ts
 //
 // The pages live behind one set of public routes (`/`, `/posts`, `/posts/:slug`)
 // — no Ladle, no auth — so this config does not start a webServer; the test

@@ -3,17 +3,22 @@
   "version": "0.0.0",
   "type": "module",
   "private": true,
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=24.18.0 <25",
+    "pnpm": ">=11.17.0 <12"
+  },
   "scripts": {
-    "dev": "concurrently \"npm:dev:worker\" \"npm:dev:frontend\"",
+    "dev": "concurrently \"pnpm:dev:worker\" \"pnpm:dev:frontend\"",
     "dev:frontend": "vite -c vite.start.config.ts",
-    "dev:worker": "npm run build && wrangler dev --config wrangler.dev.toml --port 8788 --persist-to .wrangler/state",
+    "dev:worker": "pnpm run build && wrangler dev --config wrangler.dev.toml --port 8788 --persist-to .wrangler/state",
     "build": "vite build -c vite.start.config.ts",
-    "deploy": "npm run build && wrangler deploy",
-    "deploy:production": "npm run build && wrangler deploy --env production",
-    "deploy:stage": "npm run build && wrangler deploy",
-    "test": "node --import @swc-node/register/esm-register --test",
-    "test:ui:local": "npx playwright test --config playwright.local.config.ts",
-    "test:ui:serve": "npm run build && wrangler dev --config wrangler.dev.toml --port 8788 --persist-to .wrangler/state-playwright",
+    "deploy": "pnpm run build && wrangler deploy",
+    "deploy:production": "pnpm run build && wrangler deploy --env production",
+    "deploy:stage": "pnpm run build && wrangler deploy",
+    "test": "node --import file://$PWD/scripts/register-swc-loader.mjs --test",
+    "test:ui:local": "pnpm exec playwright test --config playwright.local.config.ts",
+    "test:ui:serve": "pnpm run build && wrangler dev --config wrangler.dev.toml --port ${PLAYWRIGHT_PORT:-8788} --persist-to .wrangler/state-playwright",
     "lint": "oxlint -c oxlintrc.json && eslint \"{src,tests}/**/*.{ts,tsx}\"",
     "typecheck": "tsgo --noEmit",
     "tokens:snapshot": "node scripts/snapshot-design-tokens.mjs",
@@ -38,7 +43,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@typescript/native-preview": "^7.0.0-dev",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^6.0.4",
     "concurrently": "^9.2.1",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
@@ -50,7 +55,7 @@
     "prettier": "^3.6.2",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.57.1",
-    "vite": "^8.0.1",
+    "vite": "^8.1.5",
     "wrangler": "^4.78.0"
   }
 }

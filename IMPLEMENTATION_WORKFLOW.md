@@ -18,9 +18,9 @@ You are implementing a change in this repository.
 ## Verification
 
 - Content or logic changes:
-  `npm run typecheck && npm run lint && npm test`
+  `pnpm run typecheck && pnpm run lint && pnpm test`
 - Route, navigation, or SSR rendering changes:
-  `npm run build && npm run test:ui:local`
+  `pnpm run build && pnpm run test:ui:local`
 
 ## Before finishing
 
