@@ -16,7 +16,7 @@ function formatPublishedDate(value: string) {
 
 export default function BlogHomePage() {
   return (
-    <BlogShell pageHead={[{ value: 'home' }, { label: '', value: `${HOMEPAGE_POSTS.length} posts` }]}>
+    <BlogShell>
       <section className={styles.hero}>
         <h1 className={styles.headline}>
           Notes from building a software factory.
