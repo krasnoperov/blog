@@ -107,7 +107,7 @@
 
 @media (max-width: 768px) {
   .nav {
-    display: none;
+    gap: var(--s-5);
   }
 
   .statusPill {
