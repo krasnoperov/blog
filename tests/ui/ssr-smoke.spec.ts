@@ -14,7 +14,7 @@ test.describe('SSR smoke', () => {
     const body = await response.text();
     expect(body).toContain('Notes from building a software factory.');
     expect(body).toContain('A personal tech blog about agent-driven development');
-    expect(body).toContain('rel="canonical" href="https://blog.krasnoperov.me/"');
+    expect(body).toContain('rel="canonical" href="https://krasnoperov.me/"');
     expect(body).toContain('property="og:title" content="Krasnoperov Blog"');
   });
 
@@ -31,7 +31,7 @@ test.describe('SSR smoke', () => {
     const body = await response.text();
     expect(body).toContain('Software factory writing, one post at a time.');
     expect(body).toContain('Hello World for Factory Notes');
-    expect(body).toContain('rel="canonical" href="https://blog.krasnoperov.me/posts"');
+    expect(body).toContain('rel="canonical" href="https://krasnoperov.me/posts"');
   });
 
   test('post detail returns server-rendered HTML', async ({ request }) => {
@@ -110,7 +110,7 @@ test.describe('SSR smoke', () => {
 
     expect(sitemap.status()).toBe(200);
     expect(sitemap.headers()['content-type']).toContain('application/xml');
-    expect(await sitemap.text()).toContain('https://blog.krasnoperov.me/posts/hello-world-formatting-the-factory-notes');
+    expect(await sitemap.text()).toContain('https://krasnoperov.me/posts/hello-world-formatting-the-factory-notes');
 
     expect(feed.status()).toBe(200);
     expect(feed.headers()['content-type']).toContain('application/rss+xml');
@@ -118,7 +118,7 @@ test.describe('SSR smoke', () => {
 
     expect(llms.status()).toBe(200);
     expect(llms.headers()['x-robots-tag']).toBe('noindex, nofollow');
-    expect(await llms.text()).toContain('https://blog.krasnoperov.me/posts/hello-world-formatting-the-factory-notes.md');
+    expect(await llms.text()).toContain('https://krasnoperov.me/posts/hello-world-formatting-the-factory-notes.md');
 
     expect(llmsFull.status()).toBe(200);
     expect(await llmsFull.text()).toContain('title: Hello World for Factory Notes');

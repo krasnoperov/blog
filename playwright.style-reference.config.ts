@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
 // audit-out/style-reference/.
 //
 // Run against the live deployment:
-//   AUDIT_BASE_URL=https://blog.krasnoperov.me \
+//   AUDIT_BASE_URL=https://krasnoperov.me \
 //     pnpm exec playwright test -c playwright.style-reference.config.ts
 //
 // Run against a local dev server (start `pnpm run dev` separately):

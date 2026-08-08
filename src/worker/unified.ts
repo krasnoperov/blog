@@ -1,8 +1,14 @@
 import { app } from '../backend/index';
 import type { Env } from '../core/types';
+import { legacyHostRedirect } from './redirects';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const redirect = legacyHostRedirect(request);
+    if (redirect) {
+      return redirect;
+    }
+
     const response = await app.fetch(request, env, ctx);
 
     if (env.ENVIRONMENT !== 'stage' || response.webSocket || response.status === 101) {

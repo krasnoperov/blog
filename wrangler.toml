@@ -29,6 +29,16 @@ ENVIRONMENT = "stage"
 name = "blog-production"
 
 [[env.production.routes]]
+pattern = "krasnoperov.me"
+custom_domain = true
+
+[[env.production.routes]]
+pattern = "www.krasnoperov.me"
+custom_domain = true
+
+# Legacy hosts: kept attached so the worker can serve permanent redirects
+# from the old blog.* URLs to the apex domain.
+[[env.production.routes]]
 pattern = "blog.krasnoperov.me"
 custom_domain = true
 
