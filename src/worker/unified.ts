@@ -1,5 +1,6 @@
 import { app } from '../backend/index';
 import type { Env } from '../core/types';
+import { serveMediaAsset } from './media-ranges';
 import { legacyHostRedirect } from './redirects';
 
 export default {
@@ -7,6 +8,10 @@ export default {
     const redirect = legacyHostRedirect(request);
     if (redirect) {
       return redirect;
+    }
+
+    if (new URL(request.url).pathname.startsWith('/media/')) {
+      return serveMediaAsset(request, env.ASSETS);
     }
 
     const response = await app.fetch(request, env, ctx);

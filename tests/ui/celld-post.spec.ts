@@ -18,9 +18,15 @@ test.describe('Durable Objects film post', () => {
 
     for (const [index, path] of videoPaths.entries()) {
       await expect(videos.nth(index).locator('source')).toHaveAttribute('src', path);
-      const response = await request.head(path, { failOnStatusCode: false });
-      expect(response.status()).toBe(200);
+      const response = await request.get(path, {
+        failOnStatusCode: false,
+        headers: { Range: 'bytes=0-1023' },
+      });
+      expect(response.status()).toBe(206);
       expect(response.headers()['content-type']).toBe('video/mp4');
+      expect(response.headers()['accept-ranges']).toBe('bytes');
+      expect(response.headers()['content-range']).toMatch(/^bytes 0-1023\/\d+$/);
+      expect((await response.body()).byteLength).toBe(1024);
     }
   });
 
