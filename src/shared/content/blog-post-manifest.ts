@@ -9,11 +9,11 @@ import {
 export const BLOG_POST_MANIFEST = [
   {
     slug: 'two-films-about-durable-objects',
-    title: 'I asked GPT-5.6 to explain Durable Objects',
+    title: 'Two films about Durable Objects and celld',
     summary:
-      'Ryan Dahl published celld, a self-hosted Durable Objects runtime. I already use the model; an implementation that can live inside custom systems was a good reason to explain the ideas behind it.',
+      'Ryan Dahl published celld, an open-source Durable Objects runtime that can be embedded in custom systems. I made two short films about the model and the implementation.',
     publishedAt: '2026-08-11',
-    readingTime: '3 min read',
+    readingTime: '2 min read',
     tags: ['durable-objects', 'celld', 'distributed-systems', 'gpt-5.6', 'remotion'],
     featured: true,
   },
