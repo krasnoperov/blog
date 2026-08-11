@@ -11,7 +11,7 @@ const FLOW_DIAGRAM = `flowchart LR
 
 export default function MermaidSvgLabPage() {
   return (
-    <BlogShell statusText="Experiment · Runtime vs static SVG">
+    <BlogShell>
       <section className={styles.hero}>
         <span className={styles.eyebrow}>Experimental page</span>
         <h1 className={styles.title}>Mermaid SVG lab.</h1>

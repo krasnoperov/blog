@@ -10,6 +10,9 @@ test.describe('Durable Objects film post', () => {
   test('renders and serves both local films', async ({ page, request }) => {
     await page.goto(postPath);
 
+    const navigation = page.getByRole('navigation');
+    await expect(navigation.getByRole('link')).toHaveCount(1);
+    await expect(navigation.getByRole('link', { name: 'krasnoperov.me' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'I asked GPT-5.6 to explain Durable Objects' })).toBeVisible();
     const videos = page.locator('video');
     await expect(videos).toHaveCount(2);
@@ -27,6 +30,29 @@ test.describe('Durable Objects film post', () => {
       expect(response.headers()['accept-ranges']).toBe('bytes');
       expect(response.headers()['content-range']).toMatch(/^bytes 0-1023\/\d+$/);
       expect((await response.body()).byteLength).toBe(1024);
+    }
+  });
+
+  test('centers desktop players at up to twice the article width', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.goto(postPath);
+
+    const geometry = await page.evaluate(() => {
+      const article = document.querySelector('article')?.getBoundingClientRect();
+      const videos = [...document.querySelectorAll('video')].map((video) => video.getBoundingClientRect());
+      return {
+        article: article ? { left: article.left, width: article.width } : null,
+        videos: videos.map((video) => ({ left: video.left, width: video.width })),
+      };
+    });
+
+    expect(geometry.article).not.toBeNull();
+    for (const video of geometry.videos) {
+      expect(video.width).toBeCloseTo(geometry.article!.width * 2, 0);
+      expect(video.left + video.width / 2).toBeCloseTo(
+        geometry.article!.left + geometry.article!.width / 2,
+        0,
+      );
     }
   });
 
