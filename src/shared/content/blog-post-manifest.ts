@@ -13,7 +13,7 @@ export const BLOG_POST_MANIFEST = [
     summary:
       'Ryan Dahl published celld, an open-source Durable Objects runtime that can be embedded in custom systems. I made two short films about the model and the implementation.',
     publishedAt: '2026-08-11',
-    readingTime: '2 min read',
+    readingTime: '1 min read',
     tags: ['durable-objects', 'celld', 'distributed-systems', 'gpt-5.6', 'remotion'],
     featured: true,
   },
