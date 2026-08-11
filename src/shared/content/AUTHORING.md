@@ -47,6 +47,7 @@ These come from the actual blog renderer. Authoring outside these bounds breaks 
 - **Tables.** Use the minimum separator: `|-|-|`. Never `|---|---|` and never any box-drawing characters (`┌`, `─`, `│`, etc.). This is a global rule, not a blog-specific one.
 - **Mermaid.** Supported and lazy-loaded. Use only when a flow, state, or sequence is genuinely clearer than prose. Default is zero diagrams per post. The renderer falls back to source code on render error, so prefer simple `flowchart LR` over experimental layouts.
 - **Fenced code.** No syntax highlighting in this renderer. Don't lean on colour to convey meaning. Keep code samples short — five to fifteen lines is plenty.
+- **Video.** A fenced `video` block embeds one local MP4. Its three non-empty lines are the `/media/...mp4` source, the `/media/...` poster, and a short accessible caption. Keep both assets in `public/media/`; external video URLs remain ordinary links.
 - **Footnotes are not supported.** Use inline links like `[name](url)` instead.
 - **Links.** External links open in a new tab automatically. Internal cross-links between posts use `[Title](/posts/<slug>)`.
 - **Frontmatter.** Must match the manifest exactly: `title`, `summary`, `publishedAt` (YYYY-MM-DD), `readingTime`, `tags`, `featured`. The test suite enforces this — a mismatch fails the build.

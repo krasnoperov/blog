@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { BLOG_POST_MANIFEST } from './blog-post-manifest';
@@ -75,4 +75,26 @@ test('starter post demonstrates markdown and Mermaid authoring', async () => {
   assert.match(starter.content, /stateDiagram-v2/);
   assert.match(starter.content, /architecture-beta/);
   assert.match(starter.content, /\| Layer \| Format \| Why it exists \|/);
+});
+
+test('Durable Objects post embeds two deployable local video assets', async () => {
+  const posts = await readPostFiles();
+  const post = posts.find((candidate) => candidate.slug === 'two-films-about-durable-objects');
+
+  assert.ok(post);
+  const videoBlocks = [...post.content.matchAll(/```video\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g)];
+  assert.equal(videoBlocks.length, 2);
+
+  for (const [, videoPath, posterPath, title] of videoBlocks) {
+    assert.match(videoPath, /^\/media\/.+\.mp4$/);
+    assert.match(posterPath, /^\/media\/.+\.(?:jpg|jpeg|png|webp)$/);
+    assert.ok(title.trim());
+
+    const [video, poster] = await Promise.all([
+      stat(path.resolve('public', videoPath.slice(1))),
+      stat(path.resolve('public', posterPath.slice(1))),
+    ]);
+    assert.ok(video.size > 0);
+    assert.ok(poster.size > 0);
+  }
 });
