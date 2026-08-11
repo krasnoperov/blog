@@ -13,7 +13,9 @@ test.describe('Durable Objects film post', () => {
     const navigation = page.getByRole('navigation');
     await expect(navigation.getByRole('link')).toHaveCount(1);
     await expect(navigation.getByRole('link', { name: 'krasnoperov.me' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Durable Objects, inside and out' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Running Durable Objects on your own infrastructure with celld' }),
+    ).toBeVisible();
     const videos = page.locator('video');
     await expect(videos).toHaveCount(2);
     await expect(videos.nth(0)).toHaveAttribute('poster', '/media/celld/durable-objects-explained-poster.jpg');
