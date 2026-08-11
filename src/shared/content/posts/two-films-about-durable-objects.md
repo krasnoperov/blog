@@ -2,18 +2,18 @@
 title: 'Two films about Durable Objects and celld'
 summary: 'Ryan Dahl published celld, an open-source Durable Objects runtime that can be embedded in custom systems. I made two short films about the model and the implementation.'
 publishedAt: 2026-08-11
-readingTime: 2 min read
+readingTime: 1 min read
 tags: durable-objects, celld, distributed-systems, gpt-5.6, remotion
 featured: true
 ---
 
-At the beginning of August I saw Ryan Dahl publish [`celld`](https://github.com/denoland/celld) under the Deno organization. The [initial commit](https://github.com/denoland/celld/commit/44cec221c6d40eaa2c7cf064ff4b22bb58f7cc8b) also credits Yusuke Tanaka and William Perron.
+Earlier this month, Ryan Dahl released [`celld`](https://github.com/denoland/celld), with work by Yusuke Tanaka and William Perron.
 
-I use Durable Objects actively, so an independent implementation is good news. `celld` is an open-source daemon for running Workers and Durable Objects on machines I control, which means the model can become part of a custom system instead of remaining available from one vendor. That portability is likely good for Cloudflare too: it removes a reasonable objection from teams that like the programming model but do not want their architecture to depend on a single provider.
+I use Durable Objects actively, so an independent implementation is good news. `celld` runs Workers and Durable Objects on infrastructure I control, making the model usable in custom systems without locking them to one vendor. That portability may help Cloudflare too: it removes a reasonable objection to adopting the model.
 
-The model gives application code a durable boundary around a named object: one address, local state, and one place where state-changing decisions are ordered. In `celld`, each object has its own SQLite database. The process serving it is replaceable; state is backed by an S3-compatible bucket, and records in that bucket determine the current owner. A standalone fleet needs no separate membership controller or consensus service.
+Durable Objects give each named entity a stable place for state and decisions.
 
-The release seemed like a good reason to explain both halves: the programming model I work with, and one implementation underneath it. I asked GPT-5.6 to make the videos and kept directing the scripts, diagrams, and pacing until they were ready to publish. The two films below are a small snapshot of agent video direction in August 2026.
+I asked GPT-5.6 to make two videos about the model and `celld`'s implementation, then directed the scripts, diagrams, and pacing until they were ready to publish.
 
 ## The programming model
 
