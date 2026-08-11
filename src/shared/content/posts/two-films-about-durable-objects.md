@@ -1,5 +1,5 @@
 ---
-title: 'Durable Objects, inside and out'
+title: 'Running Durable Objects on your own infrastructure with celld'
 summary: 'Ryan Dahl published celld, an open-source Durable Objects runtime that can be embedded in custom systems. I made two short films about the model and the implementation.'
 publishedAt: 2026-08-11
 readingTime: 1 min read
