@@ -137,7 +137,9 @@
 .videoFigure {
   display: grid;
   gap: var(--s-2);
-  margin: var(--s-6) 0;
+  margin: var(--s-6) 0 var(--s-6) 50%;
+  transform: translateX(-50%);
+  width: min(200%, calc(100vw - var(--s-8) * 2));
 }
 
 .videoPlayer {
@@ -155,6 +157,14 @@
   font-family: var(--font-mono);
   font-size: 0.875rem;
   line-height: var(--leading-normal);
+}
+
+@media (max-width: 768px) {
+  .videoFigure {
+    margin-left: 0;
+    transform: none;
+    width: 100%;
+  }
 }
 
 .markdown a {
