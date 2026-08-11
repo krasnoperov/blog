@@ -134,6 +134,29 @@
   line-height: var(--leading-relaxed);
 }
 
+.videoFigure {
+  display: grid;
+  gap: var(--s-2);
+  margin: var(--s-6) 0;
+}
+
+.videoPlayer {
+  aspect-ratio: 16 / 9;
+  background: var(--ink);
+  border: 1px solid var(--paper-rule);
+  border-radius: var(--radius-soft);
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.videoCaption {
+  color: var(--ink-quiet);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  line-height: var(--leading-normal);
+}
+
 .markdown a {
   color: inherit;
   border-bottom: 1px solid var(--paper-rule);

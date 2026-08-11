@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'two-films-about-durable-objects',
+    title: 'I asked GPT-5.6 to explain Durable Objects',
+    summary:
+      'Ryan Dahl published celld, a self-hosted Durable Objects runtime. I wanted to understand how the model and the implementation fit together, so I asked GPT-5.6 to make two films — and kept sending the first versions back.',
+    publishedAt: '2026-08-11',
+    readingTime: '4 min read',
+    tags: ['durable-objects', 'celld', 'distributed-systems', 'gpt-5.6', 'remotion'],
+    featured: true,
+  },
+  {
     slug: 'linear-agent-past-the-pr',
     title: "A Linear agent that doesn't stop at the pull request",
     summary:

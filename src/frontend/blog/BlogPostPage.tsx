@@ -122,6 +122,37 @@ const markdownComponents: Components = {
       return <MermaidBlock chart={codeText} />;
     }
 
+    if (language === 'video') {
+      const [src, poster, title, ...unexpectedLines] = codeText
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const isValidVideoBlock =
+        unexpectedLines.length === 0 &&
+        /^\/media\/[\w./-]+\.mp4$/.test(src ?? '') &&
+        /^\/media\/[\w./-]+\.(?:jpg|jpeg|png|webp)$/.test(poster ?? '') &&
+        Boolean(title);
+
+      if (isValidVideoBlock) {
+        return (
+          <figure className={markdownStyles.videoFigure}>
+            <video
+              className={markdownStyles.videoPlayer}
+              controls
+              playsInline
+              preload="none"
+              poster={poster}
+              aria-label={title}
+            >
+              <source src={src} type="video/mp4" />
+              <a href={src}>Download {title}</a>
+            </video>
+            <figcaption className={markdownStyles.videoCaption}>{title}</figcaption>
+          </figure>
+        );
+      }
+    }
+
     return (
       <div className={markdownStyles.codeBlock}>
         {language && <span className={markdownStyles.codeLabel}>{language}</span>}
