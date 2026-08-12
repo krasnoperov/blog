@@ -9,7 +9,7 @@ featured: true
 
 Earlier this month, Ryan Dahl released [`celld`](https://github.com/denoland/celld), with work by Yusuke Tanaka and William Perron.
 
-I use Durable Objects actively, so an independent implementation is good news. `celld` makes it possible to run Workers and Durable Objects on any infrastructure, making the model usable in custom systems beyond Cloudflare. That may help Cloudflare too by making Durable Objects easier to adopt without fear of vendor lock-in.
+I use Durable Objects actively, so an independent implementation is good news. `celld` makes it possible to run Workers and Durable Objects on compatible infrastructure, making the model usable in custom systems beyond Cloudflare. That may help Cloudflare too by making Durable Objects easier to adopt without fear of vendor lock-in.
 
 Durable Objects give each named entity a stable place for state and decisions.
 
