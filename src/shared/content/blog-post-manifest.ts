@@ -11,7 +11,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'two-films-about-durable-objects',
     title: 'Running Durable Objects on your own infrastructure with celld',
     summary:
-      'Ryan Dahl published celld, an open-source Durable Objects runtime that can be embedded in custom systems. I made two short films about the model and the implementation.',
+      'Ryan Dahl published celld, a Durable Objects runtime for infrastructure you control. Two short films about the model and implementation, plus a writing agent built on it.',
     publishedAt: '2026-08-11',
     readingTime: '1 min read',
     tags: ['durable-objects', 'celld', 'distributed-systems', 'gpt-5.6', 'remotion'],

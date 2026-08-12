@@ -77,13 +77,13 @@ test('starter post demonstrates markdown and Mermaid authoring', async () => {
   assert.match(starter.content, /\| Layer \| Format \| Why it exists \|/);
 });
 
-test('Durable Objects post embeds two deployable local video assets', async () => {
+test('Durable Objects post embeds three deployable local video assets', async () => {
   const posts = await readPostFiles();
   const post = posts.find((candidate) => candidate.slug === 'two-films-about-durable-objects');
 
   assert.ok(post);
   const videoBlocks = [...post.content.matchAll(/```video\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g)];
-  assert.equal(videoBlocks.length, 2);
+  assert.equal(videoBlocks.length, 3);
 
   for (const [, videoPath, posterPath, title] of videoBlocks) {
     assert.match(videoPath, /^\/media\/.+\.mp4$/);
