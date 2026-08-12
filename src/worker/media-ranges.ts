@@ -10,6 +10,7 @@ interface ByteRange {
 const mediaAssetSizes: Record<string, number> = {
   '/media/celld/durable-objects-explained.mp4': 14_131_658,
   '/media/celld/durable-objects-under-the-hood.mp4': 11_339_055,
+  '/media/celld/writing-practice-on-celld.mp4': 4_657_366,
 };
 
 function parseByteRange(value: string, size: number): ByteRange | undefined {

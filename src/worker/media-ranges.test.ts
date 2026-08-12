@@ -55,3 +55,24 @@ test('streams the complete asset when no range is requested', async () => {
   assert.equal(response.headers.get('Accept-Ranges'), 'bytes');
   assert.equal(await response.text(), '0123456789');
 });
+
+test('uses the known publication size when the asset binding omits Content-Length', async () => {
+  const assetsWithoutLength = {
+    fetch: async () =>
+      new Response(bytes, {
+        headers: { 'Content-Type': 'video/mp4' },
+      }),
+  } as unknown as Fetcher;
+
+  const response = await serveMediaAsset(
+    new Request('https://example.com/media/celld/writing-practice-on-celld.mp4', {
+      headers: { Range: 'bytes=0-3' },
+    }),
+    assetsWithoutLength,
+  );
+
+  assert.equal(response.status, 206);
+  assert.equal(response.headers.get('Content-Range'), 'bytes 0-3/4657366');
+  assert.equal(response.headers.get('Content-Length'), '4');
+  assert.equal(await response.text(), '0123');
+});
