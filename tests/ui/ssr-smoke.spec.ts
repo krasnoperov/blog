@@ -64,6 +64,22 @@ test.describe('SSR smoke', () => {
     expect(body).not.toContain('node="[object Object]"');
   });
 
+  test('writing coach post has canonical article metadata', async ({ request }) => {
+    const response = await request.get('/posts/writing-practice-on-celld', {
+      headers: { Accept: 'text/html' },
+      failOnStatusCode: false,
+    });
+
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('text/html');
+    expect(response.headers()['link']).toContain('/posts/writing-practice-on-celld.md');
+    const body = await response.text();
+    expect(body).toContain('A writing coach on celld');
+    expect(body).toContain('rel="canonical" href="https://krasnoperov.me/posts/writing-practice-on-celld"');
+    expect(body).toContain('"@type":"BlogPosting"');
+    expect(body).toContain('/media/celld/writing-practice-on-celld.mp4');
+  });
+
   test('mermaid svg lab returns server-rendered HTML', async ({ request }) => {
     const response = await request.get('/experiments/mermaid-svg', {
       headers: { Accept: 'text/html' },
@@ -93,7 +109,7 @@ test.describe('SSR smoke', () => {
   });
 
   test('discovery endpoints are available for crawlers and language models', async ({ request }) => {
-    const [robots, sitemap, feed, llms, llmsFull, homeMarkdown, archiveMarkdown, postMarkdown, wellKnownLlms] = await Promise.all([
+    const [robots, sitemap, feed, llms, llmsFull, homeMarkdown, archiveMarkdown, postMarkdown, writingPostMarkdown, wellKnownLlms] = await Promise.all([
       request.get('/robots.txt', { failOnStatusCode: false }),
       request.get('/sitemap.xml', { failOnStatusCode: false }),
       request.get('/feed.xml', { failOnStatusCode: false }),
@@ -102,6 +118,7 @@ test.describe('SSR smoke', () => {
       request.get('/index.md', { failOnStatusCode: false }),
       request.get('/posts.md', { failOnStatusCode: false }),
       request.get('/posts/hello-world-formatting-the-factory-notes.md', { failOnStatusCode: false }),
+      request.get('/posts/writing-practice-on-celld.md', { failOnStatusCode: false }),
       request.get('/.well-known/llms.txt', { failOnStatusCode: false }),
     ]);
 
@@ -110,18 +127,24 @@ test.describe('SSR smoke', () => {
 
     expect(sitemap.status()).toBe(200);
     expect(sitemap.headers()['content-type']).toContain('application/xml');
-    expect(await sitemap.text()).toContain('https://krasnoperov.me/posts/hello-world-formatting-the-factory-notes');
+    const sitemapBody = await sitemap.text();
+    expect(sitemapBody).toContain('https://krasnoperov.me/posts/writing-practice-on-celld');
+    expect(sitemapBody).toContain(
+      '<loc>https://krasnoperov.me/posts/two-films-about-durable-objects</loc><lastmod>2026-08-12</lastmod>',
+    );
 
     expect(feed.status()).toBe(200);
     expect(feed.headers()['content-type']).toContain('application/rss+xml');
-    expect(await feed.text()).toContain('<rss version="2.0">');
+    const feedBody = await feed.text();
+    expect(feedBody).toContain('<rss version="2.0">');
+    expect(feedBody).toContain('A writing coach on celld');
 
     expect(llms.status()).toBe(200);
     expect(llms.headers()['x-robots-tag']).toBe('noindex, nofollow');
-    expect(await llms.text()).toContain('https://krasnoperov.me/posts/hello-world-formatting-the-factory-notes.md');
+    expect(await llms.text()).toContain('https://krasnoperov.me/posts/writing-practice-on-celld.md');
 
     expect(llmsFull.status()).toBe(200);
-    expect(await llmsFull.text()).toContain('title: Hello World for Factory Notes');
+    expect(await llmsFull.text()).toContain("title: 'A writing coach on celld'");
 
     expect(homeMarkdown.status()).toBe(200);
     expect(homeMarkdown.headers()['content-type']).toContain('text/markdown');
@@ -135,6 +158,13 @@ test.describe('SSR smoke', () => {
     expect(postMarkdown.headers()['content-type']).toContain('text/markdown');
     expect(postMarkdown.headers()['link']).toContain('rel="canonical"');
     expect(await postMarkdown.text()).toContain('```mermaid');
+
+    expect(writingPostMarkdown.status()).toBe(200);
+    expect(writingPostMarkdown.headers()['content-type']).toContain('text/markdown');
+    expect(writingPostMarkdown.headers()['link']).toContain('rel="canonical"');
+    expect(await writingPostMarkdown.text()).toContain(
+      '/media/celld/writing-practice-on-celld.mp4',
+    );
 
     expect(wellKnownLlms.status()).toBe(200);
     expect(await wellKnownLlms.text()).toContain('# Krasnoperov Blog');

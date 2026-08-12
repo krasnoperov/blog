@@ -77,24 +77,40 @@ test('starter post demonstrates markdown and Mermaid authoring', async () => {
   assert.match(starter.content, /\| Layer \| Format \| Why it exists \|/);
 });
 
-test('Durable Objects post embeds three deployable local video assets', async () => {
+test('celld posts keep their deployable local video assets separated', async () => {
   const posts = await readPostFiles();
-  const post = posts.find((candidate) => candidate.slug === 'two-films-about-durable-objects');
+  const expectations = [
+    [
+      'two-films-about-durable-objects',
+      [
+        '/media/celld/durable-objects-explained.mp4',
+        '/media/celld/durable-objects-under-the-hood.mp4',
+      ],
+    ],
+    ['writing-practice-on-celld', ['/media/celld/writing-practice-on-celld.mp4']],
+  ] as const;
 
-  assert.ok(post);
-  const videoBlocks = [...post.content.matchAll(/```video\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g)];
-  assert.equal(videoBlocks.length, 3);
+  for (const [slug, expectedVideoPaths] of expectations) {
+    const post = posts.find((candidate) => candidate.slug === slug);
+    assert.ok(post);
 
-  for (const [, videoPath, posterPath, title] of videoBlocks) {
-    assert.match(videoPath, /^\/media\/.+\.mp4$/);
-    assert.match(posterPath, /^\/media\/.+\.(?:jpg|jpeg|png|webp)$/);
-    assert.ok(title.trim());
+    const videoBlocks = [...post.content.matchAll(/```video\n([^\n]+)\n([^\n]+)\n([^\n]+)\n```/g)];
+    assert.deepEqual(
+      videoBlocks.map(([, videoPath]) => videoPath),
+      expectedVideoPaths,
+    );
 
-    const [video, poster] = await Promise.all([
-      stat(path.resolve('public', videoPath.slice(1))),
-      stat(path.resolve('public', posterPath.slice(1))),
-    ]);
-    assert.ok(video.size > 0);
-    assert.ok(poster.size > 0);
+    for (const [, videoPath, posterPath, title] of videoBlocks) {
+      assert.match(videoPath, /^\/media\/.+\.mp4$/);
+      assert.match(posterPath, /^\/media\/.+\.(?:jpg|jpeg|png|webp)$/);
+      assert.ok(title.trim());
+
+      const [video, poster] = await Promise.all([
+        stat(path.resolve('public', videoPath.slice(1))),
+        stat(path.resolve('public', posterPath.slice(1))),
+      ]);
+      assert.ok(video.size > 0);
+      assert.ok(poster.size > 0);
+    }
   }
 });

@@ -1,7 +1,8 @@
 ---
 title: 'Running Durable Objects on your own infrastructure with celld'
-summary: 'Ryan Dahl published celld, a Durable Objects runtime for infrastructure you control. Two short films about the model and implementation, plus a writing agent built on it.'
+summary: 'Ryan Dahl published celld, an independent Durable Objects runtime. Two short films cover the programming model and how celld implements it.'
 publishedAt: 2026-08-11
+updatedAt: 2026-08-12
 readingTime: 1 min read
 tags: durable-objects, celld, distributed-systems, gpt-5.6, remotion
 featured: true
@@ -27,22 +28,10 @@ Film 1 — Durable Objects, explained
 
 ## The implementation underneath
 
-The second film follows `celld` v0.1.0 at commit [`553ae73`](https://github.com/denoland/celld/commit/553ae73f83c87c3f7c7a5f73c32c2211d9d7341f): SQLite replication, conditional ownership updates, fencing, routing, and recovery after a node disappears.
+The second film looks under [`celld`](https://github.com/denoland/celld)'s hood: a SQLite database per object, replication to an S3-compatible bucket, compare-and-swap ownership records, fencing, routing, and recovery after a node disappears.
 
 ```video
 /media/celld/durable-objects-under-the-hood.mp4
 /media/celld/durable-objects-under-the-hood-poster.jpg
 Film 2 — Durable Objects, under the hood
 ```
-
-## One Durable Object in use
-
-I also built [Writing Practice](https://writing.krasnoperov.me) on `celld` and run it on a Hetzner server. Each document is a Durable Object with its own SQLite database; research and feedback run as durable jobs, so they can finish after the browser closes.
-
-```video
-/media/celld/writing-practice-on-celld.mp4
-/media/celld/writing-practice-on-celld-poster.jpg
-Writing Practice — a persistent writing agent on celld
-```
-
-[Source code](https://github.com/krasnoperov/celld-writing-practice)

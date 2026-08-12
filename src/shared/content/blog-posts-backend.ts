@@ -10,6 +10,7 @@ import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
 import reviewQuillMarkdown from './posts/review-quill.md';
 import twoFilmsAboutDurableObjectsMarkdown from './posts/two-films-about-durable-objects.md';
+import writingPracticeOnCelldMarkdown from './posts/writing-practice-on-celld.md';
 import {
   createBlogPost,
   getBlogPostBySlug,
@@ -35,6 +36,7 @@ const RAW_POSTS = {
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
   'review-quill': reviewQuillMarkdown,
   'two-films-about-durable-objects': twoFilmsAboutDurableObjectsMarkdown,
+  'writing-practice-on-celld': writingPracticeOnCelldMarkdown,
 } satisfies Record<BlogPostSlug, string>;
 
 export const BLOG_POSTS: BlogPost[] = BLOG_POST_SUMMARIES.map((summary) =>

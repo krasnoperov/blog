@@ -8,11 +8,22 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'writing-practice-on-celld',
+    title: 'A writing coach on celld',
+    summary:
+      'Writing Practice puts each piece in its own Durable Object and lets research and feedback continue after the browser closes.',
+    publishedAt: '2026-08-12',
+    readingTime: '1 min read',
+    tags: ['durable-objects', 'celld', 'writing-tools', 'ai-agents'],
+    featured: true,
+  },
+  {
     slug: 'two-films-about-durable-objects',
     title: 'Running Durable Objects on your own infrastructure with celld',
     summary:
-      'Ryan Dahl published celld, a Durable Objects runtime for infrastructure you control. Two short films about the model and implementation, plus a writing agent built on it.',
+      'Ryan Dahl published celld, an independent Durable Objects runtime. Two short films cover the programming model and how celld implements it.',
     publishedAt: '2026-08-11',
+    updatedAt: '2026-08-12',
     readingTime: '1 min read',
     tags: ['durable-objects', 'celld', 'distributed-systems', 'gpt-5.6', 'remotion'],
     featured: true,

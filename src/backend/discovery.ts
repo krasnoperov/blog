@@ -123,14 +123,16 @@ export function buildRobotsTxt(isProduction: boolean): string {
 }
 
 export function buildSitemapXml(): string {
-  const newestPost = BLOG_POSTS[0]?.publishedAt;
+  const newestPost = BLOG_POSTS[0]
+    ? (BLOG_POSTS[0].updatedAt ?? BLOG_POSTS[0].publishedAt)
+    : undefined;
   const staticEntries = [
     formatSitemapEntry(SITE_ORIGIN, newestPost),
     formatSitemapEntry(`${SITE_ORIGIN}/posts`, newestPost),
     formatSitemapEntry(`${SITE_ORIGIN}${SITE_FEED_PATH}`, newestPost),
   ];
   const postEntries = BLOG_POSTS.map((post) =>
-    formatSitemapEntry(`${SITE_ORIGIN}${post.path}`, post.publishedAt),
+    formatSitemapEntry(`${SITE_ORIGIN}${post.path}`, post.updatedAt ?? post.publishedAt),
   );
 
   return [
