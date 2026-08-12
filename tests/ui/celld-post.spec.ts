@@ -4,10 +4,17 @@ const postPath = '/posts/two-films-about-durable-objects';
 const videoPaths = [
   '/media/celld/durable-objects-explained.mp4',
   '/media/celld/durable-objects-under-the-hood.mp4',
+  '/media/celld/writing-practice-on-celld.mp4',
+];
+
+const posterPaths = [
+  '/media/celld/durable-objects-explained-poster.jpg',
+  '/media/celld/durable-objects-under-the-hood-poster.jpg',
+  '/media/celld/writing-practice-on-celld-poster.jpg',
 ];
 
 test.describe('Durable Objects film post', () => {
-  test('renders and serves both local films', async ({ page, request }) => {
+  test('renders and serves all local films', async ({ page, request }) => {
     await page.goto(postPath);
 
     const navigation = page.getByRole('navigation');
@@ -17,9 +24,11 @@ test.describe('Durable Objects film post', () => {
       page.getByRole('heading', { name: 'Running Durable Objects on your own infrastructure with celld' }),
     ).toBeVisible();
     const videos = page.locator('video');
-    await expect(videos).toHaveCount(2);
-    await expect(videos.nth(0)).toHaveAttribute('poster', '/media/celld/durable-objects-explained-poster.jpg');
-    await expect(videos.nth(1)).toHaveAttribute('poster', '/media/celld/durable-objects-under-the-hood-poster.jpg');
+    await expect(videos).toHaveCount(3);
+
+    for (const [index, path] of posterPaths.entries()) {
+      await expect(videos.nth(index)).toHaveAttribute('poster', path);
+    }
 
     for (const [index, path] of videoPaths.entries()) {
       await expect(videos.nth(index).locator('source')).toHaveAttribute('src', path);
@@ -58,11 +67,11 @@ test.describe('Durable Objects film post', () => {
     }
   });
 
-  test('keeps the article and both players inside a mobile viewport', async ({ page }) => {
+  test('keeps the article and all players inside a mobile viewport', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(postPath);
 
-    await expect(page.locator('video')).toHaveCount(2);
+    await expect(page.locator('video')).toHaveCount(3);
     const geometry = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
       scrollWidth: document.documentElement.scrollWidth,

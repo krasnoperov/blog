@@ -1,6 +1,6 @@
 ---
 title: 'Running Durable Objects on your own infrastructure with celld'
-summary: 'Ryan Dahl published celld, an open-source Durable Objects runtime that can be embedded in custom systems. I made two short films about the model and the implementation.'
+summary: 'Ryan Dahl published celld, a Durable Objects runtime for infrastructure you control. Two short films about the model and implementation, plus a writing agent built on it.'
 publishedAt: 2026-08-11
 readingTime: 1 min read
 tags: durable-objects, celld, distributed-systems, gpt-5.6, remotion
@@ -34,3 +34,15 @@ The second film follows `celld` v0.1.0 at commit [`553ae73`](https://github.com/
 /media/celld/durable-objects-under-the-hood-poster.jpg
 Film 2 — Durable Objects, under the hood
 ```
+
+## One Durable Object in use
+
+I also built [Writing Practice](https://writing.krasnoperov.me) on `celld` and run it on a Hetzner server. Each document is a Durable Object with its own SQLite database; research and feedback run as durable jobs, so they can finish after the browser closes.
+
+```video
+/media/celld/writing-practice-on-celld.mp4
+/media/celld/writing-practice-on-celld-poster.jpg
+Writing Practice — a persistent writing agent on celld
+```
+
+[Source code](https://github.com/krasnoperov/celld-writing-practice)
