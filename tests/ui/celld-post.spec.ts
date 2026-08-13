@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 
 const postCases = [
   {
-    path: '/posts/two-films-about-durable-objects',
-    heading: 'Durable Objects beyond Cloudflare with celld',
+    path: '/posts/how-durable-objects-work',
+    heading: 'How Durable Objects work',
     videoPaths: [
       '/media/celld/durable-objects-explained.mp4',
       '/media/celld/durable-objects-under-the-hood.mp4',
@@ -14,8 +14,8 @@ const postCases = [
     ],
   },
   {
-    path: '/posts/writing-practice-on-celld',
-    heading: 'A writing agent on celld',
+    path: '/posts/a-writing-agent-with-durable-objects',
+    heading: 'A writing agent with Durable Objects',
     videoPaths: ['/media/celld/writing-practice-on-celld.mp4'],
     posterPaths: ['/media/celld/writing-practice-on-celld-poster.jpg'],
   },

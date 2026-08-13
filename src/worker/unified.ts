@@ -1,11 +1,11 @@
 import { app } from '../backend/index';
 import type { Env } from '../core/types';
 import { serveMediaAsset } from './media-ranges';
-import { legacyHostRedirect } from './redirects';
+import { legacyHostRedirect, legacyPostRedirect } from './redirects';
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const redirect = legacyHostRedirect(request);
+    const redirect = legacyPostRedirect(request) ?? legacyHostRedirect(request);
     if (redirect) {
       return redirect;
     }

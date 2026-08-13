@@ -1,5 +1,5 @@
 ---
-title: 'Durable Objects beyond Cloudflare with celld'
+title: 'How Durable Objects work'
 summary: 'celld brings the Durable Objects model to compatible infrastructure beyond Cloudflare. Two short videos explain the model and the runtime beneath it.'
 publishedAt: 2026-08-11
 updatedAt: 2026-08-13
@@ -32,4 +32,4 @@ Durable Objects, under the hood
 
 GPT-5.6 made both videos as animated Remotion slide shows under my direction.
 
-[Writing Practice](/posts/writing-practice-on-celld) explores the same boundary for agentic work: one Durable Object for each long-lived writing task.
+[Writing Practice](/posts/a-writing-agent-with-durable-objects) explores the same boundary for agentic work: one Durable Object for each long-lived writing task.
