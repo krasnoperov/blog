@@ -9,6 +9,28 @@ const LEGACY_HOSTNAMES = new Set([
   'www.krasnoperov.me',
 ]);
 
+const LEGACY_POST_PATHS = new Map([
+  ['/posts/two-films-about-durable-objects', '/posts/how-durable-objects-work'],
+  [
+    '/posts/writing-practice-on-celld',
+    '/posts/a-writing-agent-with-durable-objects',
+  ],
+]);
+
+export function legacyPostRedirect(request: Request): Response | null {
+  const url = new URL(request.url);
+  const markdownSuffix = url.pathname.endsWith('.md') ? '.md' : '';
+  const path = markdownSuffix ? url.pathname.slice(0, -markdownSuffix.length) : url.pathname;
+  const canonicalPath = LEGACY_POST_PATHS.get(path);
+
+  if (!canonicalPath) {
+    return null;
+  }
+
+  const target = new URL(`${canonicalPath}${markdownSuffix}${url.search}`, SITE_ORIGIN);
+  return Response.redirect(target.toString(), 301);
+}
+
 export function legacyHostRedirect(request: Request): Response | null {
   const url = new URL(request.url);
   if (!LEGACY_HOSTNAMES.has(url.hostname)) {

@@ -1,5 +1,5 @@
 ---
-title: 'A writing agent on celld'
+title: 'A writing agent with Durable Objects'
 summary: 'Writing Practice is a small example of using a Durable Object for persistent agent work.'
 publishedAt: 2026-08-12
 updatedAt: 2026-08-13

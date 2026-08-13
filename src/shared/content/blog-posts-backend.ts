@@ -9,8 +9,8 @@ import notScalingCodeReviewMarkdown from './posts/not-scaling-code-review.md';
 import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
 import reviewQuillMarkdown from './posts/review-quill.md';
-import twoFilmsAboutDurableObjectsMarkdown from './posts/two-films-about-durable-objects.md';
-import writingPracticeOnCelldMarkdown from './posts/writing-practice-on-celld.md';
+import howDurableObjectsWorkMarkdown from './posts/how-durable-objects-work.md';
+import writingAgentWithDurableObjectsMarkdown from './posts/a-writing-agent-with-durable-objects.md';
 import {
   createBlogPost,
   getBlogPostBySlug,
@@ -35,8 +35,8 @@ const RAW_POSTS = {
   'patchrelay': patchrelayMarkdown,
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
   'review-quill': reviewQuillMarkdown,
-  'two-films-about-durable-objects': twoFilmsAboutDurableObjectsMarkdown,
-  'writing-practice-on-celld': writingPracticeOnCelldMarkdown,
+  'a-writing-agent-with-durable-objects': writingAgentWithDurableObjectsMarkdown,
+  'how-durable-objects-work': howDurableObjectsWorkMarkdown,
 } satisfies Record<BlogPostSlug, string>;
 
 export const BLOG_POSTS: BlogPost[] = BLOG_POST_SUMMARIES.map((summary) =>

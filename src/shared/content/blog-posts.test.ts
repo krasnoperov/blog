@@ -81,13 +81,16 @@ test('celld posts keep their deployable local video assets separated', async () 
   const posts = await readPostFiles();
   const expectations = [
     [
-      'two-films-about-durable-objects',
+      'how-durable-objects-work',
       [
         '/media/celld/durable-objects-explained.mp4',
         '/media/celld/durable-objects-under-the-hood.mp4',
       ],
     ],
-    ['writing-practice-on-celld', ['/media/celld/writing-practice-on-celld.mp4']],
+    [
+      'a-writing-agent-with-durable-objects',
+      ['/media/celld/writing-practice-on-celld.mp4'],
+    ],
   ] as const;
 
   for (const [slug, expectedVideoPaths] of expectations) {

@@ -1,6 +1,49 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { legacyHostRedirect } from './redirects';
+import { legacyHostRedirect, legacyPostRedirect } from './redirects';
+
+test('redirects renamed posts and their Markdown sources to canonical URLs', () => {
+  const cases = [
+    [
+      'https://krasnoperov.me/posts/two-films-about-durable-objects?utm_source=x',
+      'https://krasnoperov.me/posts/how-durable-objects-work?utm_source=x',
+    ],
+    [
+      'https://krasnoperov.me/posts/two-films-about-durable-objects.md',
+      'https://krasnoperov.me/posts/how-durable-objects-work.md',
+    ],
+    [
+      'https://krasnoperov.me/posts/writing-practice-on-celld',
+      'https://krasnoperov.me/posts/a-writing-agent-with-durable-objects',
+    ],
+    [
+      'https://krasnoperov.me/posts/writing-practice-on-celld.md',
+      'https://krasnoperov.me/posts/a-writing-agent-with-durable-objects.md',
+    ],
+    [
+      'https://blog.krasnoperov.me/posts/two-films-about-durable-objects',
+      'https://krasnoperov.me/posts/how-durable-objects-work',
+    ],
+  ] as const;
+
+  for (const [from, to] of cases) {
+    const response = legacyPostRedirect(new Request(from));
+
+    assert.ok(response, from);
+    assert.equal(response.status, 301);
+    assert.equal(response.headers.get('location'), to);
+  }
+});
+
+test('leaves canonical and unrelated post paths untouched', () => {
+  for (const path of [
+    '/posts/how-durable-objects-work',
+    '/posts/a-writing-agent-with-durable-objects.md',
+    '/posts/patchrelay',
+  ]) {
+    assert.equal(legacyPostRedirect(new Request(`https://krasnoperov.me${path}`)), null, path);
+  }
+});
 
 test('redirects the legacy blog host to the apex, preserving path and query', () => {
   const response = legacyHostRedirect(

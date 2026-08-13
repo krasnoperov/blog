@@ -65,19 +65,46 @@ test.describe('SSR smoke', () => {
   });
 
   test('writing coach post has canonical article metadata', async ({ request }) => {
-    const response = await request.get('/posts/writing-practice-on-celld', {
+    const response = await request.get('/posts/a-writing-agent-with-durable-objects', {
       headers: { Accept: 'text/html' },
       failOnStatusCode: false,
     });
 
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toContain('text/html');
-    expect(response.headers()['link']).toContain('/posts/writing-practice-on-celld.md');
+    expect(response.headers()['link']).toContain(
+      '/posts/a-writing-agent-with-durable-objects.md',
+    );
     const body = await response.text();
-    expect(body).toContain('A writing agent on celld');
-    expect(body).toContain('rel="canonical" href="https://krasnoperov.me/posts/writing-practice-on-celld"');
+    expect(body).toContain('A writing agent with Durable Objects');
+    expect(body).toContain(
+      'rel="canonical" href="https://krasnoperov.me/posts/a-writing-agent-with-durable-objects"',
+    );
     expect(body).toContain('"@type":"BlogPosting"');
     expect(body).toContain('/media/celld/writing-practice-on-celld.mp4');
+  });
+
+  test('renamed post URLs permanently redirect to their canonical paths', async ({ request }) => {
+    const cases = [
+      [
+        '/posts/two-films-about-durable-objects?utm_source=old-link',
+        'https://krasnoperov.me/posts/how-durable-objects-work?utm_source=old-link',
+      ],
+      [
+        '/posts/writing-practice-on-celld.md',
+        'https://krasnoperov.me/posts/a-writing-agent-with-durable-objects.md',
+      ],
+    ] as const;
+
+    for (const [from, to] of cases) {
+      const response = await request.get(from, {
+        failOnStatusCode: false,
+        maxRedirects: 0,
+      });
+
+      expect(response.status()).toBe(301);
+      expect(response.headers().location).toBe(to);
+    }
   });
 
   test('mermaid svg lab returns server-rendered HTML', async ({ request }) => {
@@ -118,7 +145,9 @@ test.describe('SSR smoke', () => {
       request.get('/index.md', { failOnStatusCode: false }),
       request.get('/posts.md', { failOnStatusCode: false }),
       request.get('/posts/hello-world-formatting-the-factory-notes.md', { failOnStatusCode: false }),
-      request.get('/posts/writing-practice-on-celld.md', { failOnStatusCode: false }),
+      request.get('/posts/a-writing-agent-with-durable-objects.md', {
+        failOnStatusCode: false,
+      }),
       request.get('/.well-known/llms.txt', { failOnStatusCode: false }),
     ]);
 
@@ -129,24 +158,30 @@ test.describe('SSR smoke', () => {
     expect(sitemap.headers()['content-type']).toContain('application/xml');
     const sitemapBody = await sitemap.text();
     expect(sitemapBody).toContain(
-      '<loc>https://krasnoperov.me/posts/writing-practice-on-celld</loc><lastmod>2026-08-13</lastmod>',
+      '<loc>https://krasnoperov.me/posts/a-writing-agent-with-durable-objects</loc><lastmod>2026-08-13</lastmod>',
     );
     expect(sitemapBody).toContain(
-      '<loc>https://krasnoperov.me/posts/two-films-about-durable-objects</loc><lastmod>2026-08-13</lastmod>',
+      '<loc>https://krasnoperov.me/posts/how-durable-objects-work</loc><lastmod>2026-08-13</lastmod>',
     );
+    expect(sitemapBody).not.toContain('/posts/two-films-about-durable-objects');
+    expect(sitemapBody).not.toContain('/posts/writing-practice-on-celld');
 
     expect(feed.status()).toBe(200);
     expect(feed.headers()['content-type']).toContain('application/rss+xml');
     const feedBody = await feed.text();
     expect(feedBody).toContain('<rss version="2.0">');
-    expect(feedBody).toContain('A writing agent on celld');
+    expect(feedBody).toContain('A writing agent with Durable Objects');
 
     expect(llms.status()).toBe(200);
     expect(llms.headers()['x-robots-tag']).toBe('noindex, nofollow');
-    expect(await llms.text()).toContain('https://krasnoperov.me/posts/writing-practice-on-celld.md');
+    expect(await llms.text()).toContain(
+      'https://krasnoperov.me/posts/a-writing-agent-with-durable-objects.md',
+    );
 
     expect(llmsFull.status()).toBe(200);
-    expect(await llmsFull.text()).toContain("title: 'A writing agent on celld'");
+    expect(await llmsFull.text()).toContain(
+      "title: 'A writing agent with Durable Objects'",
+    );
 
     expect(homeMarkdown.status()).toBe(200);
     expect(homeMarkdown.headers()['content-type']).toContain('text/markdown');

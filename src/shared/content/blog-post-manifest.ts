@@ -8,8 +8,8 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
-    slug: 'writing-practice-on-celld',
-    title: 'A writing agent on celld',
+    slug: 'a-writing-agent-with-durable-objects',
+    title: 'A writing agent with Durable Objects',
     summary:
       'Writing Practice is a small example of using a Durable Object for persistent agent work.',
     publishedAt: '2026-08-12',
@@ -19,8 +19,8 @@ export const BLOG_POST_MANIFEST = [
     featured: true,
   },
   {
-    slug: 'two-films-about-durable-objects',
-    title: 'Durable Objects beyond Cloudflare with celld',
+    slug: 'how-durable-objects-work',
+    title: 'How Durable Objects work',
     summary:
       'celld brings the Durable Objects model to compatible infrastructure beyond Cloudflare. Two short videos explain the model and the runtime beneath it.',
     publishedAt: '2026-08-11',
