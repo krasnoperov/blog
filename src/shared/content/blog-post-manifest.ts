@@ -9,12 +9,12 @@ import {
 export const BLOG_POST_MANIFEST = [
   {
     slug: 'writing-practice-on-celld',
-    title: 'Durable Objects for agentic work',
+    title: 'A writing agent on celld',
     summary:
-      'Writing Practice explores why Durable Objects fit agentic work that combines persistent state, ordered decisions, and background jobs.',
+      'Writing Practice is a small example of using a Durable Object for persistent agent work.',
     publishedAt: '2026-08-12',
     updatedAt: '2026-08-13',
-    readingTime: '2 min read',
+    readingTime: '1 min read',
     tags: ['durable-objects', 'celld', 'writing-tools', 'ai-agents'],
     featured: true,
   },
