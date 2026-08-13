@@ -8,7 +8,7 @@ tags: durable-objects, celld, distributed-systems, gpt-5.6, remotion
 featured: true
 ---
 
-Ryan Dahl released [`celld`](https://github.com/denoland/celld), built with Yusuke Tanaka and William Perron. It brings Workers and Durable Objects to compatible infrastructure beyond Cloudflare, making the model useful in custom systems and easier to adopt without fear of vendor lock-in.
+Ryan Dahl released [`celld`](https://github.com/denoland/celld). It brings Workers and Durable Objects to compatible infrastructure beyond Cloudflare, making the model useful in custom systems and easier to adopt without fear of vendor lock-in.
 
 A Durable Object starts with a simple boundary: one named entity, its state, and the decisions that change it. The process serving the object can disappear; the object remains.
 
@@ -32,4 +32,4 @@ Durable Objects, under the hood
 
 GPT-5.6 made both videos as animated Remotion slide shows under my direction.
 
-I also used `celld` to build [Writing Practice](/posts/writing-practice-on-celld), a writing agent running on Hetzner.
+[Writing Practice](/posts/writing-practice-on-celld) explores the same boundary for agentic work: one Durable Object for each long-lived writing task.

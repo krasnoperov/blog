@@ -15,7 +15,7 @@ const postCases = [
   },
   {
     path: '/posts/writing-practice-on-celld',
-    heading: 'A writing coach on celld',
+    heading: 'Durable Objects for agentic work',
     videoPaths: ['/media/celld/writing-practice-on-celld.mp4'],
     posterPaths: ['/media/celld/writing-practice-on-celld-poster.jpg'],
   },

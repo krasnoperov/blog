@@ -74,7 +74,7 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['content-type']).toContain('text/html');
     expect(response.headers()['link']).toContain('/posts/writing-practice-on-celld.md');
     const body = await response.text();
-    expect(body).toContain('A writing coach on celld');
+    expect(body).toContain('Durable Objects for agentic work');
     expect(body).toContain('rel="canonical" href="https://krasnoperov.me/posts/writing-practice-on-celld"');
     expect(body).toContain('"@type":"BlogPosting"');
     expect(body).toContain('/media/celld/writing-practice-on-celld.mp4');
@@ -128,7 +128,9 @@ test.describe('SSR smoke', () => {
     expect(sitemap.status()).toBe(200);
     expect(sitemap.headers()['content-type']).toContain('application/xml');
     const sitemapBody = await sitemap.text();
-    expect(sitemapBody).toContain('https://krasnoperov.me/posts/writing-practice-on-celld');
+    expect(sitemapBody).toContain(
+      '<loc>https://krasnoperov.me/posts/writing-practice-on-celld</loc><lastmod>2026-08-13</lastmod>',
+    );
     expect(sitemapBody).toContain(
       '<loc>https://krasnoperov.me/posts/two-films-about-durable-objects</loc><lastmod>2026-08-13</lastmod>',
     );
@@ -137,14 +139,14 @@ test.describe('SSR smoke', () => {
     expect(feed.headers()['content-type']).toContain('application/rss+xml');
     const feedBody = await feed.text();
     expect(feedBody).toContain('<rss version="2.0">');
-    expect(feedBody).toContain('A writing coach on celld');
+    expect(feedBody).toContain('Durable Objects for agentic work');
 
     expect(llms.status()).toBe(200);
     expect(llms.headers()['x-robots-tag']).toBe('noindex, nofollow');
     expect(await llms.text()).toContain('https://krasnoperov.me/posts/writing-practice-on-celld.md');
 
     expect(llmsFull.status()).toBe(200);
-    expect(await llmsFull.text()).toContain("title: 'A writing coach on celld'");
+    expect(await llmsFull.text()).toContain("title: 'Durable Objects for agentic work'");
 
     expect(homeMarkdown.status()).toBe(200);
     expect(homeMarkdown.headers()['content-type']).toContain('text/markdown');
