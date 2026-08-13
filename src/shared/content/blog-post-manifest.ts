@@ -19,11 +19,11 @@ export const BLOG_POST_MANIFEST = [
   },
   {
     slug: 'two-films-about-durable-objects',
-    title: 'Running Durable Objects on your own infrastructure with celld',
+    title: 'Durable Objects beyond Cloudflare with celld',
     summary:
-      'Ryan Dahl published celld, an independent Durable Objects runtime. Two short films cover the programming model and how celld implements it.',
+      'celld brings the Durable Objects model to compatible infrastructure beyond Cloudflare. Two short videos explain the model and the runtime beneath it.',
     publishedAt: '2026-08-11',
-    updatedAt: '2026-08-12',
+    updatedAt: '2026-08-13',
     readingTime: '1 min read',
     tags: ['durable-objects', 'celld', 'distributed-systems', 'gpt-5.6', 'remotion'],
     featured: true,

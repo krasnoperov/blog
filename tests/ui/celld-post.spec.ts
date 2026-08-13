@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 const postCases = [
   {
     path: '/posts/two-films-about-durable-objects',
-    heading: 'Running Durable Objects on your own infrastructure with celld',
+    heading: 'Durable Objects beyond Cloudflare with celld',
     videoPaths: [
       '/media/celld/durable-objects-explained.mp4',
       '/media/celld/durable-objects-under-the-hood.mp4',

@@ -130,7 +130,7 @@ test.describe('SSR smoke', () => {
     const sitemapBody = await sitemap.text();
     expect(sitemapBody).toContain('https://krasnoperov.me/posts/writing-practice-on-celld');
     expect(sitemapBody).toContain(
-      '<loc>https://krasnoperov.me/posts/two-films-about-durable-objects</loc><lastmod>2026-08-12</lastmod>',
+      '<loc>https://krasnoperov.me/posts/two-films-about-durable-objects</loc><lastmod>2026-08-13</lastmod>',
     );
 
     expect(feed.status()).toBe(200);
