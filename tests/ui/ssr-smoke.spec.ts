@@ -74,7 +74,7 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['content-type']).toContain('text/html');
     expect(response.headers()['link']).toContain('/posts/writing-practice-on-celld.md');
     const body = await response.text();
-    expect(body).toContain('Durable Objects for agentic work');
+    expect(body).toContain('A writing agent on celld');
     expect(body).toContain('rel="canonical" href="https://krasnoperov.me/posts/writing-practice-on-celld"');
     expect(body).toContain('"@type":"BlogPosting"');
     expect(body).toContain('/media/celld/writing-practice-on-celld.mp4');
@@ -139,14 +139,14 @@ test.describe('SSR smoke', () => {
     expect(feed.headers()['content-type']).toContain('application/rss+xml');
     const feedBody = await feed.text();
     expect(feedBody).toContain('<rss version="2.0">');
-    expect(feedBody).toContain('Durable Objects for agentic work');
+    expect(feedBody).toContain('A writing agent on celld');
 
     expect(llms.status()).toBe(200);
     expect(llms.headers()['x-robots-tag']).toBe('noindex, nofollow');
     expect(await llms.text()).toContain('https://krasnoperov.me/posts/writing-practice-on-celld.md');
 
     expect(llmsFull.status()).toBe(200);
-    expect(await llmsFull.text()).toContain("title: 'Durable Objects for agentic work'");
+    expect(await llmsFull.text()).toContain("title: 'A writing agent on celld'");
 
     expect(homeMarkdown.status()).toBe(200);
     expect(homeMarkdown.headers()['content-type']).toContain('text/markdown');
