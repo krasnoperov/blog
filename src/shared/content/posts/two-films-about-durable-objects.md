@@ -17,7 +17,7 @@ What does that change when designing a system? Start with this boundary and foll
 ```video
 /media/celld/durable-objects-explained.mp4
 /media/celld/durable-objects-explained-poster.jpg
-Film 1 — Durable Objects, explained
+Durable Objects, explained
 ```
 
 ## Keeping the promise
@@ -27,7 +27,7 @@ The runtime has a harder job: preserve that abstraction across replaceable proce
 ```video
 /media/celld/durable-objects-under-the-hood.mp4
 /media/celld/durable-objects-under-the-hood-poster.jpg
-Film 2 — Durable Objects, under the hood
+Durable Objects, under the hood
 ```
 
 GPT-5.6 made both videos as animated Remotion slide shows under my direction.
