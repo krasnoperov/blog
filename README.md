@@ -14,6 +14,11 @@ The first wave of posts is about building a software factory: the systems, autom
 - Routes are just `/`, `/posts`, and `/posts/:slug`
 - A single Cloudflare Worker serves SSR HTML and a tiny `/api/health` endpoint
 
+## Prerequisites
+
+- Node.js `>=24.18.0 <25`
+- pnpm `>=11.17.0 <12`
+
 ## Quick Start
 
 ```bash
