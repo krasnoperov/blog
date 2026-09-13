@@ -2,15 +2,8 @@ name: CI
 
 on:
   push:
-    branches:
+    branches-ignore:
       - main
-      - "**"
-  pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -59,7 +52,6 @@ jobs:
 
   test-ui:
     name: UI Tests
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/mq-spec-')
     runs-on:
       - self-hosted
       - self-hosted-container
