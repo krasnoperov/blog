@@ -83,7 +83,9 @@ Use backticks. Prefer the exact tool/command/file/run-type name from the codebas
 
 ### Closers
 
-A forward-looking line that names what's still uncertain. Never a summary, never a call to action. The line itself can be flat and even colloquial ("Let's find out.") as long as the sentences just before it have already named the specific thing that's uncertain — what's banned is the closer that gestures at uncertainty without naming it, not the plain phrasing. Examples that work:
+Product and personal posts (see the Storytelling and "Promote, don't apologise" sections of `src/shared/content/AUTHORING.md`) close on the next move: what each product does next, stated as a plan rather than a doubt. They may end with one plain invitation and a link ("If you build something too, find me on FellowMakers."). Never a summary there either.
+
+Technical posts close on a forward-looking line that names what's still uncertain. Never a summary, never a call to action. The line itself can be flat and even colloquial ("Let's find out.") as long as the sentences just before it have already named the specific thing that's uncertain — what's banned is the closer that gestures at uncertainty without naming it, not the plain phrasing. Examples that work:
 
 - "I'll write about it when I know enough to be wrong on the record."
 - "The 74.6% number is doing better."
@@ -125,10 +127,10 @@ Closer sample (forward-looking):
 Before publishing a draft, run through this check:
 
 - [ ] First sentence is first-person.
-- [ ] No "you" / "your" in body prose (acceptable in titles, install instructions, and quoted policy strings).
+- [ ] No "you" / "your" in body prose (acceptable in titles, install instructions, quoted policy strings, and the closing invitation of a product post).
 - [ ] Every adjective answering "how much" is followed by a number.
 - [ ] No paired aphoristic sentences.
 - [ ] No private file paths (`~/...`, `/home/...`).
-- [ ] Closing sentence names a specific uncertainty, not a tidy summary.
+- [ ] Technical post: the closing sentence names a specific uncertainty. Product or personal post: it states the next move. Never a tidy summary.
 - [ ] If a metaphor appears, it survives one sentence of unfolding without falling apart.
 - [ ] If the draft sounds like a marketing landing page when read aloud, rewrite the lede.
