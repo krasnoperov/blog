@@ -12,8 +12,8 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['x-frontend-renderer']).toBe('tanstack-start');
     expect(response.headers()['x-llms-txt']).toBe('/llms.txt');
     const body = await response.text();
-    expect(body).toContain('Notes from building products alone, with agents.');
-    expect(body).toContain('I build UserTold, MakeFX, FellowMakers');
+    expect(body).toContain('Aleksei, and I build products.');
+    expect(body).toContain('If you came here from one of');
     expect(body).toContain('rel="canonical" href="https://krasnoperov.me/"');
     expect(body).toContain('property="og:title" content="Krasnoperov Blog"');
   });

@@ -1,5 +1,5 @@
 export const SITE_NAME = 'Krasnoperov Blog';
-export const SITE_TAGLINE = 'Notes from one person shipping products';
+export const SITE_TAGLINE = "A builder's notes";
 export const SITE_AUTHOR_NAME = 'Aleksei Krasnoperov';
 export const SITE_AUTHOR_URL = 'https://krasnoperov.me/';
 export const SITE_AUTHOR_SAME_AS = [
@@ -9,7 +9,7 @@ export const SITE_AUTHOR_SAME_AS = [
 ];
 export const SITE_LOCALE = 'en_US';
 export const SITE_DESCRIPTION =
-  'I build four products with coding agents: UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat! Notes on running them, and on the agent setup that ships them.';
+  "I'm a builder: UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat! Notes on building products: users, distribution, pricing, and the agents that ship them.";
 export const SITE_ORIGIN = 'https://krasnoperov.me';
 export const SITE_FEED_PATH = '/feed.xml';
 

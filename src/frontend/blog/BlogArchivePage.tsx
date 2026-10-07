@@ -19,8 +19,8 @@ export default function BlogArchivePage() {
         <span className={styles.eyebrow}>Archive · {BLOG_POSTS.length} posts</span>
         <h1 className={styles.title}>Notes and essays, one post at a time.</h1>
         <p className={styles.description}>
-          Everything in order: the software factory that ships my products, and what I learn
-          running the products themselves.
+          Everything in order: the agent setup that ships my products, and what I learn building
+          and running the products themselves.
         </p>
       </section>
 

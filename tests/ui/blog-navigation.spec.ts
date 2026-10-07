@@ -4,7 +4,7 @@ test.describe('blog navigation', () => {
   test('reader can move from home to archive to a post', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: 'Notes from building products alone, with agents.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: "I'm Aleksei, and I build products." })).toBeVisible();
     await page.getByRole('link', { name: 'browse archive' }).click();
 
     await expect(page).toHaveURL(/\/posts$/);

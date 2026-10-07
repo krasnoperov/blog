@@ -21,6 +21,10 @@ test('redirects renamed posts and their Markdown sources to canonical URLs', () 
       'https://krasnoperov.me/posts/a-writing-agent-with-durable-objects.md',
     ],
     [
+      'https://krasnoperov.me/posts/what-the-factory-is-for',
+      'https://krasnoperov.me/posts/i-am-a-builder',
+    ],
+    [
       'https://blog.krasnoperov.me/posts/two-films-about-durable-objects',
       'https://krasnoperov.me/posts/how-durable-objects-work',
     ],

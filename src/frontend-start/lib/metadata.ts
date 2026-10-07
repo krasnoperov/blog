@@ -92,7 +92,7 @@ export function homePageHead() {
 export function archivePageHead() {
   return baseMetadata({
     title: `Archive | ${SITE_NAME}`,
-    description: 'Archive of posts on building and running small products with coding agents.',
+    description: 'Archive of notes on building products: users, distribution, pricing, and the agent setup that ships them.',
     path: '/posts',
     jsonLd: [
       {

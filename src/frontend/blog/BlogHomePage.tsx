@@ -19,11 +19,12 @@ export default function BlogHomePage() {
     <BlogShell>
       <section className={styles.hero}>
         <h1 className={styles.headline}>
-          Notes from building products alone, with agents.
+          I'm Aleksei, and I build products.
         </h1>
         <p className={styles.subtitle}>
-          I'm Aleksei Krasnoperov. I build UserTold, MakeFX, FellowMakers, and Learn, Speak,
-          Repeat!, and write about what I learn running them, and about the agent setup behind them.
+          UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat! If you came here from one of
+          them, this is who made it. These are my notes on building them and everything around
+          that: finding users, telling the story, making the numbers work.
         </p>
         <div className={styles.actions}>
           <Link to={`/posts/${featuredPost.slug}`} className={styles.actionPrimary}>read the latest</Link>
