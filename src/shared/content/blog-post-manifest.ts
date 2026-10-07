@@ -11,7 +11,7 @@ export const BLOG_POST_MANIFEST = [
     slug: 'i-just-wanted-to-speak-spanish',
     title: 'I just wanted to speak Spanish',
     summary:
-      'Courses were too slow, so I built my own. Testing it needed user interviews, so I built UserTold. Promoting that needed videos, so I built MakeFX. How one wish became four products, and the question each one is stuck on now.',
+      'Courses were too slow, so I built my own. Testing it needed user interviews, so I built UserTold. Showing that needed video, so I built MakeFX. One wish, four products, and the next move for each.',
     publishedAt: '2026-10-08',
     readingTime: '5 min read',
     tags: ['indie-hacking', 'product-development', 'learnspeakrepeat', 'usertold', 'makefx', 'fellowmakers'],

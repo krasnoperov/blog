@@ -48,6 +48,21 @@ Product and personal posts are told as stories, and the same rules apply at two 
 - **Each post answers the question the previous one left open, then leaves a new one.** Link back to the post that asked it in the first paragraph.
 - **Never promise a date.** An open question is a hook; "coming next week" is a debt.
 
+## Promote, don't apologise
+
+Product and personal posts promote the work. State what a product does today and what it does next; leave doubts, complaints, and hedges out of the copy.
+
+| Instead of | Write |
+|-|-|
+| working on, trying to, experimenting with | I built, it does, it ships |
+| still early, stuck, doesn't have yet, I don't know yet | what it does today, and the next move |
+| just, simple, small, little side project | the product name and the outcome |
+| I think, maybe, probably, hopefully | the claim, with the figure that proves it |
+| let me know if this is useful | an invitation and a link |
+| AI-powered | what the agent actually does |
+
+An open question still ends a post, but it is phrased as the next move ("the next study UserTold runs is on them"), not as a gap ("I don't know yet"). A cost is phrased as what it buys ("six hours of speaking a month for about the price of two tutor hours"), not as a complaint ("expensive enough to push prices up").
+
 ## Voice rules
 
 For full voice calibration — sentence rhythm, lexicon, the closer rules, the failure-mode checklist — see `VOICE.md` at the repo root. The rules below are the load-bearing subset; `VOICE.md` is the authority where they overlap.

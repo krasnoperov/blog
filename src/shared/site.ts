@@ -9,7 +9,7 @@ export const SITE_AUTHOR_SAME_AS = [
 ];
 export const SITE_LOCALE = 'en_US';
 export const SITE_DESCRIPTION =
-  "I'm a builder: UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat! Notes on building products: users, distribution, pricing, and the agents that ship them.";
+  "I build what I need, and agents run it: Learn, Speak, Repeat!, UserTold, MakeFX, and FellowMakers. Notes on building agent-native products and bringing them to people.";
 export const SITE_ORIGIN = 'https://krasnoperov.me';
 export const SITE_FEED_PATH = '/feed.xml';
 
