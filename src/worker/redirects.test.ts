@@ -22,7 +22,11 @@ test('redirects renamed posts and their Markdown sources to canonical URLs', () 
     ],
     [
       'https://krasnoperov.me/posts/what-the-factory-is-for',
+      'https://krasnoperov.me/posts/i-just-wanted-to-speak-spanish',
+    ],
+    [
       'https://krasnoperov.me/posts/i-am-a-builder',
+      'https://krasnoperov.me/posts/i-just-wanted-to-speak-spanish',
     ],
     [
       'https://blog.krasnoperov.me/posts/two-films-about-durable-objects',

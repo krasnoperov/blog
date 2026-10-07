@@ -6,7 +6,7 @@ import linearAgentPastThePrMarkdown from './posts/linear-agent-past-the-pr.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
 import mergeTreesMarkdown from './posts/merge-trees.md';
 import orchestratorMovedIntoTheSessionMarkdown from './posts/orchestrator-moved-into-the-session.md';
-import iAmABuilderMarkdown from './posts/i-am-a-builder.md';
+import iJustWantedToSpeakSpanishMarkdown from './posts/i-just-wanted-to-speak-spanish.md';
 import notScalingCodeReviewMarkdown from './posts/not-scaling-code-review.md';
 import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
@@ -38,7 +38,7 @@ const RAW_POSTS = {
   'patchrelay': patchrelayMarkdown,
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
   'review-quill': reviewQuillMarkdown,
-  'i-am-a-builder': iAmABuilderMarkdown,
+  'i-just-wanted-to-speak-spanish': iJustWantedToSpeakSpanishMarkdown,
   'a-writing-agent-with-durable-objects': writingAgentWithDurableObjectsMarkdown,
   'how-durable-objects-work': howDurableObjectsWorkMarkdown,
 } satisfies Record<BlogPostSlug, string>;

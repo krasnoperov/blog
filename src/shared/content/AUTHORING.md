@@ -31,6 +31,23 @@ There are two kinds of post, and each has its own shape.
 
 This shape exists because the blog refuses to manifest a single right answer. Every technical post is one author's most-logical-for-now choice, not a recommendation. The structure forces that humility into the bones of every post.
 
+## Storytelling
+
+Product and personal posts are told as stories, and the same rules apply at two levels.
+
+**Inside a post.**
+
+- **Open on a hook,** not a thesis: a person, a wish, a concrete problem. "Hi, I'm Alekséi. All I wanted was to speak Spanish." beats "This post is about my products."
+- **Chain beats with "but" and "so", never "and then".** Each step is a want, the obstacle that blocked it, and what I did about it. If two beats are joined by "and then", one of them is a list item, not a story beat.
+- **Details serve the beat.** A product's features go in where they answer the "so": how the thing solves the problem that blocked me. Keep the specifics (prices, minutes, what a session contains) and cut the catalogue prose.
+- **End on an open question,** stated plainly. The question is the reason to read the next post.
+
+**Across posts.**
+
+- **A series is one chain stretched over several posts.** The opener lays out the whole chain; each later post takes one link and goes deep.
+- **Each post answers the question the previous one left open, then leaves a new one.** Link back to the post that asked it in the first paragraph.
+- **Never promise a date.** An open question is a hook; "coming next week" is a debt.
+
 ## Voice rules
 
 For full voice calibration — sentence rhythm, lexicon, the closer rules, the failure-mode checklist — see `VOICE.md` at the repo root. The rules below are the load-bearing subset; `VOICE.md` is the authority where they overlap.

@@ -15,7 +15,8 @@ const LEGACY_POST_PATHS = new Map([
     '/posts/writing-practice-on-celld',
     '/posts/a-writing-agent-with-durable-objects',
   ],
-  ['/posts/what-the-factory-is-for', '/posts/i-am-a-builder'],
+  ['/posts/what-the-factory-is-for', '/posts/i-just-wanted-to-speak-spanish'],
+  ['/posts/i-am-a-builder', '/posts/i-just-wanted-to-speak-spanish'],
 ]);
 
 export function legacyPostRedirect(request: Request): Response | null {

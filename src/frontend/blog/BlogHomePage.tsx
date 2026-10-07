@@ -19,7 +19,7 @@ export default function BlogHomePage() {
     <BlogShell>
       <section className={styles.hero}>
         <h1 className={styles.headline}>
-          I'm Aleksei, and I build products.
+          I'm Alekséi, and I build products.
         </h1>
         <p className={styles.subtitle}>
           UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat! If you came here from one of

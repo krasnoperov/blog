@@ -8,13 +8,13 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
-    slug: 'i-am-a-builder',
-    title: "I'm a builder",
+    slug: 'i-just-wanted-to-speak-spanish',
+    title: 'I just wanted to speak Spanish',
     summary:
-      'This site is my calling card: who I am, what I build, and what each of my projects is teaching me about building products.',
+      'Courses were too slow, so I built my own. Testing it needed user interviews, so I built UserTold. Promoting that needed videos, so I built MakeFX. How one wish became four products, and the question each one is stuck on now.',
     publishedAt: '2026-10-08',
-    readingTime: '6 min read',
-    tags: ['indie-hacking', 'product-development', 'usertold', 'makefx', 'learnspeakrepeat', 'fellowmakers'],
+    readingTime: '5 min read',
+    tags: ['indie-hacking', 'product-development', 'learnspeakrepeat', 'usertold', 'makefx', 'fellowmakers'],
     featured: true,
   },
   {
