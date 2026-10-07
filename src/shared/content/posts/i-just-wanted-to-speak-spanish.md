@@ -41,7 +41,7 @@ A course that works for me proves very little. I needed to see other learners us
 
 But the tools I found were either expensive or not agentic. I wanted my coding agent to run the interviews, read the answers, and turn them into work.
 
-So I built [UserTold](https://usertold.ai). My agent writes a study, and UserTold runs it inside the product: a voice interview, or quiet observation of a task followed by questions about what just happened. Each session comes back as evidence I can check, down to the quote, the click, and the page. The evidence becomes issues in Linear or GitHub, and when an issue closes, the evidence is marked resolved, so I can see if the problem comes back. It costs $0.25 a minute of completed interview, with no subscription.
+So I built [UserTold](https://usertold.ai). My agent writes a study, and UserTold runs it inside the product: a voice interview, or quiet observation of a task followed by questions about what just happened. Each session comes back as evidence I can check, down to the quote, the click, and the page. The evidence becomes issues in Linear or GitHub, and when an issue closes, the evidence is marked resolved, so I can see if the problem comes back. It costs $0.25 per recorded minute, billed only for interviews that finish processing, with no subscription.
 
 UserTold is listed in ChatGPT, and the listing brings registrations, but not, as far as I can tell, from people who want user research. They came for something else, and I don't know yet what it is.
 
