@@ -159,6 +159,21 @@
   line-height: var(--leading-normal);
 }
 
+.imageFigure {
+  display: grid;
+  gap: var(--s-2);
+  margin: var(--s-6) 0;
+}
+
+.image {
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--paper-rule);
+  border-radius: var(--radius-soft);
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   .videoFigure {
     margin-left: 0;

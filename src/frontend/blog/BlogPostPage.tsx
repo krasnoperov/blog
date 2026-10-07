@@ -122,6 +122,26 @@ const markdownComponents: Components = {
       return <MermaidBlock chart={codeText} />;
     }
 
+    if (language === 'image') {
+      const [src, title, ...unexpectedLines] = codeText
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+      const isValidImageBlock =
+        unexpectedLines.length === 0 &&
+        /^\/media\/[\w./-]+\.(?:jpg|jpeg|png|webp)$/.test(src ?? '') &&
+        Boolean(title);
+
+      if (isValidImageBlock) {
+        return (
+          <figure className={markdownStyles.imageFigure}>
+            <img className={markdownStyles.image} src={src} alt={title} loading="lazy" decoding="async" />
+            <figcaption className={markdownStyles.videoCaption}>{title}</figcaption>
+          </figure>
+        );
+      }
+    }
+
     if (language === 'video') {
       const [src, poster, title, ...unexpectedLines] = codeText
         .split('\n')

@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'orchestrator-moved-into-the-session',
+    title: 'The orchestrator moved into the session',
+    summary:
+      'patchrelay delivered a couple of thousand PRs for me. Since Opus 5.5, the main Claude Code session plans, delegates, and reviews on its own, so I no longer break work into Linear issues. The gates stayed: review-quill and merge-steward are still how anything lands.',
+    publishedAt: '2026-10-08',
+    readingTime: '5 min read',
+    tags: ['software-factory', 'patchrelay', 'agentic-development', 'claude-code', 'review-quill', 'merge-steward'],
+    featured: true,
+  },
+  {
     slug: 'a-writing-agent-with-durable-objects',
     title: 'A writing agent with Durable Objects',
     summary:

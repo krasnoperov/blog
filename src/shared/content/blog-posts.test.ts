@@ -117,3 +117,20 @@ test('celld posts keep their deployable local video assets separated', async () 
     }
   }
 });
+
+test('image blocks point at deployable local assets', async () => {
+  const posts = await readPostFiles();
+  const imageBlocks = posts.flatMap((post) => [
+    ...post.content.matchAll(/```image\n([^\n]+)\n([^\n]+)\n```/g),
+  ]);
+
+  assert.ok(imageBlocks.length > 0);
+
+  for (const [, imagePath, caption] of imageBlocks) {
+    assert.match(imagePath, /^\/media\/[\w./-]+\.(?:jpg|jpeg|png|webp)$/);
+    assert.ok(caption.trim());
+
+    const image = await stat(path.resolve('public', imagePath.slice(1)));
+    assert.ok(image.size > 0);
+  }
+});

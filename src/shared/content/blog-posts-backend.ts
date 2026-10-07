@@ -5,6 +5,7 @@ import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes
 import linearAgentPastThePrMarkdown from './posts/linear-agent-past-the-pr.md';
 import mergeStewardMarkdown from './posts/merge-steward.md';
 import mergeTreesMarkdown from './posts/merge-trees.md';
+import orchestratorMovedIntoTheSessionMarkdown from './posts/orchestrator-moved-into-the-session.md';
 import notScalingCodeReviewMarkdown from './posts/not-scaling-code-review.md';
 import patchrelayMarkdown from './posts/patchrelay.md';
 import pickingAnAgentHarnessMarkdown from './posts/picking-an-agent-harness.md';
@@ -32,6 +33,7 @@ const RAW_POSTS = {
   'merge-steward': mergeStewardMarkdown,
   'merge-trees': mergeTreesMarkdown,
   'not-scaling-code-review': notScalingCodeReviewMarkdown,
+  'orchestrator-moved-into-the-session': orchestratorMovedIntoTheSessionMarkdown,
   'patchrelay': patchrelayMarkdown,
   'picking-an-agent-harness': pickingAnAgentHarnessMarkdown,
   'review-quill': reviewQuillMarkdown,
