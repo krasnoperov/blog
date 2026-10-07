@@ -20,7 +20,7 @@ A post that respects these rules can be re-read a year later without making the 
 
 There are two kinds of post, and each has its own shape.
 
-**Product and personal posts** (what a project is, what it is teaching me, where it is stuck) open with who the post is for or what happened, give each product its own section, and end on the open question for each one. They don't need a vendor survey. They still follow every content prep and voice rule: no invented numbers, and opinion flagged as opinion.
+**Product and personal posts** (what a project is, what it is teaching me, where it goes next) open with who the post is for or what happened, give each product its own section, and end on the next move for each one. They don't need a vendor survey. They still follow every content prep and voice rule: no invented numbers, and opinion flagged as opinion.
 
 **Technical posts** (a tool, a system design, a choice between options) follow the four-part shape:
 
@@ -40,13 +40,13 @@ Product and personal posts are told as stories, and the same rules apply at two 
 - **Open on a hook,** not a thesis: a person, a wish, a concrete problem. "Hi, I'm Alekséi. All I wanted was to speak Spanish." beats "This post is about my products."
 - **Chain beats with "but" and "so", never "and then".** Each step is a want, the obstacle that blocked it, and what I did about it. If two beats are joined by "and then", one of them is a list item, not a story beat.
 - **Details serve the beat.** A product's features go in where they answer the "so": how the thing solves the problem that blocked me. Keep the specifics (prices, minutes, what a session contains) and cut the catalogue prose.
-- **End on an open question,** stated plainly. The question is the reason to read the next post.
+- **End on the next move,** stated plainly: what the product does next. The next move is the reason to read the next post.
 
 **Across posts.**
 
 - **A series is one chain stretched over several posts.** The opener lays out the whole chain; each later post takes one link and goes deep.
-- **Each post answers the question the previous one left open, then leaves a new one.** Link back to the post that asked it in the first paragraph.
-- **Never promise a date.** An open question is a hook; "coming next week" is a debt.
+- **Each post delivers the next move the previous one named, then names a new one.** Link back to the post that named it in the first paragraph.
+- **Never promise a date.** A next move is a hook; "coming next week" is a debt.
 
 ## Promote, don't apologise
 
@@ -61,7 +61,7 @@ Product and personal posts promote the work. State what a product does today and
 | let me know if this is useful | an invitation and a link |
 | AI-powered | what the agent actually does |
 
-An open question still ends a post, but it is phrased as the next move ("the next study UserTold runs is on them"), not as a gap ("I don't know yet"). A cost is phrased as what it buys ("six hours of speaking a month for about the price of two tutor hours"), not as a complaint ("expensive enough to push prices up").
+A post ends on the next move ("the next study UserTold runs is on them"), never on a gap ("I don't know yet"). A cost is phrased as what it buys ("six hours of speaking a month for about the price of two tutor hours"), not as a complaint ("expensive enough to push prices up").
 
 ## Voice rules
 
@@ -72,7 +72,7 @@ For full voice calibration — sentence rhythm, lexicon, the closer rules, the f
 - **Short paragraphs.** Two to five sentences. One idea per paragraph. If a paragraph runs longer than five sentences it's usually two paragraphs.
 - **Banned words and phrases.** No `delve`, `leverage`, `robust`, `seamless`, `unlock`, `landscape` as filler, `journey` as marketing, "in conclusion", "at the end of the day", "it's important to note that", "let's dive in". These are AI tells; the reader's brain skips them.
 - **Em-dashes are part of the voice — use them, but watch for loose chaining.** Long compound sentences with em-dashes are signature here (see `VOICE.md`). The failure isn't the dash; it's a clause joined by an additive "and" or a trailing relative that adds nothing. Test: cut the sentence at the join — if both halves stand alone and the link survives, split it; if the length carries the argument, keep it.
-- **No marketing closers, and no empty ones.** End on the technical observation or a specifically-named uncertainty. Don't summarise what the reader just read, and don't gesture vaguely ("time will tell"). A flat forward line ("Let's find out.") is fine once the open question has been stated explicitly.
+- **No marketing closers, and no empty ones.** Technical posts end on the technical observation or a specifically-named uncertainty; product and personal posts end on the next move. Don't summarise what the reader just read, and don't gesture vaguely ("time will tell"). A flat forward line ("Let's find out.") is fine once the open question of a technical post has been stated explicitly.
 - **Code identifiers in backticks.** Function names, file paths, commit shas. Don't bold them and don't italicise them.
 - **Cite by name, not by adjective.** "Hetzner CPX21" not "an affordable VPS". "Codex App Server" not "a modern agent runtime". Readers want to fact-check.
 
