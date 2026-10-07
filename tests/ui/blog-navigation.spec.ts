@@ -4,11 +4,11 @@ test.describe('blog navigation', () => {
   test('reader can move from home to archive to a post', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: 'Notes from building a software factory.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Notes from building products alone, with agents.' })).toBeVisible();
     await page.getByRole('link', { name: 'browse archive' }).click();
 
     await expect(page).toHaveURL(/\/posts$/);
-    await expect(page.getByRole('heading', { name: 'Software factory writing, one post at a time.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Notes and essays, one post at a time.' })).toBeVisible();
 
     await page.getByRole('link', { name: /Hello World for Factory Notes/i }).click();
     await expect(page).toHaveURL(/\/posts\/hello-world-formatting-the-factory-notes$/);

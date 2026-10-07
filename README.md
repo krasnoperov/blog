@@ -4,7 +4,7 @@ A personal tech blog reshaped from an internal starter foundation into a markdow
 
 ## Current Focus
 
-The first wave of posts is about building a software factory: the systems, automations, control planes, and feedback loops that convert ideas into delivered software.
+The blog is about building and running small products with coding agents (UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat!). The first wave of posts covered the software factory that ships them: the systems, automations, and feedback loops that convert ideas into delivered software.
 
 ## Structure
 

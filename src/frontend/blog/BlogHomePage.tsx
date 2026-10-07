@@ -19,11 +19,11 @@ export default function BlogHomePage() {
     <BlogShell>
       <section className={styles.hero}>
         <h1 className={styles.headline}>
-          Notes from building a software factory.
+          Notes from building products alone, with agents.
         </h1>
         <p className={styles.subtitle}>
-          A personal tech blog about agent-driven development, harness design, and the small
-          services that keep a coding-agent factory honest.
+          I'm Aleksei Krasnoperov. I build UserTold, MakeFX, FellowMakers, and Learn, Speak,
+          Repeat!, and write about what I learn running them, and about the agent setup behind them.
         </p>
         <div className={styles.actions}>
           <Link to={`/posts/${featuredPost.slug}`} className={styles.actionPrimary}>read the latest</Link>

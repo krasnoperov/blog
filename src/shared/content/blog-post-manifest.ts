@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'what-the-factory-is-for',
+    title: 'What the factory is for',
+    summary:
+      'For a year this blog was about building a software factory. At my scale it is finished, so the blog moves on to the four products it ships: UserTold, MakeFX, FellowMakers, and Learn, Speak, Repeat!',
+    publishedAt: '2026-10-08',
+    readingTime: '6 min read',
+    tags: ['indie-hacking', 'usertold', 'makefx', 'learnspeakrepeat', 'fellowmakers'],
+    featured: true,
+  },
+  {
     slug: 'orchestrator-moved-into-the-session',
     title: 'The orchestrator moved into the session',
     summary:

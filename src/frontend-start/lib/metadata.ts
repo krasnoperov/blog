@@ -69,7 +69,7 @@ function baseMetadata({
 export function homePageHead() {
   return baseMetadata({
     title: SITE_NAME,
-    description: 'Notes on agent-driven development, harness design, and the small services that keep a coding-agent factory honest.',
+    description: SITE_DESCRIPTION,
     path: '/',
     jsonLd: {
       '@context': 'https://schema.org',
@@ -92,14 +92,14 @@ export function homePageHead() {
 export function archivePageHead() {
   return baseMetadata({
     title: `Archive | ${SITE_NAME}`,
-    description: 'Archive of software factory posts on delivery systems, control planes, specs, and measurement.',
+    description: 'Archive of posts on building and running small products with coding agents.',
     path: '/posts',
     jsonLd: [
       {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
         name: `${SITE_NAME} Archive`,
-        description: 'Archive of software factory notes and technical essays.',
+        description: 'Archive of notes and technical essays on building small products with coding agents.',
         url: absoluteUrl('/posts'),
         mainEntity: {
           '@type': 'ItemList',

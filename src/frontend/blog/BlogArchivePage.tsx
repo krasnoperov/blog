@@ -17,10 +17,10 @@ export default function BlogArchivePage() {
     <BlogShell>
       <section className={styles.hero}>
         <span className={styles.eyebrow}>Archive · {BLOG_POSTS.length} posts</span>
-        <h1 className={styles.title}>Software factory writing, one post at a time.</h1>
+        <h1 className={styles.title}>Notes and essays, one post at a time.</h1>
         <p className={styles.description}>
-          The archive starts with a single formatting post that demonstrates the writing surface.
-          Everything after that is notes, essays, diagrams, and walkthroughs as they land.
+          Everything in order: the software factory that ships my products, and what I learn
+          running the products themselves.
         </p>
       </section>
 

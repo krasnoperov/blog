@@ -12,8 +12,8 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['x-frontend-renderer']).toBe('tanstack-start');
     expect(response.headers()['x-llms-txt']).toBe('/llms.txt');
     const body = await response.text();
-    expect(body).toContain('Notes from building a software factory.');
-    expect(body).toContain('A personal tech blog about agent-driven development');
+    expect(body).toContain('Notes from building products alone, with agents.');
+    expect(body).toContain('I build UserTold, MakeFX, FellowMakers');
     expect(body).toContain('rel="canonical" href="https://krasnoperov.me/"');
     expect(body).toContain('property="og:title" content="Krasnoperov Blog"');
   });
@@ -29,7 +29,7 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['x-frontend-renderer']).toBe('tanstack-start');
     expect(response.headers()['link']).toContain('rel="llms-txt"');
     const body = await response.text();
-    expect(body).toContain('Software factory writing, one post at a time.');
+    expect(body).toContain('Notes and essays, one post at a time.');
     expect(body).toContain('Hello World for Factory Notes');
     expect(body).toContain('rel="canonical" href="https://krasnoperov.me/posts"');
   });
@@ -59,7 +59,7 @@ test.describe('SSR smoke', () => {
     expect(body).toMatch(/<meta property="article:tag" content="[^"]+,[^"]+"/);
     expect(body).toContain('name="keywords"');
     // Person publisher JSON-LD with sameAs (E-A-T signal).
-    expect(body).toContain('"sameAs":["https://github.com/krasnoperov"]');
+    expect(body).toContain('"sameAs":["https://github.com/krasnoperov","https://x.com/snejink","https://fellowmakers.app/people/snejink"]');
     // Regression guard: react-markdown was leaking the hast AST node as a DOM attr.
     expect(body).not.toContain('node="[object Object]"');
   });

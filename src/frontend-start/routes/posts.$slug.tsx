@@ -17,7 +17,7 @@ export const Route = createFileRoute('/posts/$slug')({
     path: '/posts/post',
     markdownPath: '/posts/post.md',
     title: 'Post',
-    summary: 'Software factory writing on Krasnoperov Blog.',
+    summary: 'Writing on Krasnoperov Blog.',
     publishedAt: '1970-01-01',
     readingTime: '5 min read',
     tags: [],
