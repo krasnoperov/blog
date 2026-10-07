@@ -2,7 +2,7 @@
 
 This guide is for anyone (or any agent) writing posts for this blog. It exists because the first wave of posts is opinionated about voice and grounding, and the cost of relearning the rules every time would be high.
 
-The blog is personal. It documents the journey of building a personal "software factory" — `patchrelay`, `review-quill`, `merge-steward`, `usertold`. Every post should sound like the same person wrote it.
+The blog is personal. It is a builder's calling card: who I am, the products I build (`usertold`, `makefx`, `fellowmakers`, `learnspeakrepeat`), and what each of them teaches me about building products — finding people, distribution, telling the story, pricing. The first wave of posts documented the software factory that ships them (`patchrelay`, `review-quill`, `merge-steward`); that setup is done for the current scale, and new posts should not drift back into factory notes unless something there genuinely changes. Every post should sound like the same person wrote it.
 
 ## Content prep rules
 
@@ -16,16 +16,20 @@ Before drafting any post:
 
 A post that respects these rules can be re-read a year later without making the author cringe. A post that doesn't is a liability.
 
-## Post structure (non-negotiable)
+## Post structure
 
-Every post in this blog follows the same four-part shape:
+There are two kinds of post, and each has its own shape.
+
+**Product and personal posts** (what a project is, what it is teaching me, where it is stuck) open with who the post is for or what happened, give each product its own section, and end on the open question for each one. They don't need a vendor survey. They still follow every content prep and voice rule: no invented numbers, and opinion flagged as opinion.
+
+**Technical posts** (a tool, a system design, a choice between options) follow the four-part shape:
 
 1. **The problem.** What hurt, in concrete terms. Two to four paragraphs. Open on a scene or an observation, not a thesis statement.
 2. **The landscape.** What other people do. This is the survey section. Cite vendors, papers, blog posts. Be specific about names and versions.
 3. **The choice.** What I picked, with the reasoning. Be specific about the file, the commit, the version. If there's a sha or a function name, name it.
 4. **The caveat.** This might change. What does the interface look like so the choice can be swapped? What would make me reconsider?
 
-This shape exists because the entire blog refuses to manifest a single right answer. Every post is one author's most-logical-for-now choice, not a recommendation. The structure forces that humility into the bones of every post.
+This shape exists because the blog refuses to manifest a single right answer. Every technical post is one author's most-logical-for-now choice, not a recommendation. The structure forces that humility into the bones of every post.
 
 ## Voice rules
 
@@ -48,6 +52,7 @@ These come from the actual blog renderer. Authoring outside these bounds breaks 
 - **Mermaid.** Supported and lazy-loaded. Use only when a flow, state, or sequence is genuinely clearer than prose. Default is zero diagrams per post. The renderer falls back to source code on render error, so prefer simple `flowchart LR` over experimental layouts.
 - **Fenced code.** No syntax highlighting in this renderer. Don't lean on colour to convey meaning. Keep code samples short — five to fifteen lines is plenty.
 - **Video.** A fenced `video` block embeds one local MP4. Its three non-empty lines are the `/media/...mp4` source, the `/media/...` poster, and a short accessible caption. Keep both assets in `public/media/`; external video URLs remain ordinary links.
+- **Image.** A fenced `image` block embeds one local image as a captioned figure. Its two non-empty lines are the `/media/...` source (`.jpg`, `.jpeg`, `.png`, or `.webp`) and a short caption that doubles as the alt text. Keep the file in `public/media/`; the content tests check that it exists.
 - **Footnotes are not supported.** Use inline links like `[name](url)` instead.
 - **Links.** External links open in a new tab automatically. Internal cross-links between posts use `[Title](/posts/<slug>)`.
 - **Frontmatter.** Must match the manifest exactly: `title`, `summary`, `publishedAt` (YYYY-MM-DD), `readingTime`, `tags`, `featured`. The test suite enforces this — a mismatch fails the build.
