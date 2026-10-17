@@ -88,6 +88,14 @@ const STATIONS: Station[] = [
   },
   {
     n: '—',
+    name: 'Human Needed',
+    body: (
+      <>Every repair loop has a budget: <code>review_fix</code> ×3, <code>ci_repair</code> ×2, <code>integration_repair</code> ×10. When one is spent, the issue moves to Human Needed. Changes to <code>wrangler.toml</code>, auth, migrations or dependencies always wait for a human’s approval.</>
+    ),
+    links: [{ label: 'post', href: '/posts/gates-not-autonomy' }],
+  },
+  {
+    n: '—',
     name: 'GitHub, the bus',
     body: (
       <>The services never call each other. A webhook only wakes them; every decision is re-read from GitHub: head SHA, reviews, checks, refs.</>

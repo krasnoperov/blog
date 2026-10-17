@@ -6,6 +6,8 @@ import {
   BOOTH,
   EVAL_DIAL,
   CRANE,
+  DESK,
+  DESK_TRAY,
   ENTRY_X,
   GATE_X,
   CI_HALL,
@@ -716,6 +718,46 @@ function production() {
   return out.join('');
 }
 
+// Human Needed: a desk at the front of the floor. Escalations land in its
+// tray; a console with two screens, a stamp for approvals, a stool, and an
+// andon tower whose lamps say whether the line needs a human.
+export const STAMP = { x: DESK.x1 - 7, y: DESK.y1 - 5 } as const;
+export const ANDON = { x: DESK.x1 + 9, y: DESK.y0 + 3 } as const;
+function desk() {
+  const { x0, x1, y0, y1, top } = DESK;
+  const out: string[] = [];
+  const slab = plan(x0, y0, x1, y1, 1.2);
+  out.push(`<path class="iso-halo" d="${k.haloOf(slab, 0, top, P)}"/>`);
+  for (const { x, y } of byDepth(k.corners(slab, 3).map(([x, y]) => ({ x, y })))) {
+    out.push(post(x, y, 2.4, 0, 1, { tone: 'lo' }, 16), post(x, y, 1.2, 1, top - 1.6, { crease: 'none' }, 12));
+  }
+  out.push(S(k.slabOf(slab, top - 1.6, 1.6, P, 3, 0.4), { tone: 'mid', inner: L(k.planOutline(k.insetPlan(slab, 2.5), top, P, 3), { tone: 'faint' }) }));
+  // The console along the back edge, its two screens facing the stool.
+  const face = y0 + 7;
+  out.push(box(x0 + 4, y0 + 1, x1 - 4, face, top, top + 15, {}, 0.8, 0.4));
+  const mid = (x0 + x1) / 2;
+  out.push(`<g data-screen="desk">${terminalScreen(face, x0 + 7, mid - 2, top + 3, top + 13, 'desk-a', 3)}${windowScreen(face, mid + 2, x1 - 7, top + 3, top + 13, 'desk-b')}</g>`);
+  // The tray where escalated PRs land.
+  const tray = plan(DESK_TRAY.x - 10, DESK_TRAY.y - 8.5, DESK_TRAY.x + 10, DESK_TRAY.y + 8.5, 0.8);
+  out.push(S(k.slabOf(tray, top, 1, P, 3, 0.3), { tone: 'lo' }));
+  out.push(L(k.planOutline(k.insetPlan(tray, 1.5), top + 1, P, 3), { tone: 'faint' }));
+  out.push('<g data-part="desk-items"></g>', '<g data-part="beams-desk"></g>');
+  // The stamp: a post with a head the live model presses on approvals.
+  out.push(post(STAMP.x, STAMP.y - 4, 2.4, top, top + 1, { tone: 'lo' }, 16), post(STAMP.x, STAMP.y - 4, 0.8, top + 1, top + 16, { crease: 'none' }, 10));
+  out.push(box(STAMP.x - 1, STAMP.y - 4, STAMP.x + 1, STAMP.y, top + 14, top + 15.5, {}, 0.3));
+  out.push('<g data-part="stamp"></g>');
+  // The stool in front, where the human sits.
+  const [sx, sy] = [mid + 4, y1 + 11];
+  out.push(post(sx, sy, 4, 0, 1, { tone: 'lo' }, 20), post(sx, sy, 0.9, 1, 13, { crease: 'none' }, 10), post(sx, sy, 5.2, 13, 15, {}, 28, 0.5));
+  // The andon tower: green when the line runs on its own, amber when it
+  // waits for an approval, red when a human is needed.
+  const { x: ax, y: ay } = ANDON;
+  out.push(post(ax, ay, 3.4, 0, 1.4, { tone: 'lo' }, 18), post(ax, ay, 0.9, 1.4, 40, { crease: 'none' }, 10));
+  for (const [name, z] of [['andon-green', 40], ['andon-amber', 44], ['andon-red', 48]] as const) out.push(lamp(name, ax, ay, z, 2.2, 3.4));
+  out.push(post(ax, ay, 2.6, 52.6, 54, {}, 18, 0.3));
+  return out.join('');
+}
+
 // usertold: an interview booth behind production with a microphone and a
 // screen whose waveform moves while it listens to the users.
 function usertold() {
@@ -802,7 +844,7 @@ function hub() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one. A gate on it opens for each PR that is approved and green on its own branch, without a wait; a red one is teleported back. A crane sets each admitted PR on top of a stack standing on main: the bottom one sits on main and each one above is built on the one below. Behind it, a CI hall has a test drum per level, wired to it: every drum spins at once while the CI of its candidate runs, its dial filling, and its lamp turns green. The bottom PR leaves for main the moment it is green, and the ones above, often green already, drop down and follow. A candidate that goes red is repaired in place: a torch on a slide beside the stack fixes it on its candidate ref, a lamp blinks for the narrow integration review, and it tests again with the ones above it. Main deploys to a small stage booth and to production, a building whose windows are its users, at the same time; each puffs smoke from its chimney for its smoke test and then lights a green lamp. In front of production, usertold listens to the users and sends what it hears back in a capsule, up over the roof and along a tube at the back of the floor, into the Linear hopper. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one. A gate on it opens for each PR that is approved and green on its own branch, without a wait; a red one is teleported back. A crane sets each admitted PR on top of a stack standing on main: the bottom one sits on main and each one above is built on the one below. Behind it, a CI hall has a test drum per level, wired to it: every drum spins at once while the CI of its candidate runs, its dial filling, and its lamp turns green. The bottom PR leaves for main the moment it is green, and the ones above, often green already, drop down and follow. A candidate that goes red is repaired in place: a torch on a slide beside the stack fixes it on its candidate ref, a lamp blinks for the narrow integration review, and it tests again with the ones above it. At the front of the floor stands a Human Needed desk with a stool, a stamp and an andon tower: a PR that has spent its review_fix or ci_repair budget is teleported into its tray and the tower turns red until the human sends it back to its line; a PR touching wrangler, auth or migrations carries a warning stripe and waits at the gate, the tower amber, until the human stamps it. Main deploys to a small stage booth and to production, a building whose windows are its users, at the same time; each puffs smoke from its chimney for its smoke test and then lights a green lamp. In front of production, usertold listens to the users and sends what it hears back in a capsule, up over the roof and along a tube at the back of the floor, into the Linear hopper. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
 
 let cached: string | null = null;
 
@@ -821,6 +863,7 @@ export function factorySvg() {
     lane(1),
     lane(2),
     portalFront(),
+    desk(),
     booth(),
     production(),
     usertold(),

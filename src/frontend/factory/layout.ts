@@ -73,6 +73,11 @@ export const REPAIR = { x: STACK_X + 27, y: TRUNK_Y + 16 } as const;
 export const USERTOLD = { x0: 846, x1: 882, y0: 30, y1: 56, z: 34 } as const;
 export const TUBE = { x: 872, y: -150, z: 115, outY: 40, inX: LANES[0].intake, inY: LANES[0].y, inZ: 106 } as const;
 
+// Human Needed: a desk at the front of the floor where escalations land,
+// with a stool for the human, a stamp for approvals and an andon tower.
+export const DESK = { x0: 476, x1: 540, y0: 60, y1: 84, top: 20 } as const;
+export const DESK_TRAY = { x: DESK.x0 + 14, y: DESK.y0 + 15 } as const;
+
 export const BUS = { x0: 30, x1: 900, y0: -168, y1: -158, z0: 132, z1: 140 } as const;
 export const TAP = {
   patchrelay: LANES[0].machine,

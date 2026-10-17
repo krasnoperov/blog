@@ -133,3 +133,10 @@
 .fx-flash { fill: var(--fx-light); opacity: .55; }
 .fx-users { display: none; }
 .fx-item[data-users] .fx-users { display: inline; }
+.fx-lamp[data-on="amber"] > .iso-top,
+.fx-lamp[data-on="amber"] > .iso-shade,
+.fx-lamp[data-on="amber"] > .iso-fill { fill: var(--fx-light); }
+/* A sensitive change: a warning stripe on the PR box. */
+.fx-sensitive { display: none; }
+.fx-item[data-sensitive] [data-k="box"] .fx-sensitive { display: inline; }
+.fx-hazard { fill: var(--fx-light); }

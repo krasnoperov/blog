@@ -7,6 +7,8 @@ import {
   CARD_H,
   EVAL_DIAL,
   CRANE,
+  DESK,
+  DESK_TRAY,
   ENTRY_X,
   GATE_X,
   GONE_X,
@@ -30,7 +32,7 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
-import { ARM_BASE, CHIMNEYS, CI_DIAL, GATE_SPAN, STAGE_DIAL, TUBE_FRONT_LEGS, TUBE_PATH, WINDOWS, levelZ } from './art';
+import { ARM_BASE, CHIMNEYS, CI_DIAL, GATE_SPAN, STAGE_DIAL, TUBE_FRONT_LEGS, TUBE_PATH, STAMP, WINDOWS, levelZ } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -51,12 +53,24 @@ export const AGENTS = [
 
 // How many review rounds each PR takes, and how long its candidate's CI
 // runs. Patterns, so the line repeats.
-const ROUNDS_OF = [1, 2, 1, 1, 1, 3, 1, 1, 1, 1];
+const ROUNDS_OF = [1, 2, 1, 1, 1, 3, 1, 1, 1, 1, 6];
 const CI_OF = [4.2, 6.8, 3.4, 5.6, 7.4, 3.9, 5.1];
 const SPAWN_EVERY = [4.4, 5.2, 6.0];
 // Some PRs fail CI on their own branch and are turned back at the gate;
 // some go red in the queue, built on the PRs ahead of them.
 const FAILS_ENTRY = (id: number) => id % 13 === 4;
+// Some stay red on their branch through every ci_repair attempt.
+const FAILS_ENTRY_HARD = (id: number) => id % 23 === 9;
+// Repair budgets, as in patchrelay: review_fix ×3, ci_repair ×2,
+// integration_repair ×10. A spent budget escalates to a human.
+const REVIEW_FIX_BUDGET = 3;
+const CI_REPAIR_BUDGET = 2;
+const INTEGRATION_REPAIR_BUDGET = 10;
+// Changes to wrangler.toml, auth, migrations or dependencies need a human's
+// approval before they are admitted.
+const SENSITIVE = (id: number) => id % 9 === 5;
+const APPROVE_TIME = 1.6;
+const HUMAN_TIME = 2.8;
 const FAILS_IN_QUEUE = (id: number) => id % 11 === 3;
 // CI on the PR's own branch starts when the PR is opened and runs while it
 // is reviewed, so it is usually green by the time it reaches the gate.
@@ -74,7 +88,7 @@ const CAPSULE_EVERY = 5;
 // A deploy's smoke tests take this long; then it is Done, and the next one
 // may start.
 const SMOKE_DONE = 0.9;
-type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'deploy' | 'gone';
+type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'deploy' | 'desk' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
 interface Item {
@@ -105,6 +119,14 @@ interface Item {
   fix: number;
   // An issue that came from what users told usertold.
   fromUsers: boolean;
+  // Repair attempts spent, a human's help, and approval of a sensitive change.
+  ciRepairs: number;
+  integrationRepairs: number;
+  escalated: '' | 'review' | 'ci';
+  toDesk: boolean;
+  human: boolean;
+  sensitive: boolean;
+  approval: number;
   ciNeed: number;
   flag: boolean;
   el: SVGGElement;
@@ -147,6 +169,8 @@ function boxSvg() {
     k.lineSvg(k.lineOnTop([-8, 0], [8, 0], BOX_H, P), { tone: 'faint' }),
     `<ellipse data-ci class="fx-ci" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="1.5" ry="0.8"/>`,
     usersMark(-4.2, 3.6, BOX_H),
+    // A sensitive change (wrangler, auth, migrations): a warning stripe.
+    `<g class="fx-sensitive">${k.lineSvg(k.onTop([[-7, -6.2], [-1, -6.2], [-1, -4.4], [-7, -4.4]], BOX_H, P, true), { tone: 'lo' })}<path class="fx-hazard" d="${k.onTop([[-7, -6.2], [-1, -6.2], [-1, -4.4], [-7, -4.4]], BOX_H, P, true)}"/></g>`,
     `<g data-k="flag">${cyl(-5, -4, 0.5, BOX_H, BOX_H + 9, { crease: 'none' }, 8)}${box(-4.6, -4.4, 1.6, -3.6, BOX_H + 5, BOX_H + 9, { className: 'fx-flag' }, 0.2)}</g>`,
   ].join('');
 }
@@ -359,6 +383,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const BOX = boxSvg();
 
   const beams = part('beams');
+  const beamsDesk = part('beams-desk');
+  const deskItems = part('desk-items');
+  const stampEl = part('stamp');
+  const deskScreen = svg.querySelector('[data-screen="desk"]');
+  let stampKey = '';
   const stackEl = part('stack');
   const craneEl = part('crane');
   const craneRig = document.createElementNS(SVG_NS, 'g');
@@ -396,6 +425,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let returned = 0;
   let beacon = 99;
   let repaired = 0;
+  let escalations = 0;
+  let stampT = 0;
   // The repair carriage's height, and usertold: how long it still listens,
   // when it last sent a capsule, the capsules in the tube.
   let repairZ = levelZ(STACK_MAX);
@@ -488,6 +519,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       beamFrom: null,
       ci: 0,
       fix: -1,
+      ciRepairs: 0,
+      integrationRepairs: 0,
+      escalated: '',
+      toDesk: false,
+      human: false,
+      sensitive: SENSITIVE(id),
+      approval: 0,
       fromUsers: lane === 0 && takeFromUsers(),
       ciNeed: CI_OF[id % CI_OF.length],
       flag: false,
@@ -501,6 +539,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     el.setAttribute('role', 'button');
     el.setAttribute('aria-label', `Follow ${name}${item.fromUsers ? ', from what users told usertold' : ''}`);
     el.toggleAttribute('data-users', item.fromUsers);
+    el.toggleAttribute('data-sensitive', item.sensitive);
     el.addEventListener('click', () => follow(item));
     el.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -581,6 +620,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       verdict[lane] = { kind: passing ? 'approve' : 'changes', t: 0 };
       dialTarget[lane] = 0;
       item.t = 0;
+      // Every review_fix spent and still not approved: a human is needed.
+      if (!passing && item.reviews > REVIEW_FIX_BUDGET) {
+        escalate(item, 'review');
+        return true;
+      }
       pulse(TAP.review, passing ? TAP.queue : TAP[LANES[lane].key]);
       return false;
     }
@@ -697,12 +741,22 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     pulse(TAP.queue, TAP[LANES[item.lane].key]);
   }
 
+  // Send a PR to the Human Needed desk: it beams out where it is and lands
+  // in the desk's tray.
+  function escalate(item: Item, why: 'review' | 'ci') {
+    teleport(item);
+    returned -= 1;
+    escalations += 1;
+    item.escalated = why;
+    item.toDesk = true;
+  }
+
   function runMerge(dt: number) {
     // CI on each PR's own branch runs from the moment it is opened.
     for (const item of items) {
       if ((item.stage === 'built' || item.stage === 'approved') && (item.path === 'belt' || item.path === 'cross' || item.path === 'trunk') && item.pre < 1) {
         item.pre = Math.min(1, item.pre + dt / BRANCH_CI);
-        if (item.pre >= 1 && FAILS_ENTRY(item.id) && !item.retried) item.red = 0;
+        if (item.pre >= 1 && !item.human && ((FAILS_ENTRY(item.id) && item.ciRepairs === 0) || FAILS_ENTRY_HARD(item.id))) item.red = 0;
       }
     }
     // The gate: an approved PR with a green branch is admitted as it comes
@@ -712,8 +766,20 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       const atGate = Math.abs(item.x - (GATE_X - 10)) < 0.5;
       if (item.red >= 0) {
         if (atGate) item.red += dt;
-        if (item.red > 0.9) teleport(item);
-      } else if (item.pre >= 1 && item.x >= GATE_X - 40) {
+        if (item.red > 0.9) {
+          // Back to its agent for a ci_repair, or to a human once those are spent.
+          if (item.ciRepairs >= CI_REPAIR_BUDGET) escalate(item, 'ci');
+          else {
+            item.ciRepairs += 1;
+            teleport(item);
+          }
+        }
+      } else if (item.sensitive && !item.human && atGate && item.pre >= 1) {
+        // A sensitive change waits at the gate for a human's stamp.
+        item.approval += dt;
+        stampT += dt;
+        if (item.approval >= APPROVE_TIME) item.human = true;
+      } else if (item.pre >= 1 && item.x >= GATE_X - 40 && (!item.sensitive || item.human)) {
         item.path = 'queue';
         item.ci = 0;
       }
@@ -792,7 +858,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
       if (candidate.red >= 0) {
         candidate.red += dt;
-        if (candidate.red > 0.6 && !stack.some((other) => other.fix >= 0)) candidate.fix = 0;
+        if (candidate.red > 0.6 && !stack.some((other) => other.fix >= 0)) {
+          candidate.fix = 0;
+          candidate.integrationRepairs += 1;
+        }
         return;
       }
       if (candidate.retest) {
@@ -825,6 +894,17 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       pulse(TAP.queue, TAP.dock);
     }
 
+    // The human: works on what landed in the tray, then sends it back to its
+    // line with fresh budgets.
+    for (const item of items.filter((candidate) => candidate.path === 'desk')) {
+      item.t += dt;
+      if (item.t < HUMAN_TIME) continue;
+      item.human = true;
+      item.rounds = item.reviews + 1;
+      item.ciRepairs = 0;
+      item.escalated = '';
+      teleport(item);
+    }
     // The gate's bar rises while a PR is being let through.
     const passing = items.some((item) => item.path === 'queue' && item.stage === 'approved' && item.x > GATE_X - 40 && item.x < GATE_X + 12);
     gateOpen = still.matches ? (passing ? 1 : 0) : gateOpen + ((passing ? 1 : 0) - gateOpen) * (1 - Math.exp(-dt / 0.08));
@@ -847,6 +927,16 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (item.beamFrom) {
         item.fade = Math.max(0, 1 - item.t / 0.6);
         if (item.t < 0.6) continue;
+        if (item.toDesk) {
+          // Into the desk's tray, once it is empty.
+          if (items.some((other) => other !== item && (other.path === 'desk' || (other.path === 'teleport' && other.toDesk && other.beamFrom === null)))) continue;
+          item.beamFrom = null;
+          item.x = DESK_TRAY.x;
+          item.y = DESK_TRAY.y;
+          item.z = DESK.top + 1;
+          item.t = 0;
+          continue;
+        }
         const lane = item.lane;
         // Land only on a clear spot: no PR riding there, none still landing
         // from another teleport, and the lift not handing one up.
@@ -867,7 +957,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         item.fade = Math.min(1, item.t / 0.6);
         if (item.t >= 0.6) {
           item.fade = 1;
-          item.path = 'upper';
+          item.path = item.toDesk ? 'desk' : 'upper';
+          item.toDesk = false;
           item.t = 0;
         }
       }
@@ -1057,6 +1148,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     const agent = AGENTS[item.lane].label;
     if (item.done) return 'deployed · stage and production · smoke tests green · Done';
     if (item.path === 'deploy') return 'deploying · stage and production · smoke tests running';
+    if (item.path === 'desk' || (item.path === 'teleport' && item.toDesk)) {
+      const budget = item.escalated === 'ci' ? `ci_repair ${CI_REPAIR_BUDGET}/${CI_REPAIR_BUDGET} spent` : `review_fix ${REVIEW_FIX_BUDGET}/${REVIEW_FIX_BUDGET} spent`;
+      return `Human Needed · ${budget}`;
+    }
     if (item.path === 'drop') return item.fromUsers ? `from what users told usertold · ${agent}` : `picked up · ${agent}`;
     if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
     if (item.path === 'teleport') return `branch CI red · back to ${agent}`;
@@ -1077,12 +1172,16 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
           const below = stack[item.level - 1];
           const base = below ? `built on ${below.name}` : 'on main';
           const state =
-            item.fix >= FIX_TIME ? 'review-quill/integration' : item.fix >= 0 ? 'integration repair on its candidate ref' : item.red >= 0 ? 'red' : item.retest ? 'testing again' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, to main' : 'green';
+            item.fix >= FIX_TIME ? 'review-quill/integration' : item.fix >= 0 ? `integration_repair ${item.integrationRepairs}/${INTEGRATION_REPAIR_BUDGET} on its candidate ref` : item.red >= 0 ? 'red' : item.retest ? 'testing again' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, to main' : 'green';
           return `merge queue · level ${item.level + 1} · ${base} · ${state}`;
         }
         if (item.path === 'queue') return here(ENTRY_X) ? 'admitted · waiting for the crane' : 'admitted · to the merge queue';
         if (item.path !== 'trunk') return item.pre < 1 ? 'approved · branch CI running' : 'approved · to the queue';
-        if (Math.abs(item.x - (GATE_X - 10)) < 0.5) return item.red >= 0 ? 'branch CI red · back to the line' : 'at the gate · branch CI running';
+        if (Math.abs(item.x - (GATE_X - 10)) < 0.5) {
+          if (item.red >= 0) return item.ciRepairs >= CI_REPAIR_BUDGET ? 'branch CI red · ci_repair spent · to a human' : `branch CI red · ci_repair ${item.ciRepairs + 1}/${CI_REPAIR_BUDGET}`;
+          if (item.sensitive && !item.human && item.pre >= 1) return 'touches wrangler, auth or migrations · waiting for a human';
+          return 'at the gate · branch CI running';
+        }
         return 'approved · to the merge queue';
       case 'merged':
         return item.x < STACK_X + 40 ? 'main · fast-forwarded' : 'deploying · stage and production';
@@ -1109,7 +1208,9 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     }
     if (item.path === 'stack') return stackEl;
     if (item.path === 'crane') return craneCargo;
-    if (item.path === 'teleport') return item.beamFrom ? (item.level >= 0 || item.z > BELT_Z + 1 ? stackEl : laneItems[1]) : upperEls[item.lane];
+    if (item.path === 'desk' || (item.path === 'teleport' && !item.beamFrom && item.toDesk)) return deskItems;
+    if (item.path === 'teleport' && item.beamFrom) return item.level >= 0 || item.z > BELT_Z + 1 ? stackEl : Math.abs(item.beamFrom[1] - TRUNK_Y) < 1 ? laneItems[1] : laneItems[item.lane];
+    if (item.path === 'teleport') return upperEls[item.lane];
     if (item.path === 'trunk' || item.path === 'queue' || item.path === 'deploy') return laneItems[1];
     return laneItems[item.lane];
   }
@@ -1192,7 +1293,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
 
     // The gate: a lamp for the review, one for the branch's CI, and the bar.
     const atGate = items.find((item) => (item.path === 'trunk' && item.x > GATE_X - 40) || (item.path === 'queue' && item.stage === 'approved' && item.x < GATE_X + 12));
-    setLamp('gate-review', atGate ? 'green' : null);
+    setLamp('gate-review', !atGate ? null : atGate.sensitive && !atGate.human ? 'amber' : 'green');
     setLamp('gate-ci', !atGate ? null : atGate.red >= 0 ? 'red' : atGate.path === 'queue' || atGate.pre >= 1 ? 'green' : 'blink');
     const barKey = gateOpen.toFixed(3);
     if (barKey !== gateKey) {
@@ -1216,14 +1317,33 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       craneRig.innerHTML = craneSvg(crane.x, crane.hook);
     }
     let beamSvg = '';
+    let deskBeamSvg = '';
     for (const item of items) {
       if (item.path !== 'teleport') continue;
       const [bx, by, bz] = item.beamFrom ?? [item.x, item.y, item.z];
       // The light swells and fades over each half: leaving, then arriving.
       const env = Math.sin(Math.PI * clamp01(item.t / 0.6));
-      if (env > 0.01) beamSvg += teleportSvg(bx, by, bz, env, clock, item.id);
+      if (env <= 0.01) continue;
+      const beam = teleportSvg(bx, by, bz, env, clock, item.id);
+      if (!item.beamFrom && item.toDesk) deskBeamSvg += beam;
+      else beamSvg += beam;
     }
     if (beams.innerHTML !== beamSvg) beams.innerHTML = beamSvg;
+    if (beamsDesk.innerHTML !== deskBeamSvg) beamsDesk.innerHTML = deskBeamSvg;
+    // Human Needed: the andon tower, the console, the stamp.
+    const needed = items.some((item) => item.path === 'desk' || (item.path === 'teleport' && item.toDesk));
+    const approving = items.some((item) => item.path === 'trunk' && item.sensitive && !item.human && item.approval > 0);
+    setLamp('andon-red', needed ? 'red' : null);
+    setLamp('andon-amber', approving ? 'amber' : null);
+    setLamp('andon-green', needed || approving ? null : 'green');
+    if (deskScreen && deskScreen.hasAttribute('data-on') !== (needed || approving)) deskScreen.toggleAttribute('data-on', needed || approving);
+    const press = approving && !still.matches ? Math.max(0, Math.sin(stampT * 9)) : 0;
+    const sKey = press.toFixed(2);
+    if (sKey !== stampKey) {
+      stampKey = sKey;
+      const z = DESK.top + 9 - press * 7;
+      stampEl.innerHTML = cyl(STAMP.x, STAMP.y, 0.7, z + 2.5, DESK.top + 15, { crease: 'none' }, 10) + box(STAMP.x - 2.6, STAMP.y - 2.6, STAMP.x + 2.6, STAMP.y + 2.6, z, z + 2.5, { tone: 'hi' }, 0.6, 0.3);
+    }
     // Deploy: the stage booth lights and its dial swings, then production's
     // windows light up column by column, round the corner, and go back.
     // Stage and production get the same SHA at once; each runs its smoke test
@@ -1336,7 +1456,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       lastText = text;
       readout.textContent = text;
     }
-    const statsText = `${merged} merged · ${deployed} deployed · ${reviewsDone} reviews · ${returned} sent back · ${repaired} repaired in the queue`;
+    const statsText = `${merged} merged · ${deployed} deployed · ${reviewsDone} reviews · ${returned} sent back · ${repaired} repaired in the queue · ${escalations} to a human`;
     if (stats && statsText !== lastStats) {
       lastStats = statsText;
       stats.textContent = statsText;
