@@ -74,7 +74,7 @@ const CAPSULE_EVERY = 5;
 // A deploy's smoke tests take this long; then it is Done, and the next one
 // may start.
 const SMOKE_DONE = 0.9;
-type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'gone';
+type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'deploy' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
 interface Item {
@@ -395,8 +395,6 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let reviewsDone = 0;
   let returned = 0;
   let beacon = 99;
-  // Every deploy runs its own timeline: smoke tests, Done, usertold.
-  const deploys: number[] = [];
   let repaired = 0;
   // The repair carriage's height, and usertold: how long it still listens,
   // when it last sent a capsule, the capsules in the tube.
@@ -930,13 +928,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (item.path === 'belt' && lift.up.item && lift.up.z < BELT_Z + 16 && item.x < HOIST_X - 1) limit = Math.min(limit, HOIST_X - GAP);
       // Deploys run one at a time, like the deploy workflow: the next merged
       // PR waits at the booth until the smoke tests of the one before pass.
-      if (item.stage === 'merged' && deploys.some((age) => age < SMOKE_DONE)) limit = Math.min(limit, GONE_X - 0.5);
+      if (item.stage === 'merged' && items.some((other) => other.path === 'deploy')) limit = Math.min(limit, GONE_X - GAP);
       if (limit > item.x) item.x = Math.min(limit, item.x + SPEED * dt);
+      // Into the booth: the deploy starts. The PR is Done only once the
+      // smoke tests on stage and production have both passed.
       if (item.stage === 'merged' && item.x >= GONE_X) {
-        deployed += 1;
+        item.path = 'deploy';
+        item.t = 0;
         beacon = 0;
-        deploys.push(0);
-        finish(item);
       }
     }
 
@@ -1005,15 +1004,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (v) v.t += dt;
     });
     beacon += dt;
-    for (let i = deploys.length - 1; i >= 0; i--) {
-      const before = deploys[i];
-      const age = (deploys[i] += dt);
-      // Smoke tests pass on both: this issue is Done in Linear.
-      if (before < SMOKE_DONE && age >= SMOKE_DONE) pulse(TAP.dock, TAP.patchrelay);
-      // Once production's users have it, usertold listens, and after a while
-      // sends what it heard back to Linear.
-      if (before < SMOKE_DONE && age >= SMOKE_DONE && listenLeft <= 0) listenLeft = 1.8;
-      if (age > 3) deploys.splice(i, 1);
+    for (const item of items.filter((candidate) => candidate.path === 'deploy')) {
+      item.t += dt;
+      if (item.t < SMOKE_DONE) continue;
+      // Smoke tests pass on both: this issue is Done in Linear, and once
+      // production's users have it, usertold listens.
+      deployed += 1;
+      pulse(TAP.dock, TAP.patchrelay);
+      if (listenLeft <= 0) listenLeft = 1.8;
+      finish(item);
     }
     sinceCapsule += dt;
     if (listenLeft > 0) {
@@ -1057,6 +1056,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   function phaseText(item: Item): string {
     const agent = AGENTS[item.lane].label;
     if (item.done) return 'deployed · stage and production · smoke tests green · Done';
+    if (item.path === 'deploy') return 'deploying · stage and production · smoke tests running';
     if (item.path === 'drop') return item.fromUsers ? `from what users told usertold · ${agent}` : `picked up · ${agent}`;
     if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
     if (item.path === 'teleport') return `branch CI red · back to ${agent}`;
@@ -1110,7 +1110,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item.path === 'stack') return stackEl;
     if (item.path === 'crane') return craneCargo;
     if (item.path === 'teleport') return item.beamFrom ? (item.level >= 0 || item.z > BELT_Z + 1 ? stackEl : laneItems[1]) : upperEls[item.lane];
-    if (item.path === 'trunk' || item.path === 'queue') return laneItems[1];
+    if (item.path === 'trunk' || item.path === 'queue' || item.path === 'deploy') return laneItems[1];
     return laneItems[item.lane];
   }
 
