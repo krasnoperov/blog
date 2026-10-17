@@ -25,13 +25,13 @@ export const STATION_NOTES: StationNote[] = [
   {
     id: 'intake',
     title: 'Linear · intake',
-    text: 'Issues are written and split in Linear. A planner sets blockedBy before work starts, so dependent issues wait for their blockers.',
+    text: 'I triage and split the work in an ordinary Claude Code or Codex session; issues live in Linear, with blockedBy where they touch the same ground.',
     boxes: [[L0.intake - 24, L0.y - 24, L0.intake + 24, L0.y + 24, 0, 110]],
   },
   {
     id: 'patchrelay',
     title: 'patchrelay',
-    text: 'Takes issues delegated to it in Linear and runs Codex sessions in one durable worktree per issue. Opens the PR, then repairs it on review comments or red CI.',
+    text: 'Takes issues delegated to it in Linear and runs Codex in one durable worktree per issue. Opens the PR, then repairs it on review comments or red CI. Before touching auth, migrations, bindings or dependencies it stops and asks.',
     boxes: [[L0.machine - 20, L0.y - 40, L0.machine + 40, L0.y + 14, 0, 64]],
   },
   {
@@ -49,13 +49,13 @@ export const STATION_NOTES: StationNote[] = [
   {
     id: 'review',
     title: 'review-quill',
-    text: 'Reviews every PR head. It approves, or requests changes and the PR goes up the lift and back to its agent. After three review fixes, a human is needed.',
+    text: 'Reviews every PR head. It approves, or requests changes and the PR goes up the lift and back to its agent. When the review_fix budget runs out, a human is needed.',
     boxes: [[PORTAL.x0 - 4, PORTAL.y0 - 10, PORTAL.x1 + 4, PORTAL.y1 + 10, 0, PORTAL.z1 + 6]],
   },
   {
     id: 'gate',
     title: 'Admission gate',
-    text: 'merge-steward admits a PR only when it is approved on its exact head and CI on its branch is green. Red branch CI goes back for ci_repair; changes to wrangler, auth, migrations or dependencies wait for a human.',
+    text: 'merge-steward admits a PR only when it is approved on its exact head and CI on its branch is green. Red branch CI goes back for ci_repair.',
     boxes: [[GATE_X - 10, TRUNK_Y - 24, GATE_X + 10, TRUNK_Y + 24, 0, 58]],
   },
   {
@@ -73,19 +73,19 @@ export const STATION_NOTES: StationNote[] = [
   {
     id: 'deploy',
     title: 'Deploy',
-    text: 'A push to main deploys stage and production from the same SHA, each with its own smoke test. The issue is Done only when both pass.',
+    text: 'A push to main deploys stage and production from the same SHA at once. On UserTold each runs a smoke test, and the issue is Done only when both pass.',
     boxes: [[BOOTH.x0 - 4, BOOTH.y0 - 4, BOOTH.x1 + 4, BOOTH.y1 + 4, 0, 60], [PROD.x0 - 4, PROD.y0 - 4, PROD.x1 + 4, PROD.y1 + 4, 0, PROD.z + 30]],
   },
   {
     id: 'usertold',
     title: 'usertold',
-    text: 'Interviews the people using what shipped. What they say becomes evidence linked to Linear issues, and goes back to intake in a capsule.',
+    text: 'Interviews the people using what shipped. Evidence becomes findings, and the findings I send land in Linear’s Triage: the capsule back to intake.',
     boxes: [[USERTOLD.x0 - 4, USERTOLD.y0 - 4, USERTOLD.x1 + 4, USERTOLD.y1 + 4, 0, USERTOLD.z + 20]],
   },
   {
     id: 'desk',
     title: 'Human Needed',
-    text: 'Where spent repair budgets and sensitive changes go. The andon is green while the line runs on its own, amber while it waits for an approval, red when a human is needed.',
+    text: 'Where spent repair budgets and the agents’ questions go. The andon is green while the line runs on its own, amber while an agent waits for an answer, red when a human is needed.',
     boxes: [[DESK.x0 - 4, DESK.y0 - 4, DESK.x1 + 14, DESK.y1 + 18, 0, 56]],
   },
   {

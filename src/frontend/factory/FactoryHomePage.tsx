@@ -23,7 +23,7 @@ const STATIONS: Station[] = [
     name: 'Intake',
     figure: ['intake'],
     body: (
-      <>Issues live in Linear. Delegating one to the patchrelay app is the only thing that lets patchrelay write code; undelegating stops the run.</>
+      <>Issues live in Linear. Delegating one to the patchrelay app lets it write the feature; undelegating pauses it. Once a PR is approved and green, patchrelay may still repair its merge candidate, never the branch.</>
     ),
     links: [{ label: 'linear.app', href: 'https://linear.app' }],
   },
@@ -32,7 +32,7 @@ const STATIONS: Station[] = [
     name: 'Triage',
     figure: ['intake', 'patchrelay'],
     body: (
-      <>A 45-second Codex pass returns one of six intents: <code>code_change</code>, <code>split_into_children</code>, <code>investigate</code>, <code>review</code>, <code>coordination</code> or <code>needs_input</code>. The last one goes back to Linear as a question.</>
+      <>I triage and plan in an ordinary Claude Code or Codex session: split the work into issues and set <code>blockedBy</code> between the ones that touch the same ground. When patchrelay picks an issue up, a short Codex pass only decides whether it is implementation or an umbrella that coordinates child issues.</>
     ),
     links: [{ label: 'patchrelay', href: REPO }],
   },
@@ -77,7 +77,7 @@ const STATIONS: Station[] = [
     name: 'Main',
     figure: ['stack'],
     body: (
-      <>Landing is a fast-forward of <code>main</code> to the SHA that passed. If <code>main</code> moved first, the candidate is relinked onto the new tip and tested again, not reviewed again.</>
+      <>Landing is a fast-forward of <code>main</code> to the SHA that passed. If <code>main</code> moved first, the candidate is rebuilt on the new tip and tested again, not reviewed again.</>
     ),
     links: [{ label: 'post', href: '/posts/merge-trees' }],
   },
@@ -86,7 +86,7 @@ const STATIONS: Station[] = [
     name: 'Deploy',
     figure: ['deploy'],
     body: (
-      <>A push to <code>main</code> runs the repo’s own Actions: stage and production on Cloudflare Workers, from the same SHA at once, each with its own smoke test. The issue is Done only when both pass.</>
+      <>A push to <code>main</code> runs the repo’s own Actions: stage and production on Cloudflare Workers, from the same SHA at once. On UserTold each runs a smoke test, and the issue is Done only when both pass.</>
     ),
     links: [{ label: 'post', href: '/posts/gates-not-autonomy' }],
   },
@@ -95,7 +95,7 @@ const STATIONS: Station[] = [
     name: 'Feedback',
     figure: ['usertold'],
     body: (
-      <>UserTold interviews the people using what shipped. Interviews become evidence, evidence is linked to Linear issues, and what users said becomes the next work on the line.</>
+      <>UserTold interviews the people using what shipped. Interviews become evidence, evidence becomes findings, and the findings I send land in Linear’s Triage as the next work on the line.</>
     ),
     links: [{ label: 'usertold.ai', href: 'https://usertold.ai' }],
   },
@@ -104,7 +104,7 @@ const STATIONS: Station[] = [
     name: 'Human Needed',
     figure: ['desk'],
     body: (
-      <>Every repair loop has a budget: <code>review_fix</code> ×3, <code>ci_repair</code> ×2, <code>integration_repair</code> ×10. When one is spent, the issue moves to Human Needed. Changes to <code>wrangler.toml</code>, auth, migrations or dependencies always wait for a human’s approval.</>
+      <>Every repair loop (<code>review_fix</code>, <code>ci_repair</code>, queue and integration repair) has a budget, ten tries each on my repos. When one runs out, the issue moves to Human Needed. The agents are told to stop and ask before touching auth, migrations, bindings or dependencies.</>
     ),
     links: [{ label: 'post', href: '/posts/gates-not-autonomy' }],
   },
@@ -126,9 +126,9 @@ const PROJECTS = [
     host: 'usertold.ai',
     line: 'AI-led user interviews and usability research.',
     numbers: [
-      ['1,564', 'merged PRs since February'],
+      ['1,564', 'merged PRs since March'],
       ['498', 'by patchrelay'],
-      ['1,395', 'reviewed by review-quill'],
+      ['1,379', 'reviewed by review-quill'],
       ['10', 'speculative depth'],
     ],
   },
@@ -138,9 +138,9 @@ const PROJECTS = [
     host: 'makefx.app',
     line: 'Images, video and audio, made by an agent.',
     numbers: [
-      ['289', 'merged PRs since November'],
+      ['290', 'merged PRs since September'],
       ['74', 'by patchrelay'],
-      ['293', 'reviewed by review-quill'],
+      ['289', 'reviewed by review-quill'],
       ['3', 'speculative depth'],
     ],
   },
@@ -170,7 +170,7 @@ export default function FactoryHomePage() {
           <h1 className={styles.headline}>The software factory behind my products</h1>
           <p className={styles.lede}>
             UserTold and MakeFX ship through one factory. Each agent works its own line: patchrelay from
-            Linear, Claude Code and Codex from sessions I start. Every pull request goes through review-quill,
+            Linear, Claude Code and Codex from sessions I start. Every pull request now goes through review-quill,
             and merge-steward merges all of them into one queue. The figure below is a simulation, not a live feed.
           </p>
         </section>
@@ -212,9 +212,9 @@ export default function FactoryHomePage() {
               <span className={styles.evalFigure}>11</span>
               <h3 className={styles.evalName}>review-quill replays</h3>
               <p>
-                Eleven frozen PRs from UserTold, MakeFX, Inventory and Subtitles, replayed through the real prompt in a
-                throwaway worktree. Each is graded on the verdict, how many concerns it raised, no nits where none belong,
-                and findings anchored to changed lines.
+                Eleven frozen cases from seven PRs in UserTold, MakeFX, Inventory and Subtitles, replayed through the real
+                prompt in a throwaway worktree. Each is graded on the verdict, how many concerns it raised, no nits where none
+                belong, findings anchored to changed lines, and required or forbidden markers.
               </p>
               <p className={styles.stationLinks}>
                 <Outbound href={`${REPO}/tree/main/packages/review-quill/eval`}>cases</Outbound>
@@ -226,7 +226,7 @@ export default function FactoryHomePage() {
               <h3 className={styles.evalName}>merge-steward scenarios</h3>
               <p>
                 patchrelay has no model eval yet. What it has around it is 34 merge-steward scenario suites (speculative
-                cascades, a CI failure mid-chain, crash recovery, a broken <code>main</code>) and 137 test files in its own
+                cascades, a CI failure mid-chain, crash recovery, a broken <code>main</code>) and 134 test files in its own
                 repo.
               </p>
               <p className={styles.stationLinks}>

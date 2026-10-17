@@ -64,13 +64,14 @@ const SPAWN_EVERY = [4.4, 5.2, 6.0];
 const FAILS_ENTRY = (id: number) => id % 13 === 4;
 // Some stay red on their branch through every ci_repair attempt.
 const FAILS_ENTRY_HARD = (id: number) => id % 23 === 9;
-// Repair budgets, as in patchrelay: review_fix ×3, ci_repair ×2,
-// integration_repair ×10. A spent budget escalates to a human.
+// Every repair loop has a budget; on the real repos it is ten tries each.
+// The simulation spends review and CI budgets after a few tries so a spent
+// one shows up now and then, and only says "spent", not how many.
 const REVIEW_FIX_BUDGET = 3;
 const CI_REPAIR_BUDGET = 2;
 const INTEGRATION_REPAIR_BUDGET = 10;
-// Changes to wrangler.toml, auth, migrations or dependencies need a human's
-// approval before they are admitted.
+// Changes to auth, migrations, bindings or dependencies: the agent stops and
+// asks a human before it goes on.
 const SENSITIVE = (id: number) => id % 9 === 5;
 const APPROVE_TIME = 1.6;
 const HUMAN_TIME = 2.8;
@@ -605,6 +606,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (item.stage === 'new') item.morph = ease((t - length * 0.3) / (length * 0.4));
       if (t < length) return true;
       item.morph = 1;
+      // The agents are told to stop and ask before touching auth,
+      // migrations, bindings or dependencies: wait for the human's stamp.
+      if (item.sensitive && !item.human) {
+        item.approval += dt;
+        stampT += dt;
+        if (item.approval < APPROVE_TIME) return true;
+        item.human = true;
+      }
       item.flag = false;
       item.stage = 'built';
       item.t = 0;
@@ -786,12 +795,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
             teleport(item);
           }
         }
-      } else if (item.sensitive && !item.human && atGate && item.pre >= 1) {
-        // A sensitive change waits at the gate for a human's stamp.
-        item.approval += dt;
-        stampT += dt;
-        if (item.approval >= APPROVE_TIME) item.human = true;
-      } else if (item.pre >= 1 && item.x >= GATE_X - 40 && (!item.sensitive || item.human)) {
+      } else if (item.pre >= 1 && item.x >= GATE_X - 40) {
         item.path = 'queue';
         item.ci = 0;
       }
@@ -968,7 +972,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         const room = !lifts[lane].up.item && !landingBusy;
         if (!room) continue;
         item.beamFrom = null;
-        item.x = HOIST_X;
+        // On the belt itself, just past the lift that may be down.
+        item.x = HOIST_X - 18;
         item.y = LANES[lane].y;
         item.z = UPPER_Z;
         item.t = 0;
@@ -1168,8 +1173,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item.done) return 'deployed · stage and production · smoke tests green · Done';
     if (item.path === 'deploy') return 'deploying · stage and production · smoke tests running';
     if (item.path === 'desk' || (item.path === 'teleport' && item.toDesk)) {
-      const budget = item.escalated === 'ci' ? `ci_repair ${CI_REPAIR_BUDGET}/${CI_REPAIR_BUDGET} spent` : `review_fix ${REVIEW_FIX_BUDGET}/${REVIEW_FIX_BUDGET} spent`;
-      return `Human Needed · ${budget}`;
+      return `Human Needed · ${item.escalated === 'ci' ? 'ci_repair' : 'review_fix'} budget spent`;
     }
     if (item.path === 'drop') return item.fromUsers ? `from what users told usertold · ${agent}` : `picked up · ${agent}`;
     if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
@@ -1178,6 +1182,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     const here = (x: number) => Math.abs(item.x - x) < 0.01;
     switch (item.stage) {
       case 'new':
+        if (here(LANES[item.lane].machine) && item.sensitive && !item.human && item.approval > 0) return 'touches auth, migrations, bindings or dependencies · asking a human';
         return here(LANES[item.lane].machine) ? `coding · ${agent}` : `to ${agent}`;
       case 'fixing':
         return here(LANES[item.lane].machine) ? `fixing review · ${agent}` : `review fix · ${agent}`;
@@ -1197,8 +1202,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         if (item.path === 'queue') return here(ENTRY_X) ? 'admitted · waiting for the crane' : 'admitted · to the merge queue';
         if (item.path !== 'trunk') return item.pre < 1 ? 'approved · branch CI running' : 'approved · to the queue';
         if (Math.abs(item.x - (GATE_X - 10)) < 0.5) {
-          if (item.red >= 0) return item.ciRepairs >= CI_REPAIR_BUDGET ? 'branch CI red · ci_repair spent · to a human' : `branch CI red · ci_repair ${item.ciRepairs + 1}/${CI_REPAIR_BUDGET}`;
-          if (item.sensitive && !item.human && item.pre >= 1) return 'touches wrangler, auth, migrations or dependencies · waiting for a human';
+          if (item.red >= 0) return item.ciRepairs >= CI_REPAIR_BUDGET ? 'branch CI red · ci_repair budget spent · to a human' : 'branch CI red · back for ci_repair';
           return 'at the gate · branch CI running';
         }
         return 'approved · to the merge queue';
@@ -1316,7 +1320,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
 
     // The gate: a lamp for the review, one for the branch's CI, and the bar.
     const atGate = items.find((item) => (item.path === 'trunk' && item.x > GATE_X - 40) || (item.path === 'queue' && item.stage === 'approved' && item.x < GATE_X + 12));
-    setLamp('gate-review', !atGate ? null : atGate.sensitive && !atGate.human ? 'amber' : 'green');
+    setLamp('gate-review', atGate ? 'green' : null);
     setLamp('gate-ci', !atGate ? null : atGate.red >= 0 ? 'red' : atGate.path === 'queue' || atGate.pre >= 1 ? 'green' : 'blink');
     const barKey = gateOpen.toFixed(3);
     if (barKey !== gateKey) {
@@ -1355,7 +1359,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (beamsDesk.innerHTML !== deskBeamSvg) beamsDesk.innerHTML = deskBeamSvg;
     // Human Needed: the andon tower, the console, the stamp.
     const needed = items.some((item) => item.path === 'desk' || (item.path === 'teleport' && item.toDesk));
-    const approving = items.some((item) => item.path === 'trunk' && item.sensitive && !item.human && item.approval > 0);
+    const approving = items.some((item) => item.path === 'belt' && item.sensitive && !item.human && item.approval > 0);
     setLamp('andon-red', needed ? 'red' : null);
     setLamp('andon-amber', approving ? 'amber' : null);
     setLamp('andon-green', needed || approving ? null : 'green');
