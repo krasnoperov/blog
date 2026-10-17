@@ -5,12 +5,16 @@ import {
   BUS,
   BOOTH,
   EVAL_DIAL,
+  CRANE,
+  ENTRY_X,
   GATE_X,
-  GAUGE,
-  HEAD_X,
+  CI_HALL,
+  ciX,
+  LEVEL_H,
+  MAIN_X0,
   PROD,
-  SLOTS,
-  slotX,
+  STACK_MAX,
+  STACK_X,
   HEIGHT,
   HOIST_X,
   JOIN_HALF,
@@ -398,22 +402,72 @@ function gate(side: 'back' | 'front') {
   return out.join('');
 }
 
-function gauges() {
-  const { y, z0, z1, r } = GAUGE;
+// The stack: a guide frame standing on the start of the main track. Beside
+// it, a panel with one bar gauge per level fills as that level's CI runs.
+const FRAME_TOP = BELT_TOP + STACK_MAX * LEVEL_H + 6;
+export const levelZ = (level: number) => BELT_TOP + level * LEVEL_H;
+function stackFrame(side: 'back' | 'front') {
+  const y = TRUNK_Y + (side === 'back' ? -11 : 11);
   const out: string[] = [];
-  const x0 = slotX(SLOTS - 1) - 10;
-  const x1 = HEAD_X + 10;
-  for (const x of [x0 + 6, (x0 + x1) / 2, x1 - 6]) {
-    out.push(box(x - 3, y - 3, x + 3, y + 3, 0, 1.2, { tone: 'lo' }, 0.6));
-    out.push(box(x - 1.3, y - 1.3, x + 1.3, y + 1.3, 1.2, z0 - 4, { crease: 'none' }, 0.3));
+  for (const x of [STACK_X - 11, STACK_X + 11]) {
+    out.push(box(x - 1.6, y - 1.6, x + 1.6, y + 1.6, 17, FRAME_TOP, { crease: 'none' }, 0.4));
+    for (let level = 1; level < STACK_MAX; level++) out.push(box(x - 2.2, y - 2.2, x + 2.2, y + 2.2, levelZ(level) - 1, levelZ(level) - 0.2, { crease: 'none' }, 0.4));
   }
-  out.push(box(x0, y - 3.5, x1, y + 3.5, z0 - 4, z0, {}, 0.6, 0.4));
-  for (let slot = SLOTS - 1; slot >= 0; slot--) {
-    const x = slotX(slot);
-    out.push(post(x, y, r + 1, z0, z0 + 2, { tone: 'lo' }, 24, 0.3));
-    out.push(S(k.cylinder(x, y, r, z0 + 2, z1 - z0 - 4, P, 24), { tone: 'lo', className: 'fx-tube', crease: 'none' }));
-    out.push(`<g data-part="gauge-${slot}"></g>`);
-    out.push(post(x, y, r + 0.8, z1 - 2, z1, {}, 24, 0.3));
+  out.push(box(STACK_X - 13, y - 2, STACK_X + 13, y + 2, FRAME_TOP, FRAME_TOP + 3, {}, 0.5, 0.3));
+  if (side === 'front') out.push(engrave(STACK_X - 9, y + 1.6, 19.4, 'MAIN', 3.2));
+  return out.join('');
+}
+
+// The CI hall: a plinth behind the stack with a test drum per level. Each
+// drum has a dial on top whose needle the live model sweeps as CI runs, ribs
+// the live model turns while it spins, and a lamp.
+export const CI_DIAL = (level: number) => ({ x: ciX(level), y: CI_HALL.y, r: 6.6, top: 26 }) as const;
+function ciHall() {
+  const { y, r } = CI_HALL;
+  const out: string[] = [];
+  const x0 = ciX(0) - 16;
+  const x1 = ciX(STACK_MAX - 1) + 16;
+  const base = plan(x0, y - 16, x1, y + 16, 1.2);
+  out.push(`<path class="iso-halo" d="${k.haloOf(base, 0, 4, P)}"/>`);
+  out.push(S(k.slabOf(base, 0, 4, P, 3, 0.5), { tone: 'lo' }));
+  out.push(L(k.planOutline(k.insetPlan(base, 3), 4, P, 3), { tone: 'faint' }));
+  out.push(D(k.corners(base, 3.5).map(([cx, cy]) => [cx, cy, 4] as Point3), 0.45));
+  // The harness: a cable from the back of each drum, along behind the row
+  // and out at its end to that drum's level of the stack.
+  for (let level = STACK_MAX - 1; level >= 0; level--) {
+    const z = 9 + level * 2.2;
+    const from = at([ciX(level), y - r + 0.2, z]);
+    out.push(k.wireSvg(from, at([STACK_X + 11, TRUNK_Y - 12.6, levelZ(level) + 5]), { tone: 'lo', size: 0.7, ends: 'to', via: [at([ciX(0) - 4, y - r - 1, z])] }));
+  }
+  for (let level = 0; level < STACK_MAX; level++) {
+    const x = ciX(level);
+    out.push(post(x, y, r + 2, 4, 5.6, { tone: 'lo' }, 36, 0.3));
+    out.push(S(k.cylinder(x, y, r, 5.6, 16.4, P, 36), { tone: 'mid', crease: 'none', inner: L([7.4, 20.2].map((z) => k.sideArc(x, y, r, z, P, 28)).join(''), { tone: 'faint' }) }));
+    out.push(`<g data-part="ci-ribs-${level}"></g>`);
+    out.push(post(x, y, r + 0.6, 22, 24.4, {}, 36, 0.4));
+    const { r: dr, top } = CI_DIAL(level);
+    out.push(post(x, y, dr, 24.4, top, { tone: 'hi', crease: 'lo' }, 40, 0.4));
+    out.push(L(k.ring(x, y, dr - 1.4, top, P, 36), { tone: 'lo' }));
+    const ticks = k.radialTicks(x, y, dr - 1.8, 24, 4, top, [0.7, 1.5], P, -Math.PI * 0.75, Math.PI * 1.5);
+    out.push(L(ticks.minor, { tone: 'lo' }), L(ticks.major, { tone: 'mid' }));
+    out.push(`<path data-part="ci-needle-${level}" class="iso-line" data-tone="hi" data-free="start" style="stroke-width:0.9" d=""/>`);
+    out.push(L(k.ring(x, y, 0.9, top, P, 12), { tone: 'mid' }));
+    out.push(lamp(`ci${level}`, x + 10, y + 11, 4, 1.8, 2.8));
+  }
+  return out.join('');
+}
+
+function cranePosts(side: 'back' | 'front') {
+  const y = TRUNK_Y + (side === 'back' ? -24 : 24);
+  const out: string[] = [];
+  for (const x of [CRANE.x0 - 14, CRANE.x1 + 18]) {
+    out.push(box(x - 3.5, y - 3.5, x + 3.5, y + 3.5, 0, 1.4, { tone: 'lo' }, 0.6));
+    out.push(box(x - 1.6, y - 1.6, x + 1.6, y + 1.6, 1.4, CRANE.z + 6, { crease: 'none' }, 0.3));
+  }
+  if (side === 'front') {
+    for (const x of [CRANE.x0 - 14, CRANE.x1 + 18]) out.push(box(x - 2.5, TRUNK_Y - 26, x + 2.5, TRUNK_Y + 26, CRANE.z + 6, CRANE.z + 10, {}, 0.5, 0.3));
+    out.push('<g data-part="crane"></g>');
+    out.push(box(CRANE.x0 - 16, TRUNK_Y - 3, CRANE.x1 + 20, TRUNK_Y + 3, CRANE.z + 10, CRANE.z + 15, {}, 0.6, 0.4));
   }
   return out.join('');
 }
@@ -438,32 +492,49 @@ function lane(i: LaneIndex) {
   else out.push(armColumn(machine, y));
   out.push(liftMast(dropX(i), y), liftMast(HOIST_X, y));
   if (isTrunk) {
-    const trunkLegs: number[] = [];
-    for (let x = JOIN_X + 40; x < BOOTH.x0 - 6; x += 58) trunkLegs.push(x);
-    out.push(legs(trunkLegs, y), gauges(), gate('back'));
+    out.push(legs([JOIN_X + 50], y), gate('back'), cranePosts('back'));
   }
   const main = belt(`belt-${i}`, x0, x1, y, BELT_TOP, false);
-  const trunk = isTrunk ? belt('belt-t', JOIN_X + JOIN_HALF, BOOTH.x0 + 6, y, BELT_TOP, false) : null;
+  const trunk = isTrunk ? belt('belt-t', JOIN_X + JOIN_HALF, ENTRY_X + 14, y, BELT_TOP, true) : null;
   // The middle lane runs straight through; the outer lanes end on it.
   const onLane = collector(y - HALF, y + HALF, { right: !isTrunk, back: i === 0, front: i === 2 });
   out.push(main.back, onLane.back, main.carry, onLane.carry);
   if (trunk) out.push(trunk.back, trunk.carry);
+  if (isTrunk) {
+    const pad = plan(ENTRY_X - 10, y - 10, ENTRY_X + 10, y + 10, 1);
+    out.push(S(k.slabOf(pad, BELT_TOP, 0.8, P, 3, 0.3), { tone: 'lo' }));
+    out.push(L(k.planOutline(k.insetPlan(pad, 2), BELT_TOP + 0.8, P, 3), { tone: 'faint' }));
+    out.push(mainTrack(), stackFrame('back'));
+  }
   out.push(`<g data-part="items-${i}"></g>`);
+  if (isTrunk) out.push('<g data-part="stack"></g>');
   out.push(`<g data-part="lift-${i}"></g>`);
   out.push(main.front, onLane.front);
-  if (trunk) out.push(trunk.front, gate('front'));
+  if (trunk) out.push(trunk.front, gate('front'), stackFrame('front'));
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
   if (i < 2) out.push(`<g data-part="arm-${i}"></g>`);
   if (i === 2) out.push(codexPress(machine, y, 'front'));
   out.push(drop(TAP[LANES[i].key], [machine + 25, y - HALF - 17, 46]));
   if (i === 0) out.push(k.wireSvg(at([intake + 20, y + 8, 100]), at([machine + 18, y - HALF - 15, 46]), { tone: 'mid', via: [at([intake + 40, y + 8, 120]), at([machine + 18, y - HALF - 15, 120])] }));
-  if (isTrunk) out.push('<g data-part="links"></g>', '<g data-part="beams"></g>');
+  if (isTrunk) out.push('<g data-part="links"></g>', cranePosts('front'), '<g data-part="beams"></g>');
   out.push(`<g data-part="probe-${i}"></g>`);
   // The upper return belt, from the lift past review back to the lift ahead
   // of the machine.
   // Kept slim, so the line underneath stays readable.
   const upper = belt(`ubelt-${i}`, dropX(i) - 10, HOIST_X + 10, y, UPPER_Z, true, 6, true);
   out.push(upper.back, upper.carry, `<g data-part="upper-${i}"></g>`, upper.front);
+  return out.join('');
+}
+
+function mainTrack() {
+  const y = TRUNK_Y;
+  const out: string[] = [];
+  const bed = plan(MAIN_X0 - 2, y - 15, BOOTH.x0 + 4, y + 15, 1);
+  out.push(S(k.slabOf(bed, 0, 17, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(bed, 4, P, 3), { tone: 'faint' }) }));
+  const sleepers: string[] = [];
+  for (let x = MAIN_X0 + 6; x <= BOOTH.x0; x += 11) sleepers.push(box(x - 2.2, y - 12, x + 2.2, y + 12, 17, 19.6, { tone: 'lo' }, 0.4));
+  out.push(sleepers.join(''));
+  for (const dy of [-7, 5]) out.push(box(MAIN_X0 - 2, y + dy, BOOTH.x0 + 4, y + dy + 2.6, 19.6, 24, {}, 0.4, 0.3));
   return out.join('');
 }
 
@@ -639,7 +710,7 @@ function hub() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one, the merge queue. A gate on it opens for each PR that is approved and green on its own branch, without a wait; a red one is teleported back. In the queue every candidate is built on the ones ahead and tested at the same time, read on a row of glass gauges behind the belt that fill as CI runs; the head leaves for main the moment it is green, and the ones behind, already green, follow right after it. A candidate that goes red is teleported back to its own line, and the gauges behind it drain and fill again. Main lands in a small stage booth whose window lights and dial swings, then production: a building whose windows, its users, light up one column after another. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one. A gate on it opens for each PR that is approved and green on its own branch, without a wait; a red one is teleported back. A crane sets each admitted PR on top of a stack standing on main: the bottom one sits on main and each one above is built on the one below. Behind it, a CI hall has a test drum per level, wired to it: every drum spins at once while its candidate's CI runs, its dial filling, and its lamp turns green. The bottom PR leaves for main the moment it is green, and the ones above, often green already, drop down and follow. A candidate that goes red is teleported back to its own line, and the ones above it test again. Main lands in a small stage booth whose window lights and dial swings, then production: a building whose windows, its users, light up one column after another. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
 
 let cached: string | null = null;
 
@@ -653,6 +724,7 @@ export function factorySvg() {
     hub(),
     portalBack(),
     lane(0),
+    ciHall(),
     lane(1),
     lane(2),
     portalFront(),

@@ -4,6 +4,7 @@ interface ItemState {
   id: number;
   path: string;
   stage: string;
+  level: number;
   ci: number | null;
   x: number;
   y: number;
@@ -12,8 +13,8 @@ interface ItemState {
 
 // PRs from the three lines cross a square collector and queue up behind
 // each other; boxes never share a spot anywhere on the line. Past the
-// collector, a gate admits each PR into the merge queue, where every
-// candidate's CI runs at the same time.
+// collector, a gate admits each PR, a crane sets it on the stack, and every
+// level of the stack runs its CI at the same time.
 test('factory merge node never overlaps and keeps the queue moving', async ({ page }) => {
   await page.goto('/');
   const stage = page.locator('.fx-stage');
@@ -25,7 +26,7 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
     stage.evaluate((el) => (el as HTMLElement & { factoryState: () => ItemState[] }).factoryState());
 
   const first = await read();
-  const inQueue = (item: ItemState) => item.stage === 'approved' && ['trunk', 'queue'].includes(item.path);
+  const inQueue = (item: ItemState) => item.stage === 'approved' && ['trunk', 'queue', 'crane', 'stack'].includes(item.path);
   const queuedAtStart = new Set(first.filter(inQueue).map((item) => item.id));
   const enteredQueue = new Set<number>();
   let parallel = 0;
@@ -42,8 +43,11 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
       }
     }
     for (const item of items) if (inQueue(item) && !queuedAtStart.has(item.id)) enteredQueue.add(item.id);
-    // Candidates in the queue test in parallel: several CIs part way at once.
-    const running = items.filter((item) => item.path === 'queue' && item.ci !== null && item.ci > 0 && item.ci < 1).length;
+    // The stack holds one PR per level.
+    const levels = items.filter((item) => item.path === 'stack').map((item) => item.level);
+    expect(new Set(levels).size, 'one PR per stack level').toBe(levels.length);
+    // Stacked candidates test in parallel: several CIs part way at once.
+    const running = items.filter((item) => item.path === 'stack' && item.ci !== null && item.ci > 0 && item.ci < 1).length;
     parallel = Math.max(parallel, running);
     last = items;
     await page.waitForTimeout(100);

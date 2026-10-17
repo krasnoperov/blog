@@ -29,7 +29,7 @@ export function FactoryFigure() {
       <figcaption className="iso-legend fx-legend">
         <span className="iso-keys">
           <span className="iso-key"><Swatch mark="lit" />Issue card, then pull request; the heavy outline is the one followed</span>
-          <span className="iso-key"><Swatch mark="dotted" />Queued candidate, built on the one ahead</span>
+          <span className="iso-key"><Swatch mark="stack" />Stacked candidate, built on the one below; its gauge fills as CI runs</span>
           <span className="iso-key"><Swatch mark="green" />Green CI</span>
           <span className="iso-key"><Swatch mark="red" />Changes requested: lifted up and carried back to its own machine</span>
         </span>
@@ -39,7 +39,15 @@ export function FactoryFigure() {
   );
 }
 
-function Swatch({ mark }: { mark: 'lit' | 'raised' | 'dotted' | 'green' | 'red' }) {
+function Swatch({ mark }: { mark: 'lit' | 'raised' | 'stack' | 'green' | 'red' }) {
+  if (mark === 'stack') {
+    return (
+      <svg className="iso-swatch" data-mark="raised" viewBox="0 0 16 10" aria-hidden="true">
+        <path d="M4 6.2 8 4.4 12 6.2 12 7.4 8 9.2 4 7.4Z" />
+        <path d="M4 2.6 8 0.8 12 2.6 12 3.8 8 5.6 4 3.8Z" />
+      </svg>
+    );
+  }
   if (mark === 'lit' || mark === 'raised') {
     return (
       <svg className="iso-swatch" data-mark={mark} viewBox="0 0 16 10" aria-hidden="true">

@@ -39,16 +39,23 @@ export const JOIN_X = 410;
 export const JOIN_HALF = 12;
 
 // The merge queue. A gate past the collector opens for a PR once it is
-// approved and CI on its own branch is green; it then rides the queue belt
-// to the head, where it leaves for main the moment its candidate is green.
-// Every queued candidate is built on the one ahead and tested at the same
-// time, read on a row of gauges, one per place in the queue.
+// approved and CI on its own branch is green. Admitted PRs ride to a pad
+// where a crane sets each on top of the stack, which stands on the start of
+// the main track: the bottom PR sits on main, each one above is built on the
+// one below it, and every level tests at once, read on a gauge beside it.
+// The bottom PR leaves for main the moment it is green.
 export const GATE_X = 470;
-export const QUEUE_GAP = 27;
-export const HEAD_X = 762;
-export const SLOTS = 10;
-export const slotX = (slot: number) => HEAD_X - slot * QUEUE_GAP;
-export const GAUGE = { y: TRUNK_Y - 21, z0: 25, z1: 52, r: 2.4 } as const;
+export const ENTRY_X = 512;
+export const STACK_X = 592;
+export const STACK_MAX = 5;
+export const LEVEL_H = BOX_H + 1.2;
+export const CRANE = { x0: ENTRY_X, x1: STACK_X, z: 112 } as const;
+export const MAIN_X0 = 556;
+// CI: a test hall behind the stack, one test drum per level of the stack,
+// the one nearest the stack for the bottom level. Each drum spins while its
+// candidate's CI runs; the dial on top reads how far it has got.
+export const CI_HALL = { x0: 606, step: 30, y: TRUNK_Y - 72, r: 9 } as const;
+export const ciX = (level: number) => CI_HALL.x0 + level * CI_HALL.step;
 
 // Deploy: main lands in a small stage booth, then reaches production, a
 // building whose windows are the users.
