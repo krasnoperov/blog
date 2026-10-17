@@ -114,7 +114,5 @@
 .fx-tp-core-b { stop-color: var(--fx-tp-core); stop-opacity: 0; }
 .fx-tp-pad { fill: none; stroke: var(--fx-tp); stroke-width: 1.2px; vector-effect: non-scaling-stroke; }
 .fx-tp-ring { fill: none; stroke: var(--fx-tp); stroke-width: 1px; vector-effect: non-scaling-stroke; }
-.fx-tp-ray { fill: none; stroke: var(--fx-tp); stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 5 9; animation: fx-tp-rise 0.6s linear infinite; }
+.fx-tp-ray { fill: none; stroke: var(--fx-tp); stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 5 9; }
 .fx-tp-spark { fill: var(--fx-tp-core); stroke: var(--fx-tp); stroke-width: .4px; vector-effect: non-scaling-stroke; }
-@keyframes fx-tp-rise { to { stroke-dashoffset: -28; } }
-@media (prefers-reduced-motion: reduce) { .fx-tp-ray { animation: none; } }

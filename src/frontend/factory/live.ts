@@ -147,7 +147,10 @@ function teleportSvg(x: number, y: number, z: number, env: number, time: number,
   const rays = [-8, -5.5, -3, -0.8, 1.6, 4, 6.4, 8.4];
   rays.forEach((dx, index) => {
     const top = z + TP_HEIGHT * (0.55 + 0.45 * ((index * 37 + seed * 13) % 10) / 10);
-    out.push(`<path class="fx-tp-ray" style="opacity:${env.toFixed(2)};animation-delay:-${((index * 0.13) % 0.6).toFixed(2)}s;stroke-width:${index % 3 === 0 ? 1.1 : 0.6}px" d="${k.segment([x + dx, face, z], [x + dx, face, top], P)}"/>`);
+    // The markup is rebuilt each frame, so the streaming comes from the
+    // clock, not from a CSS animation that would restart every frame.
+    const offset = -((time * 46 + index * 3.5) % 14);
+    out.push(`<path class="fx-tp-ray" style="opacity:${env.toFixed(2)};stroke-dashoffset:${offset.toFixed(2)};stroke-width:${index % 3 === 0 ? 1.1 : 0.6}px" d="${k.segment([x + dx, face, z], [x + dx, face, top], P)}"/>`);
   });
   for (let index = 0; index < 3; index++) {
     const rise = ((time * 70 + index * 30) % (TP_HEIGHT * 0.75));
