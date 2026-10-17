@@ -69,7 +69,7 @@ const TRAVEL_Z = levelZ(STACK_MAX) + 10;
 const FIX_TIME = 1.6;
 const INTEGRATION_TIME = 0.7;
 // Feedback capsules ride the tube at this speed, no more often than this.
-const CAPSULE_SPEED = 150;
+const CAPSULE_SPEED = 200;
 const CAPSULE_EVERY = 5;
 type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
@@ -126,7 +126,14 @@ function cardSvg() {
     k.lineSvg(k.lineOnTop([-5.5, -2.4], [3.5, -2.4], CARD_H, P), { tone: 'lo', free: true }),
     k.lineSvg(k.lineOnTop([-5.5, 0.6], [0.5, 0.6], CARD_H, P), { tone: 'lo', free: true }),
     k.dotsSvg([at([5, 3, CARD_H])], { size: 0.7, tone: 'mid' }),
+    usersMark(-4.4, 3.2, CARD_H),
   ].join('');
+}
+
+// The stamp on an issue that came from what users told usertold: a small
+// microphone ring, shown only on those issues.
+function usersMark(x: number, y: number, z: number) {
+  return `<g class="fx-users">${k.lineSvg(k.ring(x, y, 1.5, z, P, 16), { tone: 'hi' })}${k.dotsSvg([at([x, y, z])], { size: 0.6, tone: 'hi' })}</g>`;
 }
 
 function boxSvg() {
@@ -136,6 +143,7 @@ function boxSvg() {
     S(k.slabOf(body, 0, BOX_H, P, 3, 0.5), { tone: 'hi', inner: k.lineSvg(k.sideSeam(body, 7.4, P, 3), { tone: 'faint' }) }),
     k.lineSvg(k.lineOnTop([-8, 0], [8, 0], BOX_H, P), { tone: 'faint' }),
     `<ellipse data-ci class="fx-ci" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="1.5" ry="0.8"/>`,
+    usersMark(-4.2, 3.6, BOX_H),
     `<g data-k="flag">${cyl(-5, -4, 0.5, BOX_H, BOX_H + 9, { crease: 'none' }, 8)}${box(-4.6, -4.4, 1.6, -3.6, BOX_H + 5, BOX_H + 9, { className: 'fx-flag' }, 0.2)}</g>`,
   ].join('');
 }
@@ -384,6 +392,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let reviewsDone = 0;
   let returned = 0;
   let beacon = 99;
+  // Every deploy runs its own timeline: smoke tests, Done, usertold.
+  const deploys: number[] = [];
   let repaired = 0;
   // The repair carriage's height, and usertold: how long it still listens,
   // when it last sent a capsule, the capsules in the tube.
@@ -488,7 +498,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     };
     el.setAttribute('tabindex', '0');
     el.setAttribute('role', 'button');
-    el.setAttribute('aria-label', `Follow ${name}`);
+    el.setAttribute('aria-label', `Follow ${name}${item.fromUsers ? ', from what users told usertold' : ''}`);
+    el.toggleAttribute('data-users', item.fromUsers);
     el.addEventListener('click', () => follow(item));
     el.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -918,6 +929,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (item.stage === 'merged' && item.x >= GONE_X) {
         deployed += 1;
         beacon = 0;
+        deploys.push(0);
         finish(item);
       }
     }
@@ -986,13 +998,17 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       const v = verdict[lane];
       if (v) v.t += dt;
     });
-    const before = beacon;
     beacon += dt;
-    // Smoke tests pass on both: the issue is Done in Linear.
-    if (before < 1.25 && beacon >= 1.25) pulse(TAP.dock, TAP.patchrelay);
-    // Once production's users have it, usertold listens, and after a while
-    // sends what it heard back to Linear.
-    if (before < 1.0 && beacon >= 1.0) listenLeft = Math.max(listenLeft, 1.8);
+    for (let i = deploys.length - 1; i >= 0; i--) {
+      const before = deploys[i];
+      const age = (deploys[i] += dt);
+      // Smoke tests pass on both: this issue is Done in Linear.
+      if (before < 1.25 && age >= 1.25) pulse(TAP.dock, TAP.patchrelay);
+      // Once production's users have it, usertold listens, and after a while
+      // sends what it heard back to Linear.
+      if (before < 1.0 && age >= 1.0 && listenLeft <= 0) listenLeft = 1.8;
+      if (age > 3) deploys.splice(i, 1);
+    }
     sinceCapsule += dt;
     if (listenLeft > 0) {
       listenLeft -= dt;
@@ -1028,6 +1044,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }
 
   function phaseOf(item: Item): string {
+    const phase = phaseText(item);
+    return item.fromUsers && item.path !== 'drop' ? `${phase} · from users` : phase;
+  }
+
+  function phaseText(item: Item): string {
     const agent = AGENTS[item.lane].label;
     if (item.done) return 'deployed · stage and production · smoke tests green · Done';
     if (item.path === 'drop') return item.fromUsers ? `from what users told usertold · ${agent}` : `picked up · ${agent}`;
