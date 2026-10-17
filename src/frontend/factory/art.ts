@@ -51,8 +51,6 @@ const lamp = (name: string, x: number, y: number, z: number, r = 2.6, h = 4) =>
   S(k.cylinder(x, y, r, z + 1.2, h, P, 18), { tone: 'mid', className: 'fx-lamp', crease: 'none' }).replace('<g ', `<g data-lamp="${name}" `);
 const rectOnY = (y: number, x0: number, x1: number, z0: number, z1: number) =>
   `${k.segment([x0, y, z0], [x1, y, z0], P)}${k.segment([x1, y, z0], [x1, y, z1], P)}${k.segment([x1, y, z1], [x0, y, z1], P)}${k.segment([x0, y, z1], [x0, y, z0], P)}`;
-const rectOnX = (x: number, y0: number, y1: number, z0: number, z1: number) =>
-  `${k.segment([x, y0, z0], [x, y1, z0], P)}${k.segment([x, y1, z0], [x, y1, z1], P)}${k.segment([x, y1, z1], [x, y0, z1], P)}${k.segment([x, y0, z1], [x, y0, z0], P)}`;
 const byDepth = <T extends { x: number; y: number }>(list: T[]) => [...list].sort((a, b) => depth(a.x, a.y) - depth(b.x, b.y));
 
 const HALF = 11;
@@ -292,55 +290,52 @@ function sessionConsole(x: number, y: number, lane: LaneIndex) {
   return out.join('');
 }
 
-// patchrelay: a closed machining cell with a window, a hex spindle on top.
-function patchrelayMachine(x: number, y: number) {
+// An issue list on dark glass, for patchrelay's pod: it works from Linear.
+function issueScreen(y: number, x0: number, x1: number, z0: number, z1: number, name: string) {
+  const out = [`<path class="fx-screen" d="${faceQuad(y, x0, x1, z0, z1)}"/>`];
+  const dots: string[] = [];
+  const rows: string[] = [];
+  for (let i = 0; i < 4; i++) {
+    const z = z1 - 3.5 - i * ((z1 - z0 - 5) / 3.4);
+    dots.push(k.sideRing([x0 + 3.2, y, z], 1, 'y', P, 10));
+    rows.push(faceLine(y, x0 + 6, x0 + 6 + (x1 - x0 - 9) * [0.8, 0.55, 0.9, 0.4][i], z));
+  }
+  out.push(`<path class="fx-linear-line" d="${dots.join('')}"/>`, `<path class="fx-screen-line" d="${rows.join('')}"/>`);
+  return `<g data-screen="${name}">${out.join('')}</g>`;
+}
+
+// A small pod on a stand behind the belt: the agent's screen, its name and a
+// status lamp. It replaces the big cabinets so the line stays visible.
+function screenPod(x: number, y: number, lane: LaneIndex) {
   const out: string[] = [];
-  const body = plan(x - 26, y - 20, x + 26, y + 20, 1.6);
-  const face = y + 20;
-  out.push(
-    S(k.slabOf(body, 0, 56, P, 3, 0.8), {
-      tone: 'mid',
-      inner:
-        L(k.sideSeam(body, 48, P, 3), { tone: 'faint' }) +
-        L(rectOnY(face, x - 18, x + 10, 30, 44), { tone: 'lo' }) +
-        L(rectOnX(x + 26, y - 13, y + 13, 18, 34), { tone: 'lo' }) +
-        L([14, 18, 22].map((dx) => k.segment([x + dx, face, 6], [x + dx, face, 22], P)).join(''), { tone: 'faint' }),
-    }),
-  );
-  out.push(L(k.planOutline(k.insetPlan(body, 4), 56, P, 3), { tone: 'faint' }));
-  out.push(D(k.corners(body, 5).map(([cx, cy]) => [cx, cy, 56] as Point3)));
-  const hex: Array<[number, number]> = [];
-  for (let i = 0; i < 6; i++) hex.push([x - 6 + Math.cos((i * Math.PI) / 3) * 9, y + Math.sin((i * Math.PI) / 3) * 9]);
-  out.push(S(k.extrude(hex, 56, 9, P, { bevel: 0.5 }), { tone: 'mid' }));
-  out.push(post(x - 6, y, 4, 65, 69, {}, 20, 0.4));
-  out.push(lamp('m0', x + 16, y - 10, 56));
-  out.push(engrave(x - 18, face, 9, 'PATCHRELAY'));
-  out.push(`<path class="fx-linear" d="${faceQuad(face, x - 26, x + 26, 49.6, 51)}"/>`);
+  const y1 = y - HALF - 12;
+  const y0 = y1 - 5;
+  const x0 = x + 12;
+  const x1 = x + 38;
+  out.push(box(x0 + 9, y0 - 2, x1 - 9, y1 + 1, 0, 1.4, { tone: 'lo' }, 0.6));
+  out.push(box(x0 + 11.5, y0 + 1, x1 - 11.5, y1 - 1, 1.4, 22, { crease: 'none' }, 0.4));
+  out.push(S(k.slabOf(plan(x0, y0, x1, y1, 1.2), 22, 24, P, 3, 0.5), { tone: 'mid' }));
+  out.push(`<path class="fx-screen-bezel" d="${faceQuad(y1, x0 + 1.5, x1 - 1.5, 26.5, 44.5)}"/>`);
+  const screen = lane === 0 ? issueScreen : lane === 1 ? terminalScreen : windowScreen;
+  out.push(screen(y1, x0 + 2.8, x1 - 2.8, 27.6, 43.4, `m${lane}`));
+  out.push(engrave(x0 + 2, y1, 23.2, ['PATCHRELAY', 'CLAUDE CODE', 'CODEX'][lane], 2.6));
+  if (lane === 0) out.push(`<path class="fx-linear" d="${faceQuad(y1, x0, x1, 45, 46)}"/>`);
+  if (lane === 1) out.push(`<path class="fx-claude" d="${faceQuad(y1, x0, x1, 45, 46)}"/>`);
+  out.push(lamp(`m${lane}`, x1 - 4, y0 + 2.5, 46, 2, 3));
   return out.join('');
 }
 
-function claudeMachine(x: number, y: number) {
-  // Claude Code: a terminal cabinet the belt runs through, its front a big
-  // screen with a prompt and a warm cursor, a warm trim along the top.
+// A SCARA arm: a column behind the belt and two horizontal links that the
+// live model swings over the work. Only the column is drawn here.
+export const ARM_BASE = (x: number, y: number) => [x - 4, y - HALF - 14] as const;
+function armColumn(x: number, y: number) {
+  const [bx, by] = ARM_BASE(x, y);
   const out: string[] = [];
-  const body = plan(x - 26, y - 21, x + 26, y + 21, 2.4);
-  const face = y + 21;
-  out.push(box(x - 28, y - 23, x + 28, y + 23, 0, 2, { tone: 'lo' }, 2.4));
-  out.push(
-    S(k.slabOf(body, 2, 48, P, 4, 0.8), {
-      tone: 'mid',
-      inner: L(rectOnX(x + 26, y - 13, y + 13, 16, 34), { tone: 'lo' }),
-    }),
-  );
-  out.push(`<path class="fx-screen-bezel" d="${faceQuad(face, x - 23, x + 17, 13, 47.5)}"/>`);
-  out.push(terminalScreen(face, x - 21, x + 15, 15, 45.5, 'm1', 6));
-  out.push(`<path class="fx-claude" d="${faceQuad(face, x - 26, x + 26, 48.4, 50)}"/>`);
-  out.push(engrave(x - 21, face, 8, 'CLAUDE CODE'));
-  out.push(L([20, 24, 28].map((dz) => faceLine(face, x + 19, x + 24, dz)).join(''), { tone: 'lo' }));
-  const hood = plan(x - 23, y - 18, x + 23, y + 18, 3);
-  out.push(S(k.slabOf(hood, 50, 4, P, 6, 0.6), { tone: 'mid' }));
-  out.push(D(k.corners(hood, 4).map(([cx, cy]) => [cx, cy, 54] as Point3)));
-  out.push(lamp('m1', x + 14, y - 8, 54));
+  out.push(post(bx, by, 8, 0, 2, { tone: 'lo' }, 32));
+  out.push(D(k.corners(plan(bx - 6, by - 6, bx + 6, by + 6, 1), 0).map(([cx, cy]) => [cx, cy, 2] as Point3), 0.4));
+  out.push(post(bx, by, 4.6, 2, 44, { crease: 'none', inner: L([16, 30].map((z) => k.sideArc(bx, by, 4.6, z, P, 20)).join(''), { tone: 'faint' }) }, 28));
+  out.push(post(bx, by, 6, 44, 48, {}, 32, 0.5));
+  out.push(L(k.knurl(bx, by, 6, 44.4, 47.6, 36, P, 0.3), { tone: 'lo' }));
   return out.join('');
 }
 
@@ -355,15 +350,10 @@ function codexPress(x: number, y: number, part: 'back' | 'front') {
   out.push(box(x - 10, y + HALF + 2, x + 10, y + HALF + 12, 0, 1.6, { tone: 'lo' }, 0.6));
   out.push(box(x - 6, y + HALF + 4, x + 6, y + HALF + 10, 1.6, 66, {}, 0.6, 0.4));
   out.push('<g data-part="ram"></g>');
-  // Codex Desktop: the press head is a housing whose front is an app window
-  // with a diff, high above the belt.
-  const crown = plan(x - 26, y - HALF - 12, x + 26, y + HALF + 12, 1.6);
-  const face = y + HALF + 12;
-  out.push(S(k.slabOf(crown, 66, 34, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(crown, 70, P, 3), { tone: 'faint' }) }));
-  out.push(`<path class="fx-screen-bezel" d="${faceQuad(face, x - 23, x + 23, 71.5, 98)}"/>`);
-  out.push(windowScreen(face, x - 21.5, x + 21.5, 73, 96.5, 'm2'));
-  out.push(engrave(x - 22, face, 67.6, 'CODEX', 3.4));
-  out.push(lamp('m2', x + 18, y - 10, 100));
+  const crown = plan(x - 12, y - HALF - 12, x + 12, y + HALF + 12, 1.4);
+  out.push(S(k.slabOf(crown, 66, 10, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(crown, 71, P, 3), { tone: 'faint' }) }));
+  out.push(post(x, y - 12, 9, 76, 80, {}, 40, 0.5));
+  out.push(L(k.knurl(x, y - 12, 9, 76.6, 79.4, 48, P, 0.3), { tone: 'lo' }));
   return out.join('');
 }
 
@@ -435,7 +425,9 @@ function lane(i: LaneIndex) {
   const legXs: number[] = [];
   for (let x = x0 + 10; x < x1 - 4; x += 58) legXs.push(x);
   out.push(legs(legXs, y));
+  out.push(screenPod(machine, y, i));
   if (i === 2) out.push(codexPress(machine, y, 'back'));
+  else out.push(armColumn(machine, y));
   out.push(liftMast(dropX(i), y), liftMast(HOIST_X, y));
   if (isTrunk) {
     out.push(cranePosts('back'));
@@ -462,17 +454,17 @@ function lane(i: LaneIndex) {
     out.push(trunk.front, stackFrame('front'));
   }
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
-  if (i === 0) out.push(drop(TAP.patchrelay, [machine - 6, y - 20, 56]), patchrelayMachine(machine, y));
-  if (i === 1) out.push(drop(TAP.claude, [machine, y - 23, 44]), claudeMachine(machine, y));
-  if (i === 2) out.push(drop(TAP.codex, [machine, y - HALF - 12, 76]), codexPress(machine, y, 'front'));
-  if (i === 0) out.push(k.wireSvg(at([intake + 20, y + 8, 100]), at([machine - 6, y + 8, 69]), { tone: 'mid', via: [at([intake + 40, y + 8, 120]), at([machine - 6, y + 8, 120])] }));
+  if (i < 2) out.push(`<g data-part="arm-${i}"></g>`);
+  if (i === 2) out.push(codexPress(machine, y, 'front'));
+  out.push(drop(TAP[LANES[i].key], [machine + 25, y - HALF - 17, 46]));
+  if (i === 0) out.push(k.wireSvg(at([intake + 20, y + 8, 100]), at([machine + 18, y - HALF - 15, 46]), { tone: 'mid', via: [at([intake + 40, y + 8, 120]), at([machine + 18, y - HALF - 15, 120])] }));
   if (isTrunk) out.push('<g data-part="links"></g>', cranePosts('front'));
   out.push(`<g data-part="probe-${i}"></g>`);
   // The upper return belt, from the lift past review back to the lift ahead
   // of the machine.
-  // Drawn light, so the line underneath stays readable.
+  // Kept slim, so the line underneath stays readable.
   const upper = belt(`ubelt-${i}`, dropX(i) - 10, HOIST_X + 10, y, UPPER_Z, true, 6, true);
-  out.push(`<g class="fx-upper">${upper.back}${upper.carry}</g>`, `<g data-part="upper-${i}"></g>`, `<g class="fx-upper">${upper.front}</g>`);
+  out.push(upper.back, upper.carry, `<g data-part="upper-${i}"></g>`, upper.front);
   return out.join('');
 }
 
@@ -581,7 +573,7 @@ function dock() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a terminal cabinet and an open press with an app window behind it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one, where they queue up behind each other and run to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the deploy dock as soon as it is green; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one, where they queue up behind each other and run to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the deploy dock as soon as it is green; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
 
 let cached: string | null = null;
 

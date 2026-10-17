@@ -26,6 +26,7 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
+import { ARM_BASE } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -180,6 +181,62 @@ function craneSvg(x: number, hook: number) {
   return rope + head + trolley + jaws;
 }
 
+// The SCARA arms: two horizontal links on a column, a wrist with a quill,
+// and each agent's tool. Positions come from two-link inverse kinematics.
+const ARM_L1 = 16;
+const ARM_L2 = 14;
+const SHOULDER_Z = 48;
+// A link: a capsule between two joints, extruded flat.
+function bar(a: [number, number], b: [number, number], width: number, z0: number, z1: number) {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+  const u: [number, number] = [(b[0] - a[0]) / len, (b[1] - a[1]) / len];
+  const n: [number, number] = [-u[1], u[0]];
+  const r = width / 2;
+  const ring: Array<[number, number]> = [];
+  const cap = (c: [number, number], from: number) => {
+    for (let i = 0; i <= 6; i++) {
+      const t = from + (i / 6) * Math.PI;
+      ring.push([c[0] + r * (Math.cos(t) * u[0] + Math.sin(t) * n[0]), c[1] + r * (Math.cos(t) * u[1] + Math.sin(t) * n[1])]);
+    }
+  };
+  cap(b, -Math.PI / 2);
+  cap(a, Math.PI / 2);
+  return S(k.extrude(ring, z0, z1 - z0, P, { bevel: 0.3 }), { tone: 'mid' });
+}
+
+function armSvg(lane: LaneIndex, tool: [number, number], quill: number) {
+  const { machine, y } = LANES[lane];
+  const [bx, by] = ARM_BASE(machine, y);
+  let dx = tool[0] - bx;
+  let dy = tool[1] - by;
+  let d = Math.hypot(dx, dy);
+  const reach = ARM_L1 + ARM_L2 - 0.5;
+  if (d > reach) {
+    dx *= reach / d;
+    dy *= reach / d;
+    d = reach;
+  }
+  const c2 = Math.max(-1, Math.min(1, (d * d - ARM_L1 * ARM_L1 - ARM_L2 * ARM_L2) / (2 * ARM_L1 * ARM_L2)));
+  const t2 = -Math.acos(c2);
+  const t1 = Math.atan2(dy, dx) - Math.atan2(ARM_L2 * Math.sin(t2), ARM_L1 + ARM_L2 * Math.cos(t2));
+  const elbow: [number, number] = [bx + ARM_L1 * Math.cos(t1), by + ARM_L1 * Math.sin(t1)];
+  const wrist: [number, number] = [elbow[0] + ARM_L2 * Math.cos(t1 + t2), elbow[1] + ARM_L2 * Math.sin(t1 + t2)];
+  const toolTop = quill + 5;
+  const toolBody =
+    lane === 0
+      ? S(k.extrude(Array.from({ length: 6 }, (_, i) => [wrist[0] + Math.cos((i * Math.PI) / 3) * 3.6, wrist[1] + Math.sin((i * Math.PI) / 3) * 3.6] as [number, number]), quill, 5, P, { bevel: 0.3 }), { tone: 'mid', className: 'fx-tool' })
+      : cyl(wrist[0], wrist[1], 3.4, quill, toolTop, { className: 'fx-tool', inner: `<path class="fx-claude-ring" d="${k.sideArc(wrist[0], wrist[1], 3.4, quill + 2.5, P, 16)}"/>` }, 22, 0.3);
+  return [
+    bar([bx, by], elbow, 7, SHOULDER_Z, SHOULDER_Z + 3.5),
+    cyl(bx, by, 4.4, SHOULDER_Z + 3.5, SHOULDER_Z + 6, {}, 24, 0.4),
+    cyl(wrist[0], wrist[1], 1.3, toolTop, SHOULDER_Z + 3.5, { crease: 'none' }, 12),
+    toolBody,
+    cyl(elbow[0], elbow[1], 3.6, SHOULDER_Z - 0.5, SHOULDER_Z + 7, {}, 22, 0.4),
+    bar(elbow, wrist, 5.6, SHOULDER_Z + 3.5, SHOULDER_Z + 7),
+    cyl(wrist[0], wrist[1], 3.2, SHOULDER_Z + 3, SHOULDER_Z + 8.5, {}, 22, 0.4),
+  ].join('');
+}
+
 // A lift platform: a deck with guide shoes reaching to the posts.
 function platformSvg(x: number, y: number, z: number) {
   // A deck and a carriage that rides the mast behind the belt.
@@ -208,6 +265,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const slats = [part('belt-0'), part('belt-1'), part('belt-2'), part('belt-t')];
   const upperSlats = [part('ubelt-0'), part('ubelt-1'), part('ubelt-2')];
   const ramEl = part('ram');
+  const armEls = [part('arm-0'), part('arm-1')];
+  // Where each arm's tool is, where its quill bottom sits, and a timer for
+  // the work motion. At rest the arm folds back toward its column.
+  const armRest = (lane: LaneIndex): [number, number] => {
+    const [bx, by] = ARM_BASE(LANES[lane].machine, LANES[lane].y);
+    return [bx - 9, by + 9];
+  };
+  const arms = [0, 1].map((lane) => ({ tool: armRest(lane as LaneIndex), quill: SHOULDER_Z - 12, t: 0, key: '' }));
   const screens = [0, 1, 2].map((lane) => svg.querySelector(`[data-screen="m${lane}"]`));
   const linksEl = part('links');
   const pulsesEl = part('pulses');
@@ -743,6 +808,27 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     runLifts(dt);
     runMerge(dt);
 
+    // The arms: swing over the issue being worked and tap it, trace small
+    // circles while they work, fold back when idle.
+    arms.forEach((arm, index) => {
+      const lane = index as LaneIndex;
+      arm.t += dt;
+      const work = items.find((item) => item.lane === lane && item.path === 'belt' && (item.stage === 'new' || item.stage === 'fixing') && Math.abs(item.x - LANES[lane].machine) < 0.01);
+      let target = armRest(lane);
+      let quill = SHOULDER_Z - 12;
+      if (work && !still.matches) {
+        const top = BELT_Z + (work.morph >= 0.5 ? BOX_H : CARD_H);
+        target = [LANES[lane].machine + 2.4 * Math.cos(arm.t * 3.2), LANES[lane].y + 2.4 * Math.sin(arm.t * 3.2)];
+        quill = top + 0.6 + 5 * (0.5 + 0.5 * Math.sin(arm.t * 8));
+      } else if (work) {
+        target = [LANES[lane].machine, LANES[lane].y];
+        quill = BELT_Z + BOX_H + 2;
+      }
+      const follow = 1 - Math.exp(-dt / 0.16);
+      arm.tool = [arm.tool[0] + (target[0] - arm.tool[0]) * follow, arm.tool[1] + (target[1] - arm.tool[1]) * follow];
+      arm.quill += (quill - arm.quill) * (1 - Math.exp(-dt / 0.08));
+    });
+
     // Machines and gauges.
     const pressing = items.find((item) => item.lane === 2 && item.path === 'belt' && item.stage !== 'built' && Math.abs(item.x - LANES[2].machine) < 0.01 && (item.stage === 'new' || item.stage === 'fixing'));
     const rest = 52;
@@ -889,6 +975,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       // The machine's screen wakes while it works.
       const screen = screens[lane];
       if (screen && screen.hasAttribute('data-on') !== working) screen.toggleAttribute('data-on', working);
+    });
+    arms.forEach((arm, lane) => {
+      const key = `${arm.tool[0].toFixed(1)}:${arm.tool[1].toFixed(1)}:${arm.quill.toFixed(1)}`;
+      if (key !== arm.key) {
+        arm.key = key;
+        armEls[lane].innerHTML = armSvg(lane as LaneIndex, arm.tool, arm.quill);
+      }
     });
     const ramKey = ramBottom.toFixed(2);
     if (ramKey !== keys.ram) {
