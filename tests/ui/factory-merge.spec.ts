@@ -4,16 +4,15 @@ interface ItemState {
   id: number;
   path: string;
   stage: string;
-  granted: boolean;
   level: number;
   x: number;
   y: number;
   z: number;
 }
 
-// The merge node admits one PR at a time into the funnel and only when the
-// queue has room, so boxes never share a spot anywhere on the line. Past the
-// funnel, the queue is the entry pad, the crane and the stack on main.
+// PRs from the three lines cross a square collector and queue up behind
+// each other; boxes never share a spot anywhere on the line. Past the
+// collector, the queue is the entry pad, the crane and the stack on main.
 test('factory merge node never overlaps and keeps the queue moving', async ({ page }) => {
   await page.goto('/');
   const stage = page.locator('.fx-stage');
@@ -31,8 +30,6 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
   let last = first;
   for (let sample = 0; sample < 120; sample++) {
     const items = await read();
-    const inFunnel = items.filter((item) => item.granted);
-    expect(inFunnel.length, 'at most one PR is inside the funnel').toBeLessThanOrEqual(1);
     for (let i = 0; i < items.length; i++) {
       for (let j = i + 1; j < items.length; j++) {
         const a = items[i];
@@ -49,7 +46,7 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
     last = items;
     await page.waitForTimeout(100);
   }
-  // The queue moves both ways: new PRs come in through the funnel, and PRs
+  // The queue moves both ways: new PRs come in across the collector, and PRs
   // that were already queued leave it, delivered to main or sent back.
   const stillQueued = new Set(last.filter(inQueue).map((item) => item.id));
   const leftQueue = [...queuedAtStart].filter((id) => !stillQueued.has(id));

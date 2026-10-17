@@ -12,10 +12,8 @@ import {
   STACK_X,
   HEIGHT,
   HOIST_X,
-  CURVE_X0,
-  FUNNEL_X0,
-  MERGE_X,
-  STOP_BACK,
+  JOIN_HALF,
+  JOIN_X,
   LANES,
   MAIN_X0,
   P,
@@ -28,9 +26,6 @@ import {
   WIDTH,
   at,
   depth,
-  curveAt,
-  curveSAtX,
-  curveLength,
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
@@ -177,64 +172,24 @@ function belt(id: string, x0: number, x1: number, y: number, top: number, endDru
   return { back, carry, front };
 }
 
-// Slats across a merge curve at arc positions phase, phase + 6, ... that fall
-// in the band lo..hi.
-export function curveSlats(lane: LaneIndex, lo: number, hi: number, phase: number) {
-  const total = curveSAtX(lane, FUNNEL_X0);
-  const out: string[] = [];
-  for (let s0 = phase; s0 <= total; s0 += 6) {
-    const p = curveAt(lane, s0);
-    if (p[1] < lo || p[1] > hi) continue;
-    const q = curveAt(lane, Math.min(total, s0 + 0.5));
-    const b = curveAt(lane, Math.max(0, s0 - 0.5));
-    const len = Math.hypot(q[0] - b[0], q[1] - b[1]) || 1;
-    const n: [number, number] = [-(q[1] - b[1]) / len, (q[0] - b[0]) / len];
-    out.push(k.lineOnTop([p[0] - n[0] * (HALF - 0.6), p[1] - n[1] * (HALF - 0.6)], [p[0] + n[0] * (HALF - 0.6), p[1] + n[1] * (HALF - 0.6)], BELT_TOP, P));
-  }
-  return out.join('');
-}
-
-// One lane's merge curve: a curved belt from the end of its straight run into
-// the trunk. Pieces are cut by y so each lands in the layer it belongs to.
-function curvePieces(lane: LaneIndex, from: number, to: number) {
-  // Each curve runs only to the funnel; the funnel deck takes it from there.
-  const total = curveSAtX(lane, FUNNEL_X0);
-  const steps = 40;
-  const samples: Array<{ p: [number, number]; n: [number, number] }> = [];
-  for (let i = 0; i <= steps; i++) {
-    const s0 = (total * i) / steps;
-    const p = curveAt(lane, s0);
-    const q = curveAt(lane, Math.min(total, s0 + 0.5));
-    const b = curveAt(lane, Math.max(0, s0 - 0.5));
-    const dx = q[0] - b[0];
-    const dy = q[1] - b[1];
-    const len = Math.hypot(dx, dy) || 1;
-    samples.push({ p, n: [-dy / len, dx / len] });
-  }
-  const inBand = samples.map(({ p }) => p[1] >= from && p[1] <= to);
-  const out = { carry: '', front: '' };
-  let i = 0;
-  while (i < samples.length) {
-    if (!inBand[i]) { i++; continue; }
-    const start = Math.max(0, i - 1);
-    while (i < samples.length && inBand[i]) i++;
-    const end = Math.min(samples.length - 1, i);
-    const piece = samples.slice(start, end + 1);
-    if (piece.length < 2) continue;
-    const off = (d: number) => piece.map(({ p, n }) => [p[0] + n[0] * d, p[1] + n[1] * d] as [number, number]);
-    const left = off(-HALF);
-    const right = off(HALF);
-    const ring = [...left, ...right.reverse()];
-    out.carry += S(k.extrude(ring, BELT_TOP - 5, 5, P, { convex: false }), { tone: 'mid', crease: 'none' });
-    // Slats are laid along the curve by the live model, so they move with
-    // the straight belts.
-    out.carry += `<path class="iso-line" data-tone="faint" data-curve-slats="${lane}" data-lo="${from}" data-hi="${to}" d=""/>`;
-    out.carry += L(k.onTop(off(-HALF + 1.4), BELT_TOP, P) + k.onTop(off(HALF - 1.4), BELT_TOP, P), { tone: 'lo' });
-    // The outer frame: a low wall along the side nearer the viewer.
-    const wall = [...off(HALF), ...off(HALF + 3).reverse()];
-    out.front += S(k.extrude(wall, BELT_TOP - 9, 9.8, P, { convex: false }), { tone: 'mid' });
-  }
-  return out;
+// The collector: a cross belt of rollers at the end of the lines, cut into
+// pieces along y so each sits in the layer it belongs to. Walls go only
+// where no belt enters or leaves.
+function collector(y0: number, y1: number, walls: { right: boolean; left?: boolean; back?: boolean; front?: boolean }) {
+  const x0 = JOIN_X - JOIN_HALF;
+  const x1 = JOIN_X + JOIN_HALF;
+  const back: string[] = [];
+  const carry: string[] = [];
+  const front: string[] = [];
+  if (walls.back) back.push(box(x0 - 3, y0 - 3, x1 + 3, y0, BELT_TOP - 9, BELT_TOP + 0.8, {}, 0.5, 0.3));
+  if (walls.left) back.push(box(x0 - 3, y0, x0, y1, BELT_TOP - 9, BELT_TOP + 0.8, {}, 0.4, 0.3));
+  carry.push(box(x0, y0, x1, y1, BELT_TOP - 6, BELT_TOP, { tone: 'mid', crease: 'none' }, 0.3));
+  const rollers: string[] = [];
+  for (let y = Math.ceil((y0 + 1) / 3.5) * 3.5; y < y1 - 0.5; y += 3.5) rollers.push(k.lineOnTop([x0 + 0.6, y], [x1 - 0.6, y], BELT_TOP, P));
+  carry.push(L(rollers.join(''), { tone: 'faint' }));
+  if (walls.right) front.push(box(x1, y0, x1 + 3, y1, BELT_TOP - 9, BELT_TOP + 0.8, {}, 0.4, 0.3));
+  if (walls.front) front.push(box(x0 - 3, y1, x1 + 3, y1 + 3, BELT_TOP - 9, BELT_TOP + 0.8, {}, 0.5, 0.3));
+  return { back: back.join(''), carry: carry.join(''), front: front.join('') };
 }
 
 // Screens and trims that nod to the tools each line runs. No logos: only
@@ -431,62 +386,6 @@ function liftPosts(x: number, y: number, side: 'back' | 'front') {
   return out.join('');
 }
 
-// The funnel: one deck from the stop lines to the queue. Its back edge is
-// the far side of the patchrelay curve, its front edge the near side of the
-// Codex curve, so all three belt ends meet it flush.
-function funnelEdge(lane: LaneIndex, side: number, offset: number) {
-  const s0 = curveSAtX(lane, FUNNEL_X0);
-  const total = curveLength(lane);
-  const out: Array<[number, number]> = [];
-  for (let i = 0; i <= 16; i++) {
-    const s1 = s0 + ((total - s0) * i) / 16;
-    const p = curveAt(lane, s1);
-    const q = curveAt(lane, Math.min(total, s1 + 0.5));
-    const b = curveAt(lane, Math.max(0, s1 - 0.5));
-    const len = Math.hypot(q[0] - b[0], q[1] - b[1]) || 1;
-    const n: [number, number] = [-(q[1] - b[1]) / len, (q[0] - b[0]) / len];
-    const sign = Math.sign(n[1]) * side;
-    out.push([p[0] + n[0] * sign * offset, p[1] + n[1] * sign * offset]);
-  }
-  return out;
-}
-
-function funnel() {
-  const backEdge = funnelEdge(0, -1, HALF);
-  const frontEdge = funnelEdge(2, 1, HALF);
-  const deck = [...backEdge, ...[...frontEdge].reverse()];
-  const surface = k.onTop(deck, BELT_TOP, P, true);
-  const slats: string[] = [];
-  for (let x = FUNNEL_X0 - 8; x <= MERGE_X + 8; x += 6) slats.push(k.lineOnTop([x, TRUNK_Y - 40], [x, TRUNK_Y + 40], BELT_TOP, P));
-  const carry = [
-    S(k.extrude(backEdge.map(([x, y]) => [x, y - 3] as [number, number]).concat([...backEdge].reverse()), BELT_TOP - 9, 9.8, P, { convex: false }), { tone: 'mid' }),
-    S(k.extrude(deck, BELT_TOP - 5, 5, P, { convex: false }), { tone: 'mid', crease: 'none' }),
-    `<clipPath id="belt-f"><path d="${surface}"/></clipPath>`,
-    `<g clip-path="url(#belt-f)"><g data-part="belt-f">${L(slats.join(''), { tone: 'faint' })}</g></g>`,
-    L(k.onTop(funnelEdge(0, -1, HALF - 1.4), BELT_TOP, P) + k.onTop(funnelEdge(2, 1, HALF - 1.4), BELT_TOP, P), { tone: 'lo' }),
-  ].join('');
-  const front = S(k.extrude(frontEdge.concat(frontEdge.map(([x, y]) => [x, y + 3] as [number, number]).reverse()), BELT_TOP - 9, 9.8, P, { convex: false }), { tone: 'mid' });
-  return { carry, front };
-}
-
-// A painted stop line across each incoming belt, just ahead of where a PR
-// waits for its turn into the funnel.
-function stopLines() {
-  const out: string[] = [];
-  for (const lane of [0, 2] as LaneIndex[]) {
-    const s0 = curveSAtX(lane, FUNNEL_X0) - STOP_BACK + 9.5;
-    const p = curveAt(lane, s0);
-    const q = curveAt(lane, s0 + 0.5);
-    const b = curveAt(lane, s0 - 0.5);
-    const len = Math.hypot(q[0] - b[0], q[1] - b[1]) || 1;
-    const n: [number, number] = [-(q[1] - b[1]) / len, (q[0] - b[0]) / len];
-    out.push(k.lineOnTop([p[0] - n[0] * (HALF - 1.4), p[1] - n[1] * (HALF - 1.4)], [p[0] + n[0] * (HALF - 1.4), p[1] + n[1] * (HALF - 1.4)], BELT_TOP + 0.05, P));
-  }
-  const x = FUNNEL_X0 - STOP_BACK + 9.5;
-  out.push(k.lineOnTop([x, TRUNK_Y - HALF + 1.4], [x, TRUNK_Y + HALF - 1.4], BELT_TOP + 0.05, P));
-  return `<path class="iso-line fx-stopline" d="${out.join('')}"/>`;
-}
-
 // The merge aggregate: an entry pad with a CI lamp, a guide frame standing
 // on the start of the main track that holds the stack of rebased PRs with a
 // lamp per level, and a crane that carries PRs from the pad to the stack.
@@ -529,17 +428,13 @@ function lane(i: LaneIndex) {
   const { y, intake, machine } = LANES[i];
   const isTrunk = i === 1;
   const x0 = intake - 30;
-  const x1 = isTrunk ? FUNNEL_X0 : CURVE_X0;
+  const x1 = JOIN_X - JOIN_HALF;
   const out: string[] = [];
-  const band = (lo: number, hi: number) => {
-    const pieces = [curvePieces(0, lo, hi), curvePieces(2, lo, hi)];
-    return { carry: pieces.map((p) => p.carry).join(''), front: pieces.map((p) => p.front).join('') };
-  };
-  // The stretch of merge curve between the lane behind and this one, and
-  // the items riding it, sit just before this lane.
+  // The stretch of collector between the lane behind and this one, and the
+  // PRs crossing it, sit just before this lane.
   if (i > 0) {
-    const gap = band(LANES[i - 1].y + HALF, y - HALF);
-    out.push(gap.carry, `<g data-part="gap-${i}"></g>`, gap.front);
+    const gap = collector(LANES[i - 1].y + HALF, y - HALF, { left: true, right: true });
+    out.push(gap.back, gap.carry, `<g data-part="gap-${i}"></g>`, gap.front);
   }
   const legXs: number[] = [];
   for (let x = x0 + 10; x < x1 - 4; x += 58) legXs.push(x);
@@ -552,11 +447,11 @@ function lane(i: LaneIndex) {
     out.push(lamp('entry', ENTRY_X, y - HALF - 10, 34, 2.8, 5));
   }
   const main = belt(`belt-${i}`, x0, x1, y, BELT_TOP, false);
-  const trunk = isTrunk ? belt('belt-t', MERGE_X, ENTRY_X + 14, y, BELT_TOP, true) : null;
-  const deck = isTrunk ? funnel() : null;
-  const onLane = band(y - HALF, y + HALF);
-  out.push(main.back, main.carry, onLane.carry);
-  if (trunk && deck) out.push(trunk.back, trunk.carry, deck.carry, stopLines());
+  const trunk = isTrunk ? belt('belt-t', JOIN_X + JOIN_HALF, ENTRY_X + 14, y, BELT_TOP, true) : null;
+  // The middle lane runs straight through; the outer lanes end on it.
+  const onLane = collector(y - HALF, y + HALF, { right: !isTrunk, back: i === 0, front: i === 2 });
+  out.push(main.back, onLane.back, main.carry, onLane.carry);
+  if (trunk) out.push(trunk.back, trunk.carry);
   if (isTrunk) {
     const pad = plan(ENTRY_X - 10, y - 10, ENTRY_X + 10, y + 10, 1);
     out.push(S(k.slabOf(pad, BELT_TOP, 0.8, P, 3, 0.3), { tone: 'lo' }));
@@ -567,8 +462,8 @@ function lane(i: LaneIndex) {
   if (isTrunk) out.push('<g data-part="stack"></g>');
   out.push(`<g data-part="lift-${i}"></g>`);
   out.push(main.front, onLane.front);
-  if (trunk && deck) {
-    out.push(trunk.front, deck.front, stackFrame('front'));
+  if (trunk) {
+    out.push(trunk.front, stackFrame('front'));
   }
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
   if (i === 0) out.push(drop(TAP.patchrelay, [machine - 6, y - 20, 56]), patchrelayMachine(machine, y));
@@ -690,7 +585,7 @@ function dock() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a terminal cabinet and an open press with an app window behind it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. The outer lines curve smoothly into the middle one, which runs to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the deploy dock as soon as it is green; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a terminal cabinet and an open press with an app window behind it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one, where they queue up behind each other and run to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the deploy dock as soon as it is green; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
 
 let cached: string | null = null;
 

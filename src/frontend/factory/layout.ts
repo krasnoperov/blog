@@ -30,58 +30,13 @@ export const HOIST_X = 346;
 export const UPPER_Z = 128;
 export const dropX = (lane: LaneIndex) => LANES[lane].machine - 42;
 
-// The merge: the outer lanes leave their straight run and curve smoothly
-// into the middle lane, which carries on as the single queue.
+// The merge: a square collector, a cross belt at the end of the lines. The
+// outer lines end on it and their PRs ride across onto the middle line,
+// which carries on past it as the single queue. PRs queue on their belts
+// behind whatever is ahead; nothing waits for a turn.
 export const TRUNK_Y = LANES[1].y;
-export const CURVE_X0 = 372;
-export const MERGE_X = 470;
-// The funnel: one deck where the three belt ends converge. Only one PR is in
-// it at a time; each lane waits at its own stop line just before it.
-export const FUNNEL_X0 = 430;
-export const STOP_BACK = 14;
-
-// Points along a lane's merge curve, sampled evenly by arc length.
-function sampleCurve(lane: LaneIndex) {
-  const y0 = LANES[lane].y;
-  const p0: [number, number] = [CURVE_X0, y0];
-  const p1: [number, number] = [CURVE_X0 + 52, y0];
-  const p2: [number, number] = [MERGE_X - 52, TRUNK_Y];
-  const p3: [number, number] = [MERGE_X, TRUNK_Y];
-  const raw: Array<[number, number]> = [];
-  for (let i = 0; i <= 200; i++) {
-    const t = i / 200;
-    const u = 1 - t;
-    raw.push([
-      u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
-      u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1],
-    ]);
-  }
-  const lengths = [0];
-  for (let i = 1; i < raw.length; i++) lengths.push(lengths[i - 1] + Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]));
-  return { raw, lengths, total: lengths[lengths.length - 1] };
-}
-const CURVES = [sampleCurve(0), sampleCurve(1), sampleCurve(2)];
-export const curveLength = (lane: LaneIndex) => CURVES[lane].total;
-// Arc length along a lane's curve where it reaches x.
-export function curveSAtX(lane: LaneIndex, x: number) {
-  const { raw, lengths } = CURVES[lane];
-  for (let i = 1; i < raw.length; i++) {
-    if (raw[i][0] >= x) {
-      const f = (x - raw[i - 1][0]) / (raw[i][0] - raw[i - 1][0] || 1);
-      return lengths[i - 1] + (lengths[i] - lengths[i - 1]) * f;
-    }
-  }
-  return CURVES[lane].total;
-}
-
-export function curveAt(lane: LaneIndex, s: number): [number, number] {
-  const { raw, lengths, total } = CURVES[lane];
-  const at = Math.min(Math.max(s, 0), total);
-  let i = 1;
-  while (i < lengths.length - 1 && lengths[i] < at) i++;
-  const f = (at - lengths[i - 1]) / (lengths[i] - lengths[i - 1] || 1);
-  return [raw[i - 1][0] + (raw[i][0] - raw[i - 1][0]) * f, raw[i - 1][1] + (raw[i][1] - raw[i - 1][1]) * f];
-}
+export const JOIN_X = 410;
+export const JOIN_HALF = 12;
 
 // The merge aggregate. A PR waits on the entry pad until CI on its own
 // branch is green. A crane then sets it on top of the stack, which stands on
@@ -92,7 +47,6 @@ export const STACK_X = 588;
 export const STACK_MAX = 4;
 export const LEVEL_H = BOX_H + 1.2;
 export const CRANE = { x0: ENTRY_X, x1: STACK_X, z: 112 } as const;
-export const QUEUE_X = MERGE_X;
 export const MAIN_X0 = 552;
 export const DOCK_X = 806;
 export const GONE_X = 840;

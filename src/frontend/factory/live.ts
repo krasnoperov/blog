@@ -13,17 +13,11 @@ import {
   STACK_X,
   GONE_X,
   HOIST_X,
-  FUNNEL_X0,
-  MERGE_X,
-  STOP_BACK,
-  curveSAtX,
-  CURVE_X0,
+  JOIN_X,
   LANES,
   P,
   PORTAL,
   UPPER_Z,
-  curveAt,
-  curveLength,
   REVIEW_X,
   TAP,
   TRUNK_Y,
@@ -32,7 +26,6 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
-import { curveSlats } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -64,12 +57,7 @@ const ENTRY_CI = 1.2;
 const STACK_CI = 1.0;
 const TRAVEL_Z = BELT_Z + STACK_MAX * LEVEL_H + 10;
 const levelZ = (level: number) => BELT_Z + level * LEVEL_H;
-// Stop lines before the funnel: arc length on the outer curves, x on the
-// middle lane.
-const CURVE_STOP = [curveSAtX(0, FUNNEL_X0) - STOP_BACK, 0, curveSAtX(2, FUNNEL_X0) - STOP_BACK];
-const MIDDLE_STOP = FUNNEL_X0 - STOP_BACK;
-
-type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'curve' | 'trunk' | 'crane' | 'stack' | 'teleport' | 'gone';
+type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'crane' | 'stack' | 'teleport' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
 interface Item {
@@ -86,8 +74,6 @@ interface Item {
   t: number;
   s: number;
   morph: number;
-  granted: boolean;
-  waitT: number;
   // The merge aggregate: CI on the PR's own branch at the entry pad, its
   // place in the stack, a red candidate's countdown, and the teleport fade.
   pre: number;
@@ -181,15 +167,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const needles = [part('needle-0'), part('needle-1'), part('needle-2')];
   const liftEls = [part('lift-0'), part('lift-1'), part('lift-2')];
   const upperEls = [part('upper-0'), part('upper-1'), part('upper-2')];
-  const slats = [part('belt-0'), part('belt-1'), part('belt-2'), part('belt-t'), part('belt-f')];
+  const slats = [part('belt-0'), part('belt-1'), part('belt-2'), part('belt-t')];
   const upperSlats = [part('ubelt-0'), part('ubelt-1'), part('ubelt-2')];
-  const curveSlatEls = Array.from(svg.querySelectorAll<SVGPathElement>('[data-curve-slats]')).map((el) => ({
-    el,
-    lane: Number(el.dataset.curveSlats) as LaneIndex,
-    lo: Number(el.dataset.lo),
-    hi: Number(el.dataset.hi),
-  }));
-  let lastSlatPhase = -1;
   const ramEl = part('ram');
   const screens = [0, 1, 2].map((lane) => svg.querySelector(`[data-screen="m${lane}"]`));
   const linksEl = part('links');
@@ -251,21 +230,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let lastStats = '';
 
   const onBelt = (item: Item) => item.path === 'belt' || item.path === 'trunk';
-  // The funnel admits one PR at a time, and only when the queue has room
-  // behind its last PR. Whoever has waited longest at a stop line goes next.
-  const atStopLine = (item: Item) =>
-    !item.granted &&
-    ((item.path === 'curve' && item.s >= CURVE_STOP[item.lane] - 0.01) ||
-      (item.path === 'belt' && item.lane === 1 && item.stage === 'approved' && item.x >= MIDDLE_STOP - 0.01));
-  function admit() {
-    const occupied = items.some((item) => item.granted);
-    const room = !items.some((item) => item.path === 'trunk' && item.x < MERGE_X + GAP);
-    if (occupied || !room) return;
-    const waiting = items.filter(atStopLine).sort((a, b) => b.waitT - a.waitT);
-    if (waiting.length) waiting[0].granted = true;
-  }
-  // The next item ahead on the same stretch of belt. Lane 1 feeds the trunk
-  // directly, so its items see the trunk ahead of them.
+  // The junction: the cell where the collector meets the middle line. One
+  // PR in it at a time; everyone else simply queues on their own belt.
+  const inJunction = (item: Item) =>
+    (item.path === 'cross' && Math.abs(item.y - TRUNK_Y) < GAP) ||
+    (item.path === 'belt' && item.lane === 1 && item.x > JOIN_X - GAP) ||
+    (item.path === 'trunk' && item.x < JOIN_X + GAP);
+  const junctionBusy = (except: Item) => items.some((other) => other !== except && inJunction(other));
+
   const ahead = (item: Item) => {
     let best: Item | null = null;
     for (const other of items) {
@@ -306,8 +278,6 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       t: 0,
       s: 0,
       morph: 0,
-      granted: false,
-      waitT: 0,
       pre: 0,
       level: -1,
       red: -1,
@@ -363,7 +333,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       case 'changes':
         return HOIST_X;
       default:
-        return item.lane === 1 ? (item.granted ? MERGE_X : MIDDLE_STOP) : CURVE_X0;
+        return JOIN_X;
     }
   }
 
@@ -414,18 +384,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     }
     if (item.path === 'belt' && item.stage === 'approved') {
       if (lane !== 1) {
-        if (items.some((other) => other.lane === lane && other.path === 'curve' && other.s < GAP)) return true;
-        item.path = 'curve';
-        item.s = 0;
+        // At the end of an outer line: step onto the collector once the PR
+        // ahead on it has moved on.
+        if (items.some((other) => other.lane === lane && other.path === 'cross' && Math.abs(other.y - LANES[lane].y) < GAP)) return true;
+        item.path = 'cross';
         item.t = 0;
         return true;
       }
-      if (!item.granted) {
-        item.waitT += dt;
-        return true;
-      }
       item.path = 'trunk';
-      item.granted = false;
       item.t = 0;
       return false;
     }
@@ -511,7 +477,6 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     item.red = -1;
     item.ci = 0;
     item.pre = 0;
-    item.granted = false;
     returned += 1;
     pulse(TAP.queue, TAP[LANES[item.lane].key]);
   }
@@ -672,7 +637,6 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
     });
 
-    admit();
     const belts = items.filter((item) => item.path === 'belt' || item.path === 'trunk' || item.path === 'drop').sort((a, b) => b.x - a.x);
     for (const item of belts) {
       if (item.path === 'drop') {
@@ -691,11 +655,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       let limit = stopFor(item);
       const next = ahead(item);
       if (next) limit = Math.min(limit, next.x - GAP);
-      // An outer lane's belt sees the PRs on its curve as the ones ahead.
-      if (item.path === 'belt' && item.lane !== 1) {
-        const onCurve = items.filter((other) => other.lane === item.lane && other.path === 'curve');
-        if (onCurve.length) limit = Math.min(limit, CURVE_X0 + Math.min(...onCurve.map((other) => other.s)) - GAP);
-      }
+      // An outer line holds back while the PR ahead of it is still stepping
+      // off its end onto the collector.
+      if (item.path === 'belt' && item.lane !== 1 && items.some((other) => other.lane === item.lane && other.path === 'cross' && Math.abs(other.y - LANES[item.lane].y) < GAP)) limit = Math.min(limit, JOIN_X - GAP);
+      // The middle line holds back while a PR crosses into the junction.
+      if (item.path === 'belt' && item.lane === 1 && item.x <= JOIN_X - GAP + 0.01 && items.some((other) => other.path === 'cross' && Math.abs(other.y - TRUNK_Y) < GAP)) limit = Math.min(limit, JOIN_X - GAP);
       // The pad stays clear while the crane is still low over it or a red PR
       // is leaving from it.
       if (item.path === 'trunk' && item.stage === 'approved') {
@@ -716,22 +680,23 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
     }
 
-    // The merge curves: each outer lane flows into the trunk.
+    // The collector: PRs from the outer lines ride across onto the trunk,
+    // each behind the one ahead, and into the junction once it is free.
     for (const index of [0, 2] as LaneIndex[]) {
-      const total = curveLength(index);
-      const riding = items.filter((item) => item.lane === index && item.path === 'curve').sort((a, b) => b.s - a.s);
+      const riding = items.filter((item) => item.lane === index && item.path === 'cross').sort((a, b) => Math.abs(a.y - TRUNK_Y) - Math.abs(b.y - TRUNK_Y));
       riding.forEach((item, order) => {
-        let limit = total;
-        if (order > 0) limit = Math.min(limit, riding[order - 1].s - GAP);
-        if (!item.granted) limit = Math.min(limit, CURVE_STOP[index]);
-        if (atStopLine(item)) item.waitT += dt;
-        if (limit > item.s) item.s = Math.min(limit, item.s + SPEED * dt);
-        [item.x, item.y] = curveAt(index, item.s);
-        if (item.s >= total - 0.01) {
-          item.path = 'trunk';
-          item.granted = false;
-          item.x = MERGE_X;
+        const distance = Math.abs(item.y - TRUNK_Y);
+        let limit = 0;
+        if (order > 0) limit = Math.max(limit, Math.abs(riding[order - 1].y - TRUNK_Y) + GAP);
+        if (distance >= GAP - 0.01 && junctionBusy(item)) limit = Math.max(limit, GAP);
+        if (distance > limit) {
+          const next = Math.max(limit, distance - SPEED * dt);
+          item.y = TRUNK_Y + Math.sign(item.y - TRUNK_Y) * next;
+        }
+        if (Math.abs(item.y - TRUNK_Y) < 0.01) {
           item.y = TRUNK_Y;
+          item.path = 'trunk';
+          item.x = JOIN_X;
           item.t = 0;
         }
       });
@@ -776,7 +741,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item.path === 'drop') return `picked up · ${agent}`;
     if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
     if (item.path === 'teleport') return `red in the queue · teleported back to ${agent}`;
-    if (item.path === 'curve') return item.granted ? 'approved · merging into the queue' : 'approved · waiting to merge';
+    if (item.path === 'cross') return 'approved · crossing to the queue';
     const here = (x: number) => Math.abs(item.x - x) < 0.01;
     switch (item.stage) {
       case 'new':
@@ -815,10 +780,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item.path === 'liftUp') return lifts[item.lane].up.cargo;
     if (item.path === 'liftDown') return lifts[item.lane].down.cargo;
     if (item.path === 'upper') return upperEls[item.lane];
-    if (item.path === 'curve') {
-      if (item.x > FUNNEL_X0 - 12) return laneItems[1];
-      if (item.lane === 0) return item.y < LANES[0].y + 11 ? laneItems[0] : item.y < LANES[1].y - 11 ? gaps[0] : laneItems[1];
-      return item.y > LANES[2].y - 11 ? laneItems[2] : item.y > LANES[1].y + 11 ? gaps[1] : laneItems[1];
+    if (item.path === 'cross') {
+      if (item.y < LANES[1].y - 11) return item.y < LANES[0].y + 11 ? laneItems[0] : gaps[0];
+      if (item.y > LANES[1].y + 11) return item.y > LANES[2].y - 11 ? laneItems[2] : gaps[1];
+      return laneItems[1];
     }
     if (item.path === 'stack') return stackEl;
     if (item.path === 'crane') return craneCargo;
@@ -931,11 +896,6 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     const travel = still.matches ? 0 : clock * SPEED;
     for (const el of slats) el.setAttribute('transform', k.translateAlong(P, [travel % 6, 0, 0]));
     for (const el of upperSlats) el.setAttribute('transform', k.translateAlong(P, [-(travel % 6), 0, 0]));
-    const phase = Math.round((travel % 6) * 4) / 4;
-    if (phase !== lastSlatPhase) {
-      lastSlatPhase = phase;
-      for (const curve of curveSlatEls) curve.el.setAttribute('d', curveSlats(curve.lane, curve.lo, curve.hi, phase));
-    }
 
     const caseAt = Math.floor(clock / 1.3) % 11;
     cases.forEach((el, i) => {
@@ -963,7 +923,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }
 
   // A read-only snapshot of where every item is, for tests.
-  Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, stage: item.stage, granted: item.granted, level: item.level, x: item.x, y: item.y, z: item.z })) });
+  Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, stage: item.stage, level: item.level, x: item.x, y: item.y, z: item.z })) });
 
   // Warm the line up so the first frame is already busy.
   for (let i = 0; i < 30 * 30; i++) step(1 / 30);
