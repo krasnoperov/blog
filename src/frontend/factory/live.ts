@@ -721,7 +721,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }
 
   // A read-only snapshot of where every item is, for tests.
-  Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, x: item.x, y: item.y, z: item.z })) });
+  Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, stage: item.stage, granted: item.granted, x: item.x, y: item.y, z: item.z })) });
 
   // Warm the line up so the first frame is already busy.
   for (let i = 0; i < 30 * 30; i++) step(1 / 30);
