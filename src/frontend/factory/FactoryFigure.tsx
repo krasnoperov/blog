@@ -18,7 +18,7 @@ export function FactoryFigure() {
       <div className="iso-plate fx-plate">
         <div className="iso-plate-corners" aria-hidden="true">
           <span className="iso-plate-corner" data-corner="fig">Fig 1</span>
-          <span className="iso-plate-corner" data-corner="title">Software factory · line 1</span>
+          <span className="iso-plate-corner" data-corner="title">Software factory · three lines, one queue</span>
           <span className="iso-plate-corner" data-corner="hint">runs on its own</span>
           <span className="iso-plate-corner" data-corner="readout" ref={readoutRef}>warming up</span>
         </div>
@@ -31,7 +31,7 @@ export function FactoryFigure() {
           <span className="iso-key"><Swatch mark="lit" />Issue card, then pull request; the heavy outline is the one followed</span>
           <span className="iso-key"><Swatch mark="dotted" />Queued candidate, built on the one ahead</span>
           <span className="iso-key"><Swatch mark="green" />Green CI</span>
-          <span className="iso-key"><Swatch mark="red" />Changes requested, or a red candidate being repaired</span>
+          <span className="iso-key"><Swatch mark="red" />Changes requested: hoisted back to its own machine</span>
         </span>
         <span className="fx-stats">simulated · <span ref={statsRef} /></span>
       </figcaption>

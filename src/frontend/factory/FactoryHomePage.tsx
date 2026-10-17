@@ -138,9 +138,9 @@ export default function FactoryHomePage() {
           <p className={styles.eyebrow}>Aleksei Krasnoperov · October 2026</p>
           <h1 className={styles.headline}>The software factory behind my products</h1>
           <p className={styles.lede}>
-            UserTold and MakeFX ship through one line. Issues go in through Linear, agents write the code,
-            review-quill and merge-steward decide what lands, and GitHub carries every signal in between.
-            The figure below is a simulation of those rules, not a live feed.
+            UserTold and MakeFX ship through one factory. Each agent works its own line: patchrelay from
+            Linear, Claude Code and Codex from sessions I start. Every pull request goes through review-quill,
+            and merge-steward merges all of them into one queue. The figure below is a simulation, not a live feed.
           </p>
         </section>
 

@@ -5,31 +5,35 @@ import {
   BOX_H,
   BUS,
   CARD_H,
-  DEV_X,
-  DIAL,
   EVAL_DIAL,
-  GANTRY,
-  HEAD_REST,
-  LIFT_Z,
-  MERGE_X,
+  GATE_X,
+  GONE_X,
+  HANG_Z,
+  HOIST_X,
+  JOIN_X,
+  LANES,
   P,
   PADS,
-  PROBE,
-  REAR_PATH,
-  STATION,
+  PORTAL,
+  QUEUE_X,
+  RAIL_Z,
+  REVIEW_X,
   TAP,
-  TROLLEY,
+  TRUNK_Y,
   at,
   depth,
+  dropX,
 } from './layout';
+import type { LaneIndex } from './layout';
 
 // The moving half of the figure. One small discrete model runs the line:
-// issues spawn at the hopper, move on belts that accumulate (an item never
-// closes within GAP of the one ahead), and dwell at stations. Every readout,
-// lamp and counter is read from this model.
+// issues spawn at each agent's intake, move on belts that accumulate (an
+// item never closes within GAP of the one ahead), and dwell at machines. The
+// three lanes run independently and meet at review-quill and the collector.
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SPEED = 46;
+const HOIST_SPEED = 80;
 const GAP = 27;
 const TAU = Math.PI * 2;
 
@@ -39,38 +43,31 @@ export const AGENTS = [
   { key: 'codex', label: 'Codex' },
 ] as const;
 
-// Who picks up each issue, how many review rounds it takes, and which ones
-// triage bounces back for more input. Patterns, so the tour repeats.
-const AGENT_OF = [0, 1, 0, 2, 0, 1, 2, 0];
-const ROUNDS_OF = [1, 2, 1, 1, 3, 1, 2, 1, 1];
-const REJECT_EVERY = 7;
-// Every fifth candidate goes red once in the merge queue and gets repaired.
-const FAILS_ONCE = (id: number) => id % 5 === 2;
+// How many review rounds each PR takes, and how long its candidate's CI
+// runs. Patterns, so the line repeats.
+const ROUNDS_OF = [1, 2, 1, 1, 3, 1, 2, 1, 1, 2];
+const CI_OF = [4.2, 6.8, 3.4, 5.6, 7.4, 3.9, 5.1];
+const SPAWN_EVERY = [3.6, 4.4, 5.2];
 
-type Lane = 'drop' | 'front' | 'lift' | 'rear' | 'reject' | 'gone';
-type Stage = 'new' | 'triaged' | 'built' | 'changes' | 'fixing' | 'approved' | 'merged' | 'rejected';
+type Path = 'drop' | 'belt' | 'hoist' | 'return' | 'lower' | 'cross' | 'trunk' | 'gone';
+type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
 interface Item {
   id: number;
   name: string;
-  agent: number;
+  lane: LaneIndex;
+  path: Path;
+  stage: Stage;
   rounds: number;
   reviews: number;
-  rejected: boolean;
-  lane: Lane;
-  stage: Stage;
-  s: number;
   x: number;
   y: number;
   z: number;
   t: number;
-  busy: boolean;
   morph: number;
   ci: number;
-  failOnce: boolean;
-  red: number;
+  ciNeed: number;
   flag: boolean;
-  patched: boolean;
   el: SVGGElement;
   card: SVGGElement;
   box: SVGGElement;
@@ -103,70 +100,29 @@ function boxSvg() {
     S(k.slabOf(body, 0, BOX_H, P, 3, 0.5), { tone: 'hi', inner: k.lineSvg(k.sideSeam(body, 7.4, P, 3), { tone: 'faint' }) }),
     k.lineSvg(k.lineOnTop([-8, 0], [8, 0], BOX_H, P), { tone: 'faint' }),
     `<ellipse data-ci class="fx-ci" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="1.5" ry="0.8"/>`,
-    // A review flag, shown while changes are requested.
     `<g data-k="flag">${cyl(-5, -4, 0.5, BOX_H, BOX_H + 9, { crease: 'none' }, 8)}${box(-4.6, -4.4, 1.6, -3.6, BOX_H + 5, BOX_H + 9, { className: 'fx-flag' }, 0.2)}</g>`,
-    // A patch plate, left by the queue's repair.
-    `<g data-k="patch">${box(-6.5, -5.5, -1, -0.5, BOX_H, BOX_H + 0.9, { tone: 'hi', className: 'fx-patch' }, 0.4)}</g>`,
   ].join('');
-}
-
-// The tool each agent's head carries: hex for patchrelay, round for Claude
-// Code, square for Codex.
-function tool(agent: number, x: number, z: number) {
-  if (agent === 0) {
-    const hex: Array<[number, number]> = [];
-    for (let i = 0; i < 6; i++) hex.push([x + Math.cos((i * TAU) / 6) * 5, Math.sin((i * TAU) / 6) * 5]);
-    return S(k.extrude(hex, z, 8, P, { bevel: 0.4 }), { tone: 'mid', className: 'fx-tool' });
-  }
-  if (agent === 1) return cyl(x, 0, 4.6, z, z + 8, { className: 'fx-tool', inner: k.lineSvg(k.sideArc(x, 0, 4.6, z + 4, P, 16), { tone: 'faint' }) }, 24, 0.4);
-  return box(x - 4.2, -4.2, x + 4.2, 4.2, z, z + 8, { className: 'fx-tool' }, 0.6, 0.4);
-}
-
-// A lift head, split around the issue it holds: the carriage and back jaw
-// behind it, the tool, rod and front jaw in front of it.
-function headBack(x: number, grip: number) {
-  return box(x - 7, -5, x + 7, 5, GANTRY.top - 8, GANTRY.top, {}, 0.8, 0.5) + box(x - 4, -9.2, x + 4, -8, grip - 6, grip + 2, { tone: 'lo' }, 0.3);
-}
-
-function headFront(agent: number, x: number, grip: number) {
-  const rod = cyl(x, 0, 1.6, grip + 9, GANTRY.top - 8.4, { crease: 'none' }, 12);
-  return tool(agent, x, grip + 1) + rod + box(x - 4, 8, x + 4, 9.2, grip - 6, grip + 2, { tone: 'lo' }, 0.3);
-}
-
-function trolleySvg(x: number, tip: number) {
-  const carriage = box(x - 6, TROLLEY.y - 5, x + 6, TROLLEY.y + 5, TROLLEY.z + 2, TROLLEY.z + 8, {}, 0.8, 0.4);
-  const rod = cyl(x, 0, 1, tip + 3, TROLLEY.z + 1.6, { crease: 'none' }, 10);
-  const head = cyl(x, 0, 2.6, tip, tip + 3, { tone: 'hi', className: 'fx-repair' }, 16, 0.3);
-  return rod + head + carriage;
-}
-
-function scannerSvg(drop: number) {
-  return box(104, -6, 116, 6, 52 - drop, 62, { tone: 'mid' }, 1, 0.4) + cyl(110, 0, 3, 50.4 - drop, 52 - drop, { tone: 'lo' }, 18);
-}
-
-function probeSvg(tip: number) {
-  return cyl(PROBE.x, PROBE.y, 0.9, tip + 2.4, 66, { crease: 'none' }, 12) + cyl(PROBE.x, PROBE.y, 2, tip, tip + 2.4, { tone: 'hi' }, 16);
 }
 
 function needleD(dial: { x: number; y: number; r: number; top: number }, turn: number) {
   const a = turn * TAU;
-  return k.lineOnTop([dial.x - Math.sin(a) * 1.6, dial.y + Math.cos(a) * 1.6], [dial.x + Math.sin(a) * (dial.r - 2.6), dial.y - Math.cos(a) * (dial.r - 2.6)], dial.top + 0.2, P);
+  return k.lineOnTop([dial.x - Math.sin(a) * 1.4, dial.y + Math.cos(a) * 1.4], [dial.x + Math.sin(a) * (dial.r - 2.2), dial.y - Math.cos(a) * (dial.r - 2.2)], dial.top + 0.2, P);
 }
 
-function rearPoint(s: number): [number, number] {
-  let rest = s;
-  for (let i = 0; i < REAR_PATH.length - 1; i++) {
-    const [ax, ay] = REAR_PATH[i];
-    const [bx, by] = REAR_PATH[i + 1];
-    const length = Math.hypot(bx - ax, by - ay);
-    if (rest <= length) return [ax + ((bx - ax) * rest) / length, ay + ((by - ay) * rest) / length];
-    rest -= length;
-  }
-  return REAR_PATH[REAR_PATH.length - 1];
+function probeSvg(y: number, tip: number) {
+  return cyl(REVIEW_X, y, 0.9, tip + 2.4, PORTAL.z0, { crease: 'none' }, 12) + cyl(REVIEW_X, y, 2, tip, tip + 2.4, { tone: 'hi' }, 16);
 }
 
-const REAR_LENGTH = REAR_PATH.slice(1).reduce((sum, point, i) => sum + Math.hypot(point[0] - REAR_PATH[i][0], point[1] - REAR_PATH[i][1]), 0);
-const PUSHED = 22;
+function ramSvg(x: number, y: number, bottom: number) {
+  return cyl(x, y, 2.4, bottom + 6, 66, { crease: 'none' }, 14) + box(x - 9, y - 9, x + 9, y + 9, bottom, bottom + 6, { tone: 'mid' }, 1, 0.5);
+}
+
+function rigSvg(x: number, y: number, hook: number) {
+  const carriage = box(x - 6, y - 4, x + 6, y + 4, RAIL_Z - 6, RAIL_Z, {}, 0.8, 0.4);
+  const rope = k.lineSvg(k.segment([x, y, RAIL_Z - 6], [x, y, hook + 3], P), { tone: 'mid' });
+  const hookBar = box(x - 7, y - 1, x + 7, y + 1, hook, hook + 3, { tone: 'lo' }, 0.3);
+  return carriage + rope + hookBar;
+}
 
 export interface FactoryHandles {
   stage: HTMLElement;
@@ -179,16 +135,17 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   if (!svg) return () => undefined;
   const part = (name: string) => svg.querySelector(`[data-part="${name}"]`) as SVGGElement;
   const lamp = (name: string) => svg.querySelector(`[data-lamp="${name}"]`) as SVGGElement | null;
-  const layers = { rear: part('rear-items'), front: part('items'), bin: part('bin'), links: part('links'), pulses: part('pulses') };
-  const devEl = part('dev');
-  const trolleyEl = part('trolley');
-  const scannerEl = part('scanner');
-  const probeEl = part('probe');
-  const divertEl = part('divert');
-  const needleEl = part('needle');
+  const laneItems = [part('items-0'), part('items-1'), part('items-2')];
+  const gaps = [part('gap-1'), part('gap-2')];
+  const intakes = [part('intake-0'), part('intake-1'), part('intake-2')];
+  const probes = [part('probe-0'), part('probe-1'), part('probe-2')];
+  const needles = [part('needle-0'), part('needle-1'), part('needle-2')];
+  const hoistEls = [part('hoist-0'), part('hoist-1'), part('hoist-2')];
+  const slats = [part('belt-0'), part('belt-1'), part('belt-2')];
+  const ramEl = part('ram');
+  const linksEl = part('links');
+  const pulsesEl = part('pulses');
   const evalNeedleEl = part('eval-needle');
-  const slatsFront = part('slats-front');
-  const slatsRear = part('slats-rear');
   const cases = Array.from(svg.querySelectorAll<SVGGElement>('[data-case]'));
   const pegs = Array.from(svg.querySelectorAll<SVGGElement>('[data-peg]'));
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -196,60 +153,51 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const CARD = cardSvg();
   const BOX = boxSvg();
 
-  // Moving machine parts that share the item layer, sorted by depth with it.
-  const pusher = document.createElementNS(SVG_NS, 'g');
   const blade = document.createElementNS(SVG_NS, 'g');
-  blade.innerHTML = box(STATION.gate + 9.8, -11, STATION.gate + 12.2, 11, 24.6, 44, { tone: 'mid' }, 0.4, 0.3);
-  layers.front.appendChild(pusher);
-  layers.front.appendChild(blade);
+  blade.innerHTML = box(GATE_X - 1.2, TRUNK_Y - 11, GATE_X + 1.2, TRUNK_Y + 11, 24.6, 44, { tone: 'mid' }, 0.4, 0.3);
+  laneItems[1].appendChild(blade);
+
+  // Each lane's hoist: a carriage on the overhead rail, its rope and hook,
+  // and the PR it is carrying back.
+  const rigs = LANES.map((_, lane) => {
+    const rig = document.createElementNS(SVG_NS, 'g');
+    const cargo = document.createElementNS(SVG_NS, 'g');
+    hoistEls[lane].appendChild(rig);
+    hoistEls[lane].appendChild(cargo);
+    return { el: rig, cargo, x: HOIST_X, hook: RAIL_Z - 14, key: '', item: null as Item | null };
+  });
 
   const items: Item[] = [];
   let serial = 0;
   let clock = 0;
-  let spawnWait = 0;
+  const spawnWait = [0, 1.4, 2.6];
   let tracked: Item | null = null;
   let trackWait = 0;
   let merged = 0;
   let deployed = 0;
   let reviewsDone = 0;
-  let rejectedCount = 0;
-  let binCount = 0;
-  let mergeLock: Item | null = null;
+  let returned = 0;
   let gateOpen = 0;
-  let verdict: { kind: 'approve' | 'changes'; t: number } | null = null;
-  let beacon = { t: 99 };
-  let rejectPush = { t: 99 };
-  let divertPush = { t: 99 };
-  type Phase = 'idle' | 'grab' | 'lift' | 'work' | 'hold' | 'lower' | 'rise';
-  const stations = DEV_X.map((x, agent) => {
-    const group = document.createElementNS(SVG_NS, 'g');
-    const back = document.createElementNS(SVG_NS, 'g');
-    const slot = document.createElementNS(SVG_NS, 'g');
-    const front = document.createElementNS(SVG_NS, 'g');
-    group.appendChild(back);
-    group.appendChild(slot);
-    group.appendChild(front);
-    devEl.appendChild(group);
-    return { x, agent, item: null as Item | null, phase: 'idle' as Phase, t: 0, grip: HEAD_REST, fixing: false, key: '', back, slot, front };
-  });
-  const trolley = { x: TROLLEY.x0 + 8, tip: TROLLEY.z - 8, key: '' };
-  let scanDrop = 0;
-  let probeTip = PROBE.rest;
-  let dialTurn = 0;
-  let dialTarget = 0;
+  let beacon = 99;
+  const probeTip = [44, 44, 44];
+  const dialTurn = [0, 0, 0];
+  const dialTarget = [0, 0, 0];
+  const verdict: Array<{ kind: 'approve' | 'changes'; t: number } | null> = [null, null, null];
+  let ramBottom = 52;
   const pulses: Array<{ from: number; to: number; t: number; el: SVGCircleElement }> = [];
-  let lastPusherKey = '';
-  let lastDivertKey = '';
-  let lastScanKey = '';
-  let lastProbeKey = '';
-  let lastBinKey = -1;
+  const keys = { probe: ['', '', ''], ram: '' };
   let lastText = '';
   let lastStats = '';
 
+  const onBelt = (item: Item) => item.path === 'belt' || item.path === 'trunk';
+  // The next item ahead on the same stretch of belt. Lane 1 feeds the trunk
+  // directly, so its items see the trunk ahead of them.
   const ahead = (item: Item) => {
     let best: Item | null = null;
     for (const other of items) {
-      if (other === item || other.lane !== 'front' || other.done) continue;
+      if (other === item || other.done || !onBelt(other)) continue;
+      const sameStretch = item.path === 'trunk' ? other.path === 'trunk' : other.lane === item.lane && other.path === 'belt' || (item.lane === 1 && other.path === 'trunk');
+      if (!sameStretch) continue;
       if (other.x > item.x && (!best || other.x < best.x)) best = other;
     }
     return best;
@@ -260,43 +208,35 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     const el = document.createElementNS(SVG_NS, 'circle');
     el.setAttribute('class', 'fx-pulse');
     el.setAttribute('r', '1.6');
-    layers.pulses.appendChild(el);
+    pulsesEl.appendChild(el);
     pulses.push({ from, to, t: 0, el });
   }
 
-  function spawn() {
+  function spawn(lane: LaneIndex) {
     const id = serial++;
-    const usertold = id % 3 !== 1;
-    const name = usertold ? `USE-${1640 + Math.floor(id * 0.7) * 3 + (id % 2)}` : `FX-${352 + id}`;
+    const name = lane === 0 ? `USE-${1640 + id * 3}` : lane === 1 ? `FX-${360 + id}` : `USE-${1641 + id * 3}`;
     const el = document.createElementNS(SVG_NS, 'g');
     el.setAttribute('class', 'fx-item');
     el.innerHTML = `<g data-k="card">${CARD}</g><g data-k="box" style="display:none">${BOX}</g>`;
-    const card = el.querySelector('[data-k="card"]') as SVGGElement;
-    const boxEl = el.querySelector('[data-k="box"]') as SVGGElement;
     const item: Item = {
       id,
       name,
-      agent: AGENT_OF[id % AGENT_OF.length],
+      lane,
+      path: 'drop',
+      stage: 'new',
       rounds: ROUNDS_OF[id % ROUNDS_OF.length],
       reviews: 0,
-      rejected: id % REJECT_EVERY === 3,
-      lane: 'drop',
-      stage: 'new',
-      s: 0,
-      x: STATION.spawn,
-      y: 0,
+      x: LANES[lane].intake,
+      y: LANES[lane].y,
       z: BELT_Z + 12,
       t: 0,
-      busy: false,
       morph: 0,
       ci: 0,
-      failOnce: FAILS_ONCE(id),
-      red: -1,
+      ciNeed: CI_OF[id % CI_OF.length],
       flag: false,
-      patched: false,
       el,
-      card,
-      box: boxEl,
+      card: el.querySelector('[data-k="card"]') as SVGGElement,
+      box: el.querySelector('[data-k="box"]') as SVGGElement,
       ciDot: el.querySelector('[data-ci]') as SVGElement,
       done: false,
     };
@@ -309,7 +249,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       event.preventDefault();
       follow(item);
     });
-    layers.front.appendChild(el);
+    intakes[lane].appendChild(el);
     items.push(item);
     if (!tracked) follow(item);
   }
@@ -324,308 +264,252 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
 
   function finish(item: Item) {
     item.done = true;
-    item.lane = 'gone';
+    item.path = 'gone';
     item.el.remove();
     items.splice(items.indexOf(item), 1);
   }
 
   function stopFor(item: Item): number {
+    if (item.path === 'trunk') return item.stage === 'merged' ? GONE_X + 40 : PADS[0];
     switch (item.stage) {
       case 'new':
-        return item.x <= STATION.triage + 0.01 ? STATION.triage : STATION.reject;
-      case 'rejected':
-        return STATION.reject;
-      case 'triaged':
-      case 'fixing': {
-        // Wait short of a busy station, so it can always lower its work back.
-        const station = stations[item.agent];
-        return station.phase === 'idle' || station.item === item ? station.x : station.x - GAP;
-      }
+      case 'fixing':
+        return LANES[item.lane].machine;
       case 'built':
-        return STATION.review;
+        return REVIEW_X;
       case 'changes':
-        return STATION.divert;
-      case 'approved':
-        return STATION.gate;
-      case 'merged':
-        return STATION.gone + 40;
+        return HOIST_X;
+      default:
+        return JOIN_X;
     }
   }
+
+  const junctionBusy = () =>
+    items.some((other) => other.path === 'cross' || (other.path === 'trunk' && other.x < JOIN_X + GAP));
 
   // Station work. Returns true while the item must stay put.
   function work(item: Item, dt: number): boolean {
     item.t += dt;
     const t = item.t;
-    if (item.stage === 'new' && Math.abs(item.x - STATION.triage) < 0.01) {
-      scanDrop = 6 * ease(t / 0.35) * (1 - ease((t - 1.0) / 0.35));
-      if (t < 1.4) return true;
-      item.stage = item.rejected ? 'rejected' : 'triaged';
+    const lane = item.lane;
+    if (item.path === 'belt' && (item.stage === 'new' || item.stage === 'fixing')) {
+      const length = item.stage === 'fixing' ? 1.8 : 2.8;
+      if (item.stage === 'new') item.morph = ease((t - length * 0.3) / (length * 0.4));
+      if (t < length) return true;
+      item.morph = 1;
+      item.flag = false;
+      item.stage = 'built';
       item.t = 0;
+      pulse(TAP[LANES[lane].key], TAP.review);
       return false;
     }
-    if (item.stage === 'rejected' && Math.abs(item.x - STATION.reject) < 0.01) {
-      if (t === dt) rejectPush = { t: 0 };
-      // The pusher crosses the belt, then the card drops into the bin.
-      item.y = Math.max(0, -13 + 25 * ease(t / 0.7) + 7);
-      if (t < 0.7) return true;
-      item.lane = 'reject';
-      item.s = item.y;
-      item.t = 0;
-      return false;
-    }
-    if ((item.stage === 'triaged' || item.stage === 'fixing') && Math.abs(item.x - stations[item.agent].x) < 0.01) {
-      const station = stations[item.agent];
-      if (station.phase !== 'idle') return true;
-      station.item = item;
-      station.fixing = item.stage === 'fixing';
-      station.phase = 'grab';
-      station.t = 0;
-      item.lane = 'lift';
-      item.t = 0;
-      return true;
-    }
-    if (item.stage === 'built' && Math.abs(item.x - STATION.review) < 0.01) {
+    if (item.path === 'belt' && item.stage === 'built') {
       const down = ease(t / 0.4);
-      const up = ease((t - 1.9) / 0.4);
-      probeTip = PROBE.rest - (PROBE.rest - (BELT_Z + BOX_H)) * (down - up);
+      const up = ease((t - 1.6) / 0.4);
+      probeTip[lane] = 44 - (44 - (BELT_Z + BOX_H)) * (down - up);
       const passing = item.reviews + 1 >= item.rounds;
-      dialTarget = t < 0.4 ? 0 : t < 1.6 ? 0.12 + 0.06 * Math.sin(t * 9) + 0.1 * (t - 0.4) : passing ? 0.86 : 0.34;
-      if (t < 2.3) return true;
+      dialTarget[lane] = t < 0.4 ? 0 : t < 1.4 ? 0.12 + 0.06 * Math.sin(t * 9) + 0.1 * (t - 0.4) : passing ? 0.86 : 0.34;
+      if (t < 2.0) return true;
       item.reviews += 1;
       reviewsDone += 1;
       item.stage = passing ? 'approved' : 'changes';
       item.flag = !passing;
-      verdict = { kind: passing ? 'approve' : 'changes', t: 0 };
-      dialTarget = 0;
+      verdict[lane] = { kind: passing ? 'approve' : 'changes', t: 0 };
+      dialTarget[lane] = 0;
       item.t = 0;
-      pulse(TAP.review, passing ? TAP.gate : TAP.dev);
+      pulse(TAP.review, passing ? TAP.queue : TAP[LANES[lane].key]);
       return false;
     }
-    if (item.stage === 'changes' && Math.abs(item.x - STATION.divert) < 0.01) {
-      if (t === dt && items.some((other) => other.lane === 'rear' && other.s < PUSHED + GAP)) {
-        item.t = 0;
-        return true;
-      }
-      if (t === dt) divertPush = { t: 0 };
-      const push = ease(clamp01((t - 0.25) / 0.6));
-      item.y = -PUSHED * push;
-      if (t < 0.85) return true;
-      item.lane = 'rear';
-      item.s = PUSHED;
+    if (item.path === 'belt' && item.stage === 'changes') {
+      const rig = rigs[lane];
+      if (rig.item) return true;
+      rig.item = item;
+      item.path = 'hoist';
       item.t = 0;
-      return false;
+      returned += 1;
+      return true;
     }
-    if (item.stage === 'approved' && Math.abs(item.x - STATION.gate) < 0.01) {
-      const mainClear = !items.some((other) => other !== item && other.stage === 'merged' && other.x < STATION.gate + GAP + 14);
-      if (item.ci < 1 || item.red >= 0 || !mainClear) return true;
+    if (item.path === 'belt' && item.stage === 'approved') {
+      const crossing = lane !== 1;
+      if (junctionBusy()) return true;
+      if (crossing && items.some((other) => other.lane === 1 && other.path === 'belt' && Math.abs(other.x - JOIN_X) < GAP)) return true;
+      item.path = crossing ? 'cross' : 'trunk';
+      item.t = 0;
+      return true;
+    }
+    if (item.path === 'trunk' && item.stage === 'approved') {
+      const mainClear = !items.some((other) => other !== item && other.stage === 'merged' && other.x < GATE_X + GAP + 10);
+      if (item.ci < 1 || !mainClear) return true;
       item.stage = 'merged';
       merged += 1;
       gateOpen = 1.1;
       item.t = 0;
-      pulse(TAP.gate, TAP.dock);
+      pulse(TAP.queue, TAP.dock);
       return false;
     }
     return false;
   }
 
-  function runStation(station: (typeof stations)[number], dt: number) {
-    const item = station.item;
-    station.t += dt;
-    const t = station.t;
-    const height = (subject: Item) => (subject.morph >= 0.5 ? BOX_H : CARD_H);
-    if (station.phase === 'idle' || !item) {
-      if (station.phase === 'rise') {
-        station.grip = station.grip + (HEAD_REST - station.grip) * (1 - Math.exp(-dt / 0.12));
-        if (t > 0.5) station.phase = 'idle';
+  function runRigs(dt: number) {
+    rigs.forEach((rig, lane) => {
+      const item = rig.item;
+      const rest = RAIL_Z - 14;
+      if (!item) {
+        rig.x += (HOIST_X - rig.x) * (1 - Math.exp(-dt / 0.3));
+        rig.hook += (rest - rig.hook) * (1 - Math.exp(-dt / 0.15));
+        return;
       }
-      return;
-    }
-    if (station.phase === 'grab') {
-      station.grip = HEAD_REST + (BELT_Z + height(item) - HEAD_REST) * ease(t / 0.45);
-      if (t >= 0.45) Object.assign(station, { phase: 'lift', t: 0 });
-    } else if (station.phase === 'lift') {
-      item.z = BELT_Z + (LIFT_Z - BELT_Z) * ease(t / 0.5);
-      station.grip = item.z + height(item);
-      if (t >= 0.5) Object.assign(station, { phase: 'work', t: 0 });
-    } else if (station.phase === 'work') {
-      const length = station.fixing ? 1.8 : 2.8;
-      if (!station.fixing) item.morph = ease((t - length * 0.25) / (length * 0.5));
-      item.z = LIFT_Z;
-      station.grip = item.z + height(item);
-      if (t >= length) {
-        item.morph = 1;
-        item.flag = false;
-        Object.assign(station, { phase: 'hold', t: 0 });
+      item.t += dt;
+      const t = item.t;
+      if (item.path === 'hoist') {
+        rig.x = HOIST_X;
+        if (t < 0.4) {
+          rig.hook = rest + (BELT_Z + BOX_H - rest) * ease(t / 0.4);
+        } else {
+          item.z = BELT_Z + (HANG_Z - BELT_Z) * ease((t - 0.4) / 0.6);
+          rig.hook = item.z + BOX_H;
+        }
+        if (t >= 1.0) {
+          item.path = 'return';
+          item.t = 0;
+        }
+      } else if (item.path === 'return') {
+        item.x = Math.max(dropX(item.lane), item.x - HOIST_SPEED * dt);
+        rig.x = item.x;
+        if (item.x <= dropX(item.lane)) {
+          item.path = 'lower';
+          item.t = -1;
+        }
+      } else if (item.path === 'lower') {
+        if (item.t < 0) {
+          // Wait for a clear stretch of belt under the hook.
+          const clear = !items.some((other) => other.lane === lane && other.path === 'belt' && Math.abs(other.x - item.x) < GAP);
+          item.t = clear ? 0 : -1;
+          return;
+        }
+        item.z = HANG_Z + (BELT_Z - HANG_Z) * ease(t / 0.6);
+        rig.hook = item.z + BOX_H;
+        if (t >= 0.6) {
+          item.z = BELT_Z;
+          item.path = 'belt';
+          item.stage = 'fixing';
+          item.t = 0;
+          rig.item = null;
+        }
       }
-    } else if (station.phase === 'hold') {
-      // Lower only into a clear stretch of belt; then hold the belt back.
-      const clear = !items.some((other) => other.lane === 'front' && Math.abs(other.x - station.x) < GAP);
-      if (clear) Object.assign(station, { phase: 'lower', t: 0 });
-    } else if (station.phase === 'lower') {
-      item.z = LIFT_Z + (BELT_Z - LIFT_Z) * ease(t / 0.5);
-      station.grip = item.z + BOX_H;
-      if (t >= 0.5) {
-        item.z = BELT_Z;
-        item.lane = 'front';
-        item.stage = 'built';
-        item.t = 0;
-        station.item = null;
-        Object.assign(station, { phase: 'rise', t: 0 });
-        pulse(TAP.dev, TAP.review);
-      }
-    }
+    });
   }
 
   function step(dt: number) {
     clock += dt;
-    spawnWait -= dt;
-    const active = items.filter((item) => !item.done && item.lane !== 'reject').length;
-    const hopperClear = !items.some((item) => (item.lane === 'front' || item.lane === 'drop') && item.x < STATION.spawn + GAP);
-    const upstream = items.filter((item) => (item.lane === 'front' || item.lane === 'drop') && (item.stage === 'new' || item.stage === 'triaged')).length;
-    if (spawnWait <= 0 && active < 9 && upstream < 3 && hopperClear) {
-      spawn();
-      spawnWait = 3.4;
-    }
+    // Each agent picks up work on its own clock.
+    LANES.forEach((laneInfo, index) => {
+      const lane = index as LaneIndex;
+      spawnWait[lane] -= dt;
+      const intakeClear = !items.some((item) => item.lane === lane && (item.path === 'belt' || item.path === 'drop') && item.x < laneInfo.intake + GAP);
+      const busy = items.filter((item) => item.lane === lane && item.path !== 'trunk' && item.path !== 'gone').length;
+      if (spawnWait[lane] <= 0 && intakeClear && busy < 4) {
+        spawn(lane);
+        spawnWait[lane] = SPAWN_EVERY[lane] + (serial % 3) * 0.7;
+      }
+    });
 
-    // Front belt, front to back so each item sees where the one ahead settled.
-    const front = items.filter((item) => item.lane === 'front' || item.lane === 'drop').sort((a, b) => b.x - a.x);
-    for (const item of front) {
-      if (item.lane === 'drop') {
+    const belts = items.filter((item) => item.path === 'belt' || item.path === 'trunk' || item.path === 'drop').sort((a, b) => b.x - a.x);
+    for (const item of belts) {
+      if (item.path === 'drop') {
         item.t += dt;
         item.z = BELT_Z + 12 * (1 - ease(item.t / 0.4));
         if (item.t >= 0.4) {
-          item.lane = 'front';
+          item.path = 'belt';
           item.z = BELT_Z;
           item.t = 0;
         }
         continue;
       }
-      if (item.stage === 'approved' && item.x > STATION.queueStart && item.ci < 1 && item.red < 0) {
-        item.ci = Math.min(1, item.ci + dt / 5.5);
-        if (item.ci >= 1 && item.failOnce) item.red = 0;
-      }
+      if (item.path === 'trunk' && item.stage === 'approved' && item.x > QUEUE_X && item.ci < 1) item.ci = Math.min(1, item.ci + dt / item.ciNeed);
       const stop = stopFor(item);
-      const atStop = Math.abs(item.x - stop) < 0.01;
-      if (atStop && work(item, dt)) continue;
+      if (Math.abs(item.x - stop) < 0.01 && work(item, dt)) continue;
+      if (item.path !== 'belt' && item.path !== 'trunk') continue;
       let limit = stopFor(item);
       const next = ahead(item);
       if (next) limit = Math.min(limit, next.x - GAP);
-      if (mergeLock && item.x < MERGE_X - 1) limit = Math.min(limit, MERGE_X - GAP);
-      for (const station of stations) {
-        if (station.phase === 'lower' && item.x < station.x - 1) limit = Math.min(limit, station.x - GAP);
-      }
+      // Hold back for a returned PR being set down ahead of the machine.
+      const rig = rigs[item.lane];
+      if (item.path === 'belt' && rig.item && rig.item.path === 'lower' && rig.item.t >= 0 && item.x < dropX(item.lane) - 1) limit = Math.min(limit, dropX(item.lane) - GAP);
+      // Lane 1 holds back while another lane crosses into the trunk.
+      if (item.path === 'belt' && item.lane === 1 && items.some((other) => other.path === 'cross') && item.x < JOIN_X - 1) limit = Math.min(limit, JOIN_X - GAP);
       if (limit > item.x) item.x = Math.min(limit, item.x + SPEED * dt);
-      if (item.stage === 'merged' && item.x >= STATION.gone) {
+      if (item.stage === 'merged' && item.x >= GONE_X) {
         deployed += 1;
-        beacon = { t: 0 };
+        beacon = 0;
         finish(item);
       }
     }
 
-    // The rework loop.
-    const rear = items.filter((item) => item.lane === 'rear').sort((a, b) => b.s - a.s);
-    for (let i = 0; i < rear.length; i++) {
-      const item = rear[i];
-      let limit = REAR_LENGTH;
-      if (i > 0) limit = Math.min(limit, rear[i - 1].s - GAP);
-      const entry = REAR_LENGTH - 14;
-      const beltClear = !items.some((other) => other.lane === 'front' && Math.abs(other.x - MERGE_X) < GAP);
-      if (mergeLock !== item && (!beltClear || mergeLock)) limit = Math.min(limit, entry);
-      if (item.s >= entry - 0.01 && limit > entry && !mergeLock) mergeLock = item;
-      if (limit > item.s) item.s = Math.min(limit, item.s + SPEED * dt);
-      [item.x, item.y] = rearPoint(item.s);
-      if (item.s >= REAR_LENGTH - 0.01) {
-        item.lane = 'front';
-        item.stage = 'fixing';
-        item.x = MERGE_X;
-        item.y = 0;
-        if (mergeLock === item) mergeLock = null;
+    // The collector: lanes 0 and 2 cross onto the trunk.
+    for (const item of items.filter((candidate) => candidate.path === 'cross')) {
+      const dir = Math.sign(TRUNK_Y - item.y);
+      item.y += dir * Math.min(Math.abs(TRUNK_Y - item.y), SPEED * dt);
+      if (Math.abs(item.y - TRUNK_Y) < 0.01) {
+        item.y = TRUNK_Y;
+        item.path = 'trunk';
+        item.t = 0;
       }
     }
 
-    // Rejected cards: lift over the rail, drop into the bin.
-    for (const item of items.filter((candidate) => candidate.lane === 'reject')) {
-      item.t += dt;
-      const t = clamp01(item.t / 0.6);
-      const lifted = BELT_Z + 1.6;
-      const landed = 1.4 + Math.min(binCount, 2) * CARD_H;
-      const fall = clamp01((t - 0.35) / 0.65);
-      item.y = item.s + (31 - item.s) * ease(t);
-      item.z = t < 0.35 ? BELT_Z + 1.6 * ease(t / 0.35) : lifted - (lifted - landed) * fall * fall;
-      if (item.t >= 0.6) {
-        rejectedCount += 1;
-        binCount = binCount >= 3 ? 1 : binCount + 1;
-        finish(item);
-      }
-    }
+    runRigs(dt);
 
-    // Machines.
-    for (const station of stations) runStation(station, dt);
-
-    // A red candidate: the trolley runs over, patches it, and it retests. Every
-    // candidate behind it was built on top of it, so they retest too.
-    const red = items.find((item) => item.red >= 0);
-    if (red) {
-      red.red += dt;
-      if (red.red >= 2.4) {
-        red.red = -1;
-        red.failOnce = false;
-        red.patched = true;
-        red.ci = 0;
-        for (const other of items) if (other !== red && other.stage === 'approved' && other.lane === 'front' && other.x < red.x && other.x > STATION.queueStart) other.ci = 0;
-        pulse(TAP.dev, TAP.gate);
+    // Machines and gauges.
+    const pressing = items.find((item) => item.lane === 2 && item.path === 'belt' && item.stage !== 'built' && Math.abs(item.x - LANES[2].machine) < 0.01 && (item.stage === 'new' || item.stage === 'fixing'));
+    const rest = 52;
+    if (pressing && !still.matches) {
+      const contact = BELT_Z + (pressing.morph >= 0.5 ? BOX_H : CARD_H);
+      const stroke = (1 - Math.cos(pressing.t * TAU * 1.1)) / 2;
+      ramBottom = rest - (rest - contact) * stroke;
+    } else ramBottom += (rest - ramBottom) * (1 - Math.exp(-dt / 0.12));
+    LANES.forEach((_, lane) => {
+      const reviewing = items.some((item) => item.lane === lane && item.path === 'belt' && item.stage === 'built' && Math.abs(item.x - REVIEW_X) < 0.01);
+      if (!reviewing) {
+        probeTip[lane] += (44 - probeTip[lane]) * (1 - Math.exp(-dt / 0.12));
+        dialTarget[lane] = 0;
       }
-    }
-    const target = red ? red.x : TROLLEY.x0 + 8;
-    trolley.x += (target - trolley.x) * (1 - Math.exp(-dt / 0.25));
-    const dip = red ? ease((red.red - 0.9) / 0.4) * (1 - ease((red.red - 1.9) / 0.4)) : 0;
-    trolley.tip = TROLLEY.z - 8 - dip * (TROLLEY.z - 8 - (BELT_Z + BOX_H + 1));
-    if (!items.some((item) => item.lane === 'front' && Math.abs(item.x - STATION.triage) < 0.01 && item.stage === 'new')) scanDrop *= Math.exp(-dt / 0.1);
-    if (!items.some((item) => item.lane === 'front' && Math.abs(item.x - STATION.review) < 0.01 && item.stage === 'built')) {
-      probeTip += (PROBE.rest - probeTip) * (1 - Math.exp(-dt / 0.12));
-      dialTarget = 0;
-    }
-    dialTurn += (dialTarget - dialTurn) * (1 - Math.exp(-dt / 0.16));
-    rejectPush.t += dt;
-    divertPush.t += dt;
-    beacon.t += dt;
+      dialTurn[lane] += (dialTarget[lane] - dialTurn[lane]) * (1 - Math.exp(-dt / 0.16));
+      const v = verdict[lane];
+      if (v) v.t += dt;
+    });
+    beacon += dt;
     gateOpen = Math.max(0, gateOpen - dt);
-    if (verdict) verdict.t += dt;
     for (const p of pulses) p.t += dt;
 
     if (tracked && tracked.done) {
       trackWait += dt;
       if (trackWait > 1.4) {
-        const next = [...items].filter((item) => !item.done && item.lane !== 'reject').sort((a, b) => b.id - a.id)[0];
+        const next = [...items].sort((a, b) => b.id - a.id).find((item) => !item.done);
         if (next) follow(next);
       }
     }
   }
 
   function phaseOf(item: Item): string {
-    const agent = AGENTS[item.agent].label;
-    if (item.done) return item.stage === 'merged' ? 'deployed · stage → production' : 'needs input · back in Linear';
-    if (item.lane === 'drop') return 'filed in Linear';
-    if (item.lane === 'reject') return 'needs input · back in Linear';
-    if (item.lane === 'rear') return `changes requested · back to ${agent}`;
+    const agent = AGENTS[item.lane].label;
+    if (item.done) return 'deployed · stage → production';
+    if (item.path === 'drop') return `picked up · ${agent}`;
+    if (item.path === 'hoist' || item.path === 'return' || item.path === 'lower') return `changes requested · back to ${agent}`;
+    if (item.path === 'cross') return 'approved · joining the queue';
     const here = (x: number) => Math.abs(item.x - x) < 0.01;
     switch (item.stage) {
       case 'new':
-        return here(STATION.triage) ? 'triage · classifying the issue' : 'to triage';
-      case 'rejected':
-        return 'triage · needs input';
-      case 'triaged':
-        return item.lane === 'lift' ? `dev · ${agent}` : `delegated · ${agent}`;
+        return here(LANES[item.lane].machine) ? `coding · ${agent}` : `to ${agent}`;
       case 'fixing':
-        return item.lane === 'lift' ? `fixing review · ${agent}` : `review fix · ${agent}`;
+        return here(LANES[item.lane].machine) ? `fixing review · ${agent}` : `review fix · ${agent}`;
       case 'built':
-        return here(STATION.review) ? `review-quill · round ${item.reviews + 1}` : `PR opened · review requested`;
+        return here(REVIEW_X) ? `review-quill · round ${item.reviews + 1}` : 'PR opened · review requested';
       case 'changes':
         return `changes requested · round ${item.reviews}`;
       case 'approved':
-        if (item.x <= STATION.queueStart) return 'approved · to the merge queue';
-        if (item.red >= 0) return 'merge queue · candidate red · repairing';
-        return item.ci < 1 ? (item.patched ? 'merge queue · repaired · retesting' : 'merge queue · candidate CI running') : here(STATION.gate) ? 'merge queue · green, landing next' : 'merge queue · green, waiting';
+        if (item.path !== 'trunk') return 'approved · to the queue';
+        if (item.x <= QUEUE_X) return 'approved · joining the queue';
+        return item.ci < 1 ? 'merge queue · CI running' : here(PADS[0]) ? 'merge queue · green, landing' : 'merge queue · green, waiting';
       case 'merged':
         return 'main · fast-forwarded · deploying';
     }
@@ -639,129 +523,91 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     } else if (el.hasAttribute('data-on')) el.removeAttribute('data-on');
   }
 
+  function layerOf(item: Item): SVGGElement {
+    if (item.path === 'drop') return item.z > BELT_Z + 3 ? intakes[item.lane] : laneItems[item.lane];
+    if (item.path === 'hoist' || item.path === 'return' || item.path === 'lower') return rigs[item.lane].cargo;
+    if (item.path === 'cross') {
+      if (item.y < LANES[1].y - 11) return item.y < LANES[0].y + 11 ? laneItems[0] : gaps[0];
+      if (item.y > LANES[1].y + 11) return item.y > LANES[2].y - 11 ? laneItems[2] : gaps[1];
+      return laneItems[1];
+    }
+    if (item.path === 'trunk') return laneItems[1];
+    return laneItems[item.lane];
+  }
+
   function render() {
-    // Items.
-    const rearList: Item[] = [];
-    const frontList: Array<{ el: Element; key: number }> = [];
+    const groups = new Map<SVGGElement, Array<{ el: Element; key: number }>>();
     for (const item of items) {
-      const z = item.lane === 'drop' || item.lane === 'reject' || item.lane === 'lift' ? item.z : BELT_Z;
-      item.el.setAttribute('transform', k.translateAlong(P, [item.x, item.y, z]));
+      item.el.setAttribute('transform', k.translateAlong(P, [item.x, item.y, item.z]));
       const morph = item.morph;
       item.card.style.display = morph >= 1 ? 'none' : '';
       item.box.style.display = morph <= 0 ? 'none' : '';
       item.card.style.opacity = morph > 0 && morph < 1 ? String(1 - morph) : '';
       item.box.style.opacity = morph > 0 && morph < 1 ? String(morph) : '';
-      item.ciDot.setAttribute('data-state', item.red >= 0 ? 'red' : item.stage === 'merged' || item.ci >= 1 ? 'green' : item.ci > 0 ? 'running' : 'none');
+      item.ciDot.setAttribute('data-state', item.stage === 'merged' || item.ci >= 1 ? 'green' : item.ci > 0 ? 'running' : 'none');
       item.el.toggleAttribute('data-flag', item.flag);
-      item.el.toggleAttribute('data-patched', item.patched);
-      if (item.lane === 'lift') {
-        const slot = stations[item.agent].slot;
-        if (item.el.parentNode !== slot) slot.appendChild(item.el);
-        continue;
-      }
-      if (item.lane === 'reject' && item.y > 14) {
-        if (item.el.parentNode !== layers.bin) layers.bin.appendChild(item.el);
-      } else if (item.y < -13) rearList.push(item);
-      else frontList.push({ el: item.el, key: depth(item.x, item.y) });
+      const layer = layerOf(item);
+      if (!groups.has(layer)) groups.set(layer, []);
+      groups.get(layer)?.push({ el: item.el, key: depth(item.x, item.y) });
     }
-    rearList.sort((a, b) => depth(a.x, a.y) - depth(b.x, b.y));
-    for (const item of rearList) if (layers.rear.lastChild !== item.el) layers.rear.appendChild(item.el);
-
-    const pushOut = rejectPush.t < 0.7 ? ease(rejectPush.t / 0.7) : 1 - ease((rejectPush.t - 0.75) / 0.5);
-    const plateY = -13 + 25 * pushOut;
-    const pusherKey = plateY.toFixed(2);
-    if (pusherKey !== lastPusherKey) {
-      lastPusherKey = pusherKey;
-      pusher.innerHTML = box(STATION.reject - 1.2, -15, STATION.reject + 1.2, plateY - 1, 26.4, 28.6, { crease: 'none' }, 0.4) + box(STATION.reject - 7, plateY - 1, STATION.reject + 7, plateY + 1, 25.2, 30.5, { tone: 'mid' }, 0.4, 0.3);
-    }
-    frontList.push({ el: pusher, key: depth(STATION.reject, plateY - 2) });
     blade.setAttribute('transform', k.translateAlong(P, [0, 0, 20 * ease(Math.min(1, gateOpen * 3, (1.1 - gateOpen) * 4 + 0.001))]));
-    frontList.push({ el: blade, key: depth(STATION.gate + 11, 0) });
-    frontList.sort((a, b) => a.key - b.key);
-    const current = Array.from(layers.front.children);
-    if (frontList.some((entry, i) => current[i] !== entry.el)) for (const entry of frontList) layers.front.appendChild(entry.el);
+    const trunk = groups.get(laneItems[1]) ?? [];
+    trunk.push({ el: blade, key: depth(GATE_X, TRUNK_Y) });
+    groups.set(laneItems[1], trunk);
+    for (const [layer, list] of groups) {
+      list.sort((a, b) => a.key - b.key);
+      const children = Array.from(layer.children).filter((child) => list.some((entry) => entry.el === child));
+      if (children.length !== list.length || list.some((entry, i) => children[i] !== entry.el)) for (const entry of list) layer.appendChild(entry.el);
+    }
 
-    // Links: speculative candidates are dotted to the item ahead, main is solid.
-    const chain = items.filter((item) => item.lane === 'front' && item.x > STATION.queueStart - 4 && (item.stage === 'approved' || item.stage === 'merged')).sort((a, b) => a.x - b.x);
+    // Links on the trunk: queued candidates dotted to the one ahead, main solid.
+    const chain = items.filter((item) => item.path === 'trunk' && item.x > QUEUE_X - 4).sort((a, b) => a.x - b.x);
     let links = '';
     for (let i = 0; i < chain.length - 1; i++) {
       const a = chain[i];
       const b = chain[i + 1];
-      if (b.x > STATION.gone - 30) continue;
+      if (b.x > GONE_X - 30) continue;
       const solid = a.stage === 'merged';
-      const from = at([a.x + 8, a.y, BELT_Z + 5]);
-      const to = at([b.x - 8, b.y, BELT_Z + 5]);
-      links += k.wireSvg(from, to, { tone: solid ? 'hi' : 'mid', dotted: !solid, size: 0.9 });
+      links += k.wireSvg(at([a.x + 8, a.y, BELT_Z + 5]), at([b.x - 8, b.y, BELT_Z + 5]), { tone: solid ? 'hi' : 'mid', dotted: !solid, size: 0.9 });
     }
-    if (chain.length && chain[chain.length - 1].stage === 'approved') {
-      // The front candidate links to wherever main currently ends: the gate.
-      const head = chain[chain.length - 1];
-      links += k.wireSvg(at([head.x + 8, head.y, BELT_Z + 5]), at([STATION.gate + 9.6, 0, BELT_Z + 5]), { tone: 'mid', dotted: true, size: 0.9 });
-    }
-    if (layers.links.innerHTML !== links) layers.links.innerHTML = links;
+    if (linksEl.innerHTML !== links) linksEl.innerHTML = links;
 
-    // Machines.
-    for (const station of stations) {
-      const key = `${station.grip.toFixed(2)}:${station.item ? station.item.id : '-'}`;
-      if (key !== station.key) {
-        station.key = key;
-        station.back.innerHTML = headBack(station.x, station.grip);
-        station.front.innerHTML = headFront(station.agent, station.x, station.grip);
+    // Rigs, probes, the press.
+    rigs.forEach((rig, lane) => {
+      const key = `${rig.x.toFixed(1)}:${rig.hook.toFixed(1)}`;
+      if (key !== rig.key) {
+        rig.key = key;
+        rig.el.innerHTML = rigSvg(rig.x, LANES[lane].y, rig.hook);
       }
-      station.front.toggleAttribute('data-working', station.phase === 'work');
-    }
-    const trolleyKey = `${trolley.x.toFixed(1)}:${trolley.tip.toFixed(1)}`;
-    if (trolleyKey !== trolley.key) {
-      trolley.key = trolleyKey;
-      trolleyEl.innerHTML = trolleySvg(trolley.x, trolley.tip);
-    }
-    const scanKey = scanDrop.toFixed(2);
-    if (scanKey !== lastScanKey) {
-      lastScanKey = scanKey;
-      scannerEl.innerHTML = scannerSvg(scanDrop);
-    }
-    const probeKey = probeTip.toFixed(2);
-    if (probeKey !== lastProbeKey) {
-      lastProbeKey = probeKey;
-      probeEl.innerHTML = probeSvg(probeTip);
-    }
-    needleEl.setAttribute('d', needleD(DIAL, dialTurn));
-    const divertOut = divertPush.t < 0.85 ? ease(clamp01((divertPush.t - 0.25) / 0.6)) : 1 - ease((divertPush.t - 0.9) / 0.6);
-    const plate = 15 - (PUSHED + 7) * divertOut;
-    const divertKey = plate.toFixed(2);
-    if (divertKey !== lastDivertKey) {
-      lastDivertKey = divertKey;
-      divertEl.innerHTML = box(STATION.divert - 1.4, plate + 1, STATION.divert + 1.4, 17, 29.4, 32, { crease: 'none' }, 0.4) + box(STATION.divert - 8, plate - 1, STATION.divert + 8, plate + 1, 26.4, 35, { tone: 'mid' }, 0.4, 0.3);
-    }
-    if (binCount !== lastBinKey) {
-      lastBinKey = binCount;
-      const stack: string[] = [];
-      for (let i = 0; i < binCount; i++) stack.push(`<g transform="${k.translateAlong(P, [146 + (i % 2) * 1.5, 31 - i, 1.4 + i * CARD_H])}">${CARD}</g>`);
-      const flying = Array.from(layers.bin.querySelectorAll('.fx-item'));
-      layers.bin.innerHTML = stack.join('');
-      for (const el of flying) layers.bin.appendChild(el);
-    }
-
-    // Lamps.
-    const triaging = items.some((item) => item.lane === 'front' && item.stage === 'new' && Math.abs(item.x - STATION.triage) < 0.01);
-    setLamp('triage', triaging ? 'lit' : null);
-    setLamp('verdict', verdict && verdict.t < 1.6 ? (verdict.kind === 'approve' ? 'lit' : 'red') : null);
-    const atGate = items.find((item) => item.lane === 'front' && item.stage === 'approved' && Math.abs(item.x - STATION.gate) < 0.01);
-    setLamp('approved', atGate ? 'lit' : null);
-    setLamp('ci', atGate && atGate.ci >= 1 && atGate.red < 0 ? 'green' : null);
-    PADS.forEach((x, index) => {
-      const on = items.find((item) => item.lane === 'front' && item.stage === 'approved' && Math.abs(item.x - x) < 1);
-      setLamp(`pad${index}`, !on ? null : on.red >= 0 ? 'red' : on.ci >= 1 ? 'green' : 'blink');
+      const probeKey = probeTip[lane].toFixed(2);
+      if (probeKey !== keys.probe[lane]) {
+        keys.probe[lane] = probeKey;
+        probes[lane].innerHTML = probeSvg(LANES[lane].y, probeTip[lane]);
+      }
+      needles[lane].setAttribute('d', needleD({ x: REVIEW_X, y: LANES[lane].y - 6, r: 7.2, top: PORTAL.z1 + 4 }, dialTurn[lane]));
+      const v = verdict[lane];
+      setLamp(`verdict${lane}`, v && v.t < 1.6 ? (v.kind === 'approve' ? 'lit' : 'red') : null);
+      const working = items.some((item) => item.lane === lane && item.path === 'belt' && (item.stage === 'new' || item.stage === 'fixing') && Math.abs(item.x - LANES[lane].machine) < 0.01);
+      setLamp(`m${lane}`, working ? 'lit' : null);
     });
-    setLamp('stage', beacon.t < 0.9 ? 'lit' : null);
-    setLamp('production', beacon.t > 0.6 && beacon.t < 1.7 ? 'lit' : null);
+    const ramKey = ramBottom.toFixed(2);
+    if (ramKey !== keys.ram) {
+      keys.ram = ramKey;
+      ramEl.innerHTML = ramSvg(LANES[2].machine, LANES[2].y, ramBottom);
+    }
 
-    // Bus pulses.
+    PADS.forEach((x, index) => {
+      const on = items.find((item) => item.path === 'trunk' && item.stage === 'approved' && Math.abs(item.x - x) < 1);
+      setLamp(`pad${index}`, !on ? null : on.ci >= 1 ? 'green' : 'blink');
+    });
+    setLamp('stage', beacon < 0.9 ? 'lit' : null);
+    setLamp('production', beacon > 0.6 && beacon < 1.7 ? 'lit' : null);
+
     for (let i = pulses.length - 1; i >= 0; i--) {
       const p = pulses[i];
       const span = Math.abs(p.to - p.from);
       const t = clamp01((p.t * 340) / Math.max(span, 1));
-      const [x, y] = at([p.from + (p.to - p.from) * ease(t), BUS.y1 + 0.2, 126]);
+      const [x, y] = at([p.from + (p.to - p.from) * ease(t), BUS.y1 + 0.2, 136]);
       p.el.setAttribute('cx', x.toFixed(1));
       p.el.setAttribute('cy', y.toFixed(1));
       p.el.style.opacity = String(Math.min(1, (1 - t) * 6, p.t * 8));
@@ -771,39 +617,28 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
     }
 
-    // Belts.
     const travel = still.matches ? 0 : clock * SPEED;
-    slatsFront.setAttribute('transform', k.translateAlong(P, [travel % 8, 0, 0]));
-    slatsRear.setAttribute('transform', k.translateAlong(P, [-(travel % 8), 0, 0]));
+    for (const el of slats) el.setAttribute('transform', k.translateAlong(P, [travel % 8, 0, 0]));
 
-    // Eval bench: review-quill replays its eleven cases, the scenario pegs run.
     const caseAt = Math.floor(clock / 1.3) % 11;
     cases.forEach((el, i) => {
       const lifted = i === caseAt;
       if (lifted !== el.hasAttribute('data-on')) {
-        if (lifted) el.setAttribute('data-on', '');
-        else el.removeAttribute('data-on');
+        el.toggleAttribute('data-on', lifted);
         el.setAttribute('transform', lifted ? k.translateAlong(P, [0, 0, 2.4]) : '');
       }
     });
     const caseT = (clock % 1.3) / 1.3;
     evalNeedleEl.setAttribute('d', needleD(EVAL_DIAL, -0.375 + 0.75 * (0.15 + 0.7 * ease(caseT * 1.6) - 0.7 * ease((caseT - 0.75) * 4))));
     const pegAt = Math.floor(clock / 0.18) % 44;
-    pegs.forEach((el, i) => {
-      const on = i <= pegAt && pegAt < 34 + 6;
-      if (on !== el.hasAttribute('data-on')) {
-        if (on) el.setAttribute('data-on', '');
-        else el.removeAttribute('data-on');
-      }
-    });
+    pegs.forEach((el, i) => el.toggleAttribute('data-on', i <= pegAt && pegAt < 40));
 
-    // Readout and counters.
     const text = tracked ? `${tracked.name} · ${phaseOf(tracked)}` : 'warming up';
     if (readout && text !== lastText) {
       lastText = text;
       readout.textContent = text;
     }
-    const statsText = `${merged} merged · ${deployed} deployed · ${reviewsDone} reviews · ${rejectedCount} back to Linear`;
+    const statsText = `${merged} merged · ${deployed} deployed · ${reviewsDone} reviews · ${returned} sent back`;
     if (stats && statsText !== lastStats) {
       lastStats = statsText;
       stats.textContent = statsText;
@@ -811,7 +646,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }
 
   // Warm the line up so the first frame is already busy.
-  for (let i = 0; i < 26 * 30; i++) step(1 / 30);
+  for (let i = 0; i < 30 * 30; i++) step(1 / 30);
   render();
 
   let frame = 0;
@@ -854,9 +689,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     still.removeEventListener('change', onMotion);
     if (frame) cancelAnimationFrame(frame);
     while (items.length) finish(items[0]);
-    pusher.remove();
     blade.remove();
+    rigs.forEach((rig) => { rig.el.remove(); rig.cargo.remove(); });
     for (const p of pulses) p.el.remove();
   };
 }
-
