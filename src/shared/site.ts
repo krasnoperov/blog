@@ -11,7 +11,7 @@ export const SITE_LOCALE = 'en_US';
 export const SITE_DESCRIPTION =
   "I build what I need, and agents run it: Learn, Speak, Repeat!, UserTold, MakeFX, and FellowMakers. Notes on building agent-native products and bringing them to people.";
 export const HOME_DESCRIPTION =
-  'The software factory behind UserTold and MakeFX: patchrelay, Claude Code and Codex each work their own line, review-quill reviews each pull request, and merge-steward merges them into one queue, with GitHub as the bus.';
+  'The software factory behind everything I build, from UserTold and MakeFX to Learn, Speak, Repeat: patchrelay, Claude Code and Codex each work their own line, review-quill reviews each pull request, and merge-steward merges them into one queue, with GitHub as the bus.';
 export const SITE_ORIGIN = 'https://krasnoperov.me';
 export const SITE_FEED_PATH = '/feed.xml';
 

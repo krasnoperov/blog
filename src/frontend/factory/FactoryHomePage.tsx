@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from '../components/Link';
 import { FactoryFigure } from './FactoryFigure';
+import { FactoryLine } from './FactoryLine';
 import styles from './FactoryHomePage.module.css';
 
 const REPO = 'https://github.com/krasnoperov/patchrelay';
@@ -119,32 +120,6 @@ const STATIONS: Station[] = [
   },
 ];
 
-const PROJECTS = [
-  {
-    name: 'UserTold',
-    href: 'https://usertold.ai',
-    host: 'usertold.ai',
-    line: 'AI-led user interviews and usability research.',
-    numbers: [
-      ['1,564', 'merged PRs since March'],
-      ['498', 'by patchrelay'],
-      ['1,379', 'reviewed by review-quill'],
-      ['10', 'speculative depth'],
-    ],
-  },
-  {
-    name: 'MakeFX',
-    href: 'https://makefx.app',
-    host: 'makefx.app',
-    line: 'Images, video and audio, made by an agent.',
-    numbers: [
-      ['290', 'merged PRs since September'],
-      ['74', 'by patchrelay'],
-      ['289', 'reviewed by review-quill'],
-      ['3', 'speculative depth'],
-    ],
-  },
-] as const;
 
 function Outbound({ href, children }: { href: string; children: ReactNode }) {
   if (href.startsWith('/')) return <Link to={href} className={styles.link}>{children}</Link>;
@@ -169,7 +144,7 @@ export default function FactoryHomePage() {
           <p className={styles.eyebrow}>Aleksei Krasnoperov · October 2026</p>
           <h1 className={styles.headline}>The software factory behind my products</h1>
           <p className={styles.lede}>
-            UserTold and MakeFX ship through one factory. Each agent works its own line: patchrelay from
+            Everything I build ships through one factory: seven live products and the factory itself. Each agent works its own line: patchrelay from
             Linear, Claude Code and Codex from sessions I start. Every pull request now goes through review-quill,
             and merge-steward merges all of them into one queue. The figure below is a simulation, not a live feed.
           </p>
@@ -238,26 +213,8 @@ export default function FactoryHomePage() {
 
         <section className={styles.projects} aria-labelledby="projects-title">
           <h2 id="projects-title" className={styles.sectionTitle}>Running on the line</h2>
-          <div className={styles.projectGrid}>
-            {PROJECTS.map((project) => (
-              <article key={project.name} className={styles.project}>
-                <header className={styles.projectHead}>
-                  <h3 className={styles.projectName}>{project.name}</h3>
-                  <a href={project.href} className={styles.link} rel="noreferrer">{project.host}</a>
-                </header>
-                <p className={styles.projectLine}>{project.line}</p>
-                <dl className={styles.numbers}>
-                  {project.numbers.map(([value, label]) => (
-                    <div key={label} className={styles.number}>
-                      <dt>{label}</dt>
-                      <dd>{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </article>
-            ))}
-          </div>
-          <p className={styles.footnote}>Counts from GitHub on October 17, 2026.</p>
+          <FactoryLine />
+          <p className={styles.footnote}>Counts from GitHub and from review-quill’s and merge-steward’s own records, October 17, 2026.</p>
         </section>
       </main>
 

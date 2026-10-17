@@ -1,0 +1,161 @@
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px 20px;
+  margin: 0 0 28px;
+}
+
+.number {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.number dt {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--anatomy-muted);
+}
+
+.number dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  color: var(--anatomy-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.chartFigure {
+  margin: 0 0 20px;
+  padding: 20px 20px 14px;
+  background: var(--anatomy-card);
+  box-shadow: 0 0 0 1px var(--anatomy-faint);
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.axis {
+  stroke: var(--anatomy-faint);
+  stroke-width: 1;
+}
+
+.mine { fill: var(--anatomy-faint); }
+.patchrelay { fill: var(--anatomy-mid); }
+.sessions { fill: var(--anatomy-hi); }
+
+.total,
+.month {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-anchor: middle;
+}
+
+.total { fill: var(--anatomy-text); }
+.month { fill: var(--anatomy-muted); }
+
+.keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--anatomy-muted);
+}
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.swatch.mine { background: var(--anatomy-faint); }
+.swatch.patchrelay { background: var(--anatomy-mid); }
+.swatch.sessions { background: var(--anatomy-hi); }
+
+.note {
+  max-width: 68ch;
+  margin: 0 0 28px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--anatomy-text);
+}
+
+.products {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--anatomy-faint);
+  box-shadow: 0 0 0 1px var(--anatomy-faint);
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 18px;
+  background: var(--anatomy-card);
+}
+
+.productHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.productName {
+  color: var(--anatomy-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.productName:hover { text-decoration: underline; }
+
+.status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--anatomy-muted);
+}
+
+.line {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--anatomy-text);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--anatomy-muted);
+}
+
+@media (max-width: 860px) {
+  .numbers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 560px) {
+  .products { grid-template-columns: minmax(0, 1fr); }
+  .chartFigure { padding: 14px 10px 10px; }
+}
