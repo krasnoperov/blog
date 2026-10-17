@@ -1,13 +1,12 @@
 import styles from './FactoryLine.module.css';
 
-// What runs on the line: numbers for the whole factory (people and agents,
-// not the handful of bot PRs), merged pull requests
+// What runs on the line: numbers for the whole factory, merged pull requests
 // per month by who wrote them, and every product it has built. Counts come
 // from GitHub and the review-quill and merge-steward databases on
 // October 17, 2026.
 
 const NUMBERS = [
-  ['6,841', 'pull requests merged since March by people and agents, across 11 repositories'],
+  ['6,863', 'pull requests merged across 11 repositories, the products below added up'],
   ['83%', 'of them reviewed by review-quill and landed by merge-steward'],
   ['14,284', 'review passes; about half asked for changes'],
   ['96%', 'written by agents in the last 30 days'],
@@ -103,6 +102,7 @@ export function FactoryLine() {
           {SERIES.map((s) => (
             <span key={s.key} className={styles.key}><span className={`${styles.swatch} ${styles[s.key]}`} />{s.label}</span>
           ))}
+          <span className={styles.scope}>6,841 merged since March by people and agents; 14 bot PRs and 8 from 2025 are left out.</span>
         </figcaption>
       </figure>
       <p className={styles.note}>

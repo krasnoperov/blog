@@ -73,6 +73,11 @@
   gap: 7px;
 }
 
+.scope {
+  flex-basis: 100%;
+  font-size: 12px;
+}
+
 .swatch {
   display: inline-block;
   width: 10px;
