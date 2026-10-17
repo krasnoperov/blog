@@ -162,6 +162,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }));
   let lastSlatPhase = -1;
   const ramEl = part('ram');
+  const screens = [0, 1, 2].map((lane) => svg.querySelector(`[data-screen="m${lane}"]`));
   const linksEl = part('links');
   const pulsesEl = part('pulses');
   const evalNeedleEl = part('eval-needle');
@@ -658,6 +659,9 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       setLamp(`verdict${lane}`, v && v.t < 1.6 ? (v.kind === 'approve' ? 'lit' : 'red') : null);
       const working = items.some((item) => item.lane === lane && item.path === 'belt' && (item.stage === 'new' || item.stage === 'fixing') && Math.abs(item.x - LANES[lane].machine) < 0.01);
       setLamp(`m${lane}`, working ? 'lit' : null);
+      // The machine's screen wakes while it works.
+      const screen = screens[lane];
+      if (screen && screen.hasAttribute('data-on') !== working) screen.toggleAttribute('data-on', working);
     });
     const ramKey = ramBottom.toFixed(2);
     if (ramKey !== keys.ram) {

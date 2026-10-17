@@ -234,6 +234,56 @@ function curvePieces(lane: LaneIndex, from: number, to: number) {
   return out;
 }
 
+// Screens and trims that nod to the tools each line runs. No logos: only
+// the motifs (a terminal prompt, an app window with a diff, an issue list)
+// and each tool's accent colour.
+const faceQuad = (y: number, x0: number, x1: number, z0: number, z1: number) =>
+  k.pathOf([at([x0, y, z0]), at([x1, y, z0]), at([x1, y, z1]), at([x0, y, z1])], true);
+const faceLine = (y: number, x0: number, x1: number, z: number) => k.segment([x0, y, z], [x1, y, z], P);
+const engrave = (x: number, y: number, z: number, text: string, size = 4.2) =>
+  k.faceTextSvg(k.sideMatrix([x, y], z, P, 'left'), text, { size, tone: 'mid' });
+
+// A terminal: dark glass, output lines, a prompt and a block cursor.
+function terminalScreen(y: number, x0: number, x1: number, z0: number, z1: number, name: string, rows = 5) {
+  const out = [`<path class="fx-screen" d="${faceQuad(y, x0, x1, z0, z1)}"/>`];
+  const lines: string[] = [];
+  const step = (z1 - z0 - 6) / rows;
+  const widths = [0.7, 0.45, 0.82, 0.3, 0.6, 0.5];
+  for (let i = 0; i < rows - 1; i++) {
+    const z = z1 - 4 - i * step;
+    lines.push(faceLine(y, x0 + 3, x0 + 3 + (x1 - x0 - 6) * widths[i % widths.length], z));
+  }
+  out.push(`<path class="fx-screen-line" d="${lines.join('')}"/>`);
+  const zp = z0 + 3.5;
+  out.push(`<path class="fx-screen-prompt" d="${k.segment([x0 + 3, y, zp + 1.2], [x0 + 4.6, y, zp], P)}${k.segment([x0 + 4.6, y, zp], [x0 + 3, y, zp - 1.2], P)}"/>`);
+  out.push(`<path class="fx-cursor" d="${faceQuad(y, x0 + 6.4, x0 + 8.8, zp - 1.4, zp + 1.4)}"/>`);
+  return `<g data-screen="${name}">${out.join('')}</g>`;
+}
+
+// An app window: a title bar with three dots, a sidebar, and a diff.
+function windowScreen(y: number, x0: number, x1: number, z0: number, z1: number, name: string) {
+  const out = [`<path class="fx-screen fx-window" d="${faceQuad(y, x0, x1, z0, z1)}"/>`];
+  out.push(`<path class="fx-screen-line" d="${faceLine(y, x0, x1, z1 - 5)}${k.segment([x0 + 12, y, z1 - 5], [x0 + 12, y, z0], P)}"/>`);
+  out.push(k.dotsSvg([at([x0 + 3, y, z1 - 2.5]), at([x0 + 5.6, y, z1 - 2.5]), at([x0 + 8.2, y, z1 - 2.5])], { size: 0.8, tone: 'hi' }).replace('class="iso-dots"', 'class="iso-dots fx-window-dots"'));
+  const side: string[] = [];
+  for (let i = 0; i < 4; i++) side.push(faceLine(y, x0 + 2.5, x0 + 9.5 - (i % 2) * 2.5, z1 - 9 - i * 4));
+  out.push(`<path class="fx-screen-line" d="${side.join('')}"/>`);
+  const adds: string[] = [];
+  const dels: string[] = [];
+  const plain: string[] = [];
+  const pattern = ['plain', 'del', 'add', 'add', 'plain', 'del', 'add', 'plain'];
+  const widths = [0.8, 0.55, 0.7, 0.4, 0.62, 0.5, 0.75, 0.35];
+  for (let i = 0; i < pattern.length; i++) {
+    const z = z1 - 9 - i * 3.6;
+    if (z < z0 + 2.5) break;
+    const segment = faceLine(y, x0 + 15, x0 + 15 + (x1 - x0 - 18) * widths[i], z);
+    (pattern[i] === 'add' ? adds : pattern[i] === 'del' ? dels : plain).push(segment);
+  }
+  out.push(`<path class="fx-screen-line" d="${plain.join('')}"/>`, `<path class="fx-diff-add" d="${adds.join('')}"/>`, `<path class="fx-diff-del" d="${dels.join('')}"/>`);
+  return `<g data-screen="${name}">${out.join('')}</g>`;
+}
+
+// Intake for patchrelay: the Linear hopper, its face an issue list.
 function hopper(x: number, y: number) {
   const out: string[] = [];
   for (const dx of [-17, 17]) out.push(box(x + dx - 1.4, y - 18.4, x + dx + 1.4, y - 15.6, 0, 70, { crease: 'none' }, 0.4));
@@ -242,8 +292,21 @@ function hopper(x: number, y: number) {
   out.push(box(x - 12, y - 12, x + 12, y + 12, 50, 60, {}, 1, 0.5));
   out.push(box(x - 17, y - 17, x + 17, y + 17, 60, 70, {}, 1.2, 0.5));
   const body = plan(x - 20, y - 20, x + 20, y + 20, 1.6);
-  const ribs = [-12, -4, 4, 12].map((dx) => k.segment([x + dx, y + 20, 70], [x + dx, y + 20, 88], P)).join('');
-  out.push(S(k.slabOf(body, 70, 30, P, 4, 0.8), { tone: 'mid', inner: L(k.sideSeam(body, 88, P, 4) + ribs, { tone: 'faint' }) }));
+  const face = y + 20;
+  const rows: string[] = [];
+  const dots: string[] = [];
+  [95, 89, 83, 77].forEach((z, index) => {
+    dots.push(k.sideRing([x - 13, face, z], 1.5, 'y', P, 14));
+    rows.push(faceLine(face, x - 9, x - 9 + [20, 14, 23, 10][index], z));
+  });
+  out.push(
+    S(k.slabOf(body, 70, 30, P, 4, 0.8), {
+      tone: 'mid',
+      inner: `<path class="fx-linear-line" d="${dots.join('')}"/>` + L(rows.join(''), { tone: 'lo', free: true }),
+    }),
+  );
+  out.push(`<path class="fx-linear" d="${faceQuad(face, x - 20, x + 20, 70, 71.6)}"/>`);
+  out.push(engrave(x - 18, face, 72.6, 'LINEAR', 3.4));
   const rim = plan(x - 22, y - 22, x + 22, y + 22, 1.8);
   out.push(S(k.slabOf(rim, 100, 3, P, 4, 0.6), { tone: 'mid' }));
   out.push(L(k.planOutline(k.insetPlan(rim, 3.5), 103, P, 4), { tone: 'lo' }));
@@ -260,11 +323,9 @@ function sessionConsole(x: number, y: number, lane: LaneIndex) {
   const back = y - HALF - 4;
   out.push(box(x - 16, back - 16, x + 16, back, 0, 1.6, { tone: 'lo' }, 1));
   out.push(S(k.slabOf(plan(x - 14, back - 14, x + 14, back - 2, 1.2), 1.6, 40, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(plan(x - 14, back - 14, x + 14, back - 2, 1.2), 30, P, 3), { tone: 'faint' }) }));
-  // Screen: a tilted-back panel on top, with a prompt line.
-  out.push(box(x - 13, back - 12, x + 13, back - 9, 41.6, 62, {}, 0.8, 0.4));
-  out.push(L(rectOnY(back - 9, x - 10, x + 10, 45, 59), { tone: 'lo' }));
-  out.push(L(k.segment([x - 8, back - 9, 55], [x + 2, back - 9, 55], P), { tone: 'mid', free: true }));
-  out.push(L(k.segment([x - 8, back - 9, 51], [x - 2, back - 9, 51], P), { tone: 'lo', free: true }));
+  // Screen on top: a terminal for Claude Code, an app window for Codex.
+  out.push(box(x - 14, back - 12, x + 14, back - 9, 41.6, 64, {}, 0.8, 0.4));
+  out.push(lane === 1 ? terminalScreen(back - 9, x - 11, x + 11, 44.5, 61, `c${lane}`, 4) : windowScreen(back - 9, x - 11, x + 11, 44.5, 61, `c${lane}`));
   // Arm and chute over the belt.
   out.push(box(x - 4, back - 4, x + 4, y + 2, 40, 44, {}, 0.6, 0.3));
   out.push(`<g data-part="intake-${lane}"></g>`);
@@ -295,25 +356,33 @@ function patchrelayMachine(x: number, y: number) {
   out.push(S(k.extrude(hex, 56, 9, P, { bevel: 0.5 }), { tone: 'mid' }));
   out.push(post(x - 6, y, 4, 65, 69, {}, 20, 0.4));
   out.push(lamp('m0', x + 16, y - 10, 56));
+  out.push(engrave(x - 18, face, 9, 'PATCHRELAY'));
+  out.push(`<path class="fx-linear" d="${faceQuad(face, x - 26, x + 26, 49.6, 51)}"/>`);
   return out.join('');
 }
 
-// Claude Code: a round drum the belt runs through, with a stepped dome.
 function claudeMachine(x: number, y: number) {
+  // Claude Code: a terminal cabinet the belt runs through, its front a big
+  // screen with a prompt and a warm cursor, a warm trim along the top.
   const out: string[] = [];
-  out.push(post(x, y, 25, 0, 2, { tone: 'lo' }, 64));
+  const body = plan(x - 26, y - 21, x + 26, y + 21, 2.4);
+  const face = y + 21;
+  out.push(box(x - 28, y - 23, x + 28, y + 23, 0, 2, { tone: 'lo' }, 2.4));
   out.push(
-    S(k.cylinder(x, y, 23, 2, 44, P, 64, 0.8), {
+    S(k.slabOf(body, 2, 48, P, 4, 0.8), {
       tone: 'mid',
-      inner: L([14, 32].map((z) => k.sideArc(x, y, 23, z, P, 40)).join(''), { tone: 'faint' }),
+      inner: L(rectOnX(x + 26, y - 13, y + 13, 16, 34), { tone: 'lo' }),
     }),
   );
-  out.push(L(k.knurl(x, y, 23, 38, 44, 72, P, 0.3), { tone: 'lo' }));
-  out.push(post(x, y, 19, 46, 51, {}, 56, 0.6));
-  out.push(post(x, y, 13, 51, 55, {}, 48, 0.5));
-  out.push(post(x, y, 7, 55, 58, {}, 32, 0.4));
-  out.push(L(k.ring(x, y, 16, 51, P, 48), { tone: 'faint' }));
-  out.push(lamp('m1', x, y, 58));
+  out.push(`<path class="fx-screen-bezel" d="${faceQuad(face, x - 23, x + 17, 13, 47.5)}"/>`);
+  out.push(terminalScreen(face, x - 21, x + 15, 15, 45.5, 'm1', 6));
+  out.push(`<path class="fx-claude" d="${faceQuad(face, x - 26, x + 26, 48.4, 50)}"/>`);
+  out.push(engrave(x - 21, face, 8, 'CLAUDE CODE'));
+  out.push(L([20, 24, 28].map((dz) => faceLine(face, x + 19, x + 24, dz)).join(''), { tone: 'lo' }));
+  const hood = plan(x - 23, y - 18, x + 23, y + 18, 3);
+  out.push(S(k.slabOf(hood, 50, 4, P, 6, 0.6), { tone: 'mid' }));
+  out.push(D(k.corners(hood, 4).map(([cx, cy]) => [cx, cy, 54] as Point3)));
+  out.push(lamp('m1', x + 14, y - 8, 54));
   return out.join('');
 }
 
@@ -328,11 +397,15 @@ function codexPress(x: number, y: number, part: 'back' | 'front') {
   out.push(box(x - 10, y + HALF + 2, x + 10, y + HALF + 12, 0, 1.6, { tone: 'lo' }, 0.6));
   out.push(box(x - 6, y + HALF + 4, x + 6, y + HALF + 10, 1.6, 66, {}, 0.6, 0.4));
   out.push('<g data-part="ram"></g>');
-  const crown = plan(x - 12, y - HALF - 12, x + 12, y + HALF + 12, 1.4);
-  out.push(S(k.slabOf(crown, 66, 10, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(crown, 71, P, 3), { tone: 'faint' }) }));
-  out.push(post(x, y - 12, 9, 76, 80, {}, 40, 0.5));
-  out.push(L(k.knurl(x, y - 12, 9, 76.6, 79.4, 48, P, 0.3), { tone: 'lo' }));
-  out.push(lamp('m2', x + 4, y + 14, 76));
+  // Codex Desktop: the press head is a housing whose front is an app window
+  // with a diff, high above the belt.
+  const crown = plan(x - 26, y - HALF - 12, x + 26, y + HALF + 12, 1.6);
+  const face = y + HALF + 12;
+  out.push(S(k.slabOf(crown, 66, 34, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(crown, 70, P, 3), { tone: 'faint' }) }));
+  out.push(`<path class="fx-screen-bezel" d="${faceQuad(face, x - 23, x + 23, 71.5, 98)}"/>`);
+  out.push(windowScreen(face, x - 21.5, x + 21.5, 73, 96.5, 'm2'));
+  out.push(engrave(x - 22, face, 67.6, 'CODEX', 3.4));
+  out.push(lamp('m2', x + 18, y - 10, 100));
   return out.join('');
 }
 
@@ -605,7 +678,7 @@ function dock() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a round drum and an open press. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. The outer lines curve smoothly into the middle one, which becomes the single queue, where candidates test on pads at the same time and each passes the gate as soon as it is green, onto the main track and into the deploy dock. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a terminal cabinet and an open press with an app window behind it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. The outer lines curve smoothly into the middle one, which becomes the single queue, where candidates test on pads at the same time and each passes the gate as soon as it is green, onto the main track and into the deploy dock. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
 
 let cached: string | null = null;
 

@@ -83,3 +83,24 @@
   [data-working] .fx-tool > .iso-top, .fx-lamp[data-on="blink"] > * { animation: none; }
 }
 .fx-stopline { stroke: var(--anatomy-hi); stroke-width: 1.6px; stroke-dasharray: 2 1.6; }
+
+/* Tool styling: accent colours and screens. Motifs only, no logos. */
+.iso { --fx-claude: #d97757; --fx-linear: #5e6ad2; --fx-glass: #222226; --fx-glass-ink: #ececf0; --fx-glass-dim: #9a9aa2; }
+@media (prefers-color-scheme: dark) {
+  .iso { --fx-claude: #e08a6d; --fx-linear: #8b93ec; --fx-glass: #060607; --fx-glass-ink: #d6d6dc; --fx-glass-dim: #6e6e78; }
+}
+.fx-screen { fill: var(--fx-glass); }
+.fx-screen-bezel { fill: var(--anatomy-shade-1); stroke: var(--anatomy-mid); stroke-width: .6px; vector-effect: non-scaling-stroke; }
+.fx-screen-line { fill: none; stroke: var(--fx-glass-dim); stroke-width: 1.1px; stroke-linecap: round; vector-effect: non-scaling-stroke; transition: stroke 300ms ease; }
+[data-screen][data-on] .fx-screen-line { stroke: var(--fx-glass-ink); }
+.fx-screen-prompt { fill: none; stroke: var(--fx-claude); stroke-width: .9px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.fx-cursor { fill: var(--fx-claude); animation: fx-cursor 1.1s steps(2, end) infinite; }
+.fx-window-dots circle { fill: var(--fx-glass-ink); opacity: .7; }
+.fx-diff-add { fill: none; stroke: var(--anatomy-green); stroke-width: .9px; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .75; }
+.fx-diff-del { fill: none; stroke: var(--anatomy-red); stroke-width: .9px; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: .75; }
+[data-screen][data-on] .fx-diff-add, [data-screen][data-on] .fx-diff-del { opacity: 1; }
+.fx-claude { fill: var(--fx-claude); }
+.fx-linear { fill: var(--fx-linear); }
+.fx-linear-line { fill: none; stroke: var(--fx-linear); stroke-width: .9px; vector-effect: non-scaling-stroke; }
+@keyframes fx-cursor { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .fx-cursor { animation: none; } }
