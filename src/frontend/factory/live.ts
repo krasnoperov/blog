@@ -53,24 +53,27 @@ export const AGENTS = [
 // runs. Patterns, so the line repeats.
 const ROUNDS_OF = [1, 2, 1, 1, 1, 3, 1, 1, 1, 1];
 const CI_OF = [4.2, 6.8, 3.4, 5.6, 7.4, 3.9, 5.1];
-const SPAWN_EVERY = [3.6, 4.4, 5.2];
+const SPAWN_EVERY = [4.4, 5.2, 6.0];
 // Some PRs fail CI on their own branch and are turned back at the gate;
 // some go red in the queue, built on the PRs ahead of them.
 const FAILS_ENTRY = (id: number) => id % 13 === 4;
-const FAILS_IN_QUEUE = (id: number) => id % 7 === 2;
+const FAILS_IN_QUEUE = (id: number) => id % 11 === 3;
 // CI on the PR's own branch starts when the PR is opened and runs while it
 // is reviewed, so it is usually green by the time it reaches the gate.
 const BRANCH_CI = 3.0;
 // CI on a stacked candidate: each PR's own pattern, scaled.
-const QUEUE_CI = 1.2;
+const QUEUE_CI = 0.9;
 const TRAVEL_Z = levelZ(STACK_MAX) + 10;
 // A candidate that goes red is repaired in place on its candidate ref, then
 // passes a narrow integration review, then tests again.
-const FIX_TIME = 1.6;
+const FIX_TIME = 1.2;
 const INTEGRATION_TIME = 0.7;
 // Feedback capsules ride the tube at this speed, no more often than this.
 const CAPSULE_SPEED = 200;
 const CAPSULE_EVERY = 5;
+// A deploy's smoke tests take this long; then it is Done, and the next one
+// may start.
+const SMOKE_DONE = 0.9;
 type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
@@ -725,25 +728,25 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item) {
       if (crane.phase === 'grab') {
         crane.x = ENTRY_X;
-        crane.hook = rest + (BELT_Z + BOX_H - rest) * ease(crane.t / 0.2);
-        if (crane.t >= 0.2) Object.assign(crane, { phase: 'lift', t: 0 });
+        crane.hook = rest + (BELT_Z + BOX_H - rest) * ease(crane.t / 0.15);
+        if (crane.t >= 0.15) Object.assign(crane, { phase: 'lift', t: 0 });
       } else if (crane.phase === 'lift') {
-        item.z = BELT_Z + (TRAVEL_Z - BELT_Z) * ease(crane.t / 0.3);
+        item.z = BELT_Z + (TRAVEL_Z - BELT_Z) * ease(crane.t / 0.22);
         crane.hook = item.z + BOX_H;
-        if (crane.t >= 0.3) Object.assign(crane, { phase: 'carry', t: 0 });
+        if (crane.t >= 0.22) Object.assign(crane, { phase: 'carry', t: 0 });
       } else if (crane.phase === 'carry') {
-        item.x = ENTRY_X + (STACK_X - ENTRY_X) * ease(crane.t / 0.45);
+        item.x = ENTRY_X + (STACK_X - ENTRY_X) * ease(crane.t / 0.34);
         crane.x = item.x;
         // Hover until the stack has settled: nothing leaving the frame, no
         // red PR fading out of it, every level at rest.
         const settled =
           !items.some((other) => (other.stage === 'merged' && other.path === 'queue' && other.x < STACK_X + 18) || (other.path === 'teleport' && other.beamFrom !== null && Math.abs(other.beamFrom[0] - STACK_X) < 1)) &&
           stack.every((candidate, level) => candidate.z === levelZ(level));
-        if (crane.t >= 0.45 && settled) Object.assign(crane, { phase: 'lower', t: 0, target: levelZ(stack.length) });
+        if (crane.t >= 0.34 && settled) Object.assign(crane, { phase: 'lower', t: 0, target: levelZ(stack.length) });
       } else if (crane.phase === 'lower') {
-        item.z = TRAVEL_Z + (crane.target - TRAVEL_Z) * ease(crane.t / 0.3);
+        item.z = TRAVEL_Z + (crane.target - TRAVEL_Z) * ease(crane.t / 0.22);
         crane.hook = item.z + BOX_H;
-        if (crane.t >= 0.3) {
+        if (crane.t >= 0.22) {
           item.z = crane.target;
           item.path = 'stack';
           item.level = stack.length;
@@ -755,10 +758,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
     } else if (crane.phase === 'rise') {
       crane.hook += (rest - crane.hook) * (1 - Math.exp(-dt / 0.12));
-      if (crane.t >= 0.15) Object.assign(crane, { phase: 'return', t: 0 });
+      if (crane.t >= 0.1) Object.assign(crane, { phase: 'return', t: 0 });
     } else if (crane.phase === 'return') {
-      crane.x = STACK_X + (ENTRY_X - STACK_X) * ease(crane.t / 0.35);
-      if (crane.t >= 0.35) Object.assign(crane, { phase: 'idle', t: 0 });
+      crane.x = STACK_X + (ENTRY_X - STACK_X) * ease(crane.t / 0.26);
+      if (crane.t >= 0.26) Object.assign(crane, { phase: 'idle', t: 0 });
     } else {
       crane.hook += (rest - crane.hook) * (1 - Math.exp(-dt / 0.12));
     }
@@ -925,6 +928,9 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       const lift = lifts[item.lane];
       if (item.path === 'belt' && lift.down.item && lift.down.item.t >= 0 && item.x < dropX(item.lane) - 1) limit = Math.min(limit, dropX(item.lane) - GAP);
       if (item.path === 'belt' && lift.up.item && lift.up.z < BELT_Z + 16 && item.x < HOIST_X - 1) limit = Math.min(limit, HOIST_X - GAP);
+      // Deploys run one at a time, like the deploy workflow: the next merged
+      // PR waits at the booth until the smoke tests of the one before pass.
+      if (item.stage === 'merged' && deploys.some((age) => age < SMOKE_DONE)) limit = Math.min(limit, GONE_X - 0.5);
       if (limit > item.x) item.x = Math.min(limit, item.x + SPEED * dt);
       if (item.stage === 'merged' && item.x >= GONE_X) {
         deployed += 1;
@@ -1003,10 +1009,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       const before = deploys[i];
       const age = (deploys[i] += dt);
       // Smoke tests pass on both: this issue is Done in Linear.
-      if (before < 1.25 && age >= 1.25) pulse(TAP.dock, TAP.patchrelay);
+      if (before < SMOKE_DONE && age >= SMOKE_DONE) pulse(TAP.dock, TAP.patchrelay);
       // Once production's users have it, usertold listens, and after a while
       // sends what it heard back to Linear.
-      if (before < 1.0 && age >= 1.0 && listenLeft <= 0) listenLeft = 1.8;
+      if (before < SMOKE_DONE && age >= SMOKE_DONE && listenLeft <= 0) listenLeft = 1.8;
       if (age > 3) deploys.splice(i, 1);
     }
     sinceCapsule += dt;
@@ -1232,15 +1238,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       pane.el.forEach((el) => el.toggleAttribute('data-on', on));
     }
     setLamp('mast', wave ? 'lit' : null);
-    const smokeGreen = beacon >= 1.2 && beacon < 2.6 ? 'green' : null;
+    const smokeGreen = beacon >= SMOKE_DONE && beacon < SMOKE_DONE + 1.4 ? 'green' : null;
     setLamp('smoke-stage', smokeGreen);
     setLamp('smoke-production', smokeGreen);
     let smoke = '';
-    if (beacon > 0.15 && beacon < 1.5 && !still.matches) {
-      const env = Math.min(1, (beacon - 0.15) * 4, (1.5 - beacon) * 4);
+    if (beacon > 0.05 && beacon < SMOKE_DONE + 0.2 && !still.matches) {
+      const env = Math.min(1, (beacon - 0.05) * 5, (SMOKE_DONE + 0.2 - beacon) * 5);
       for (const chimney of CHIMNEYS) {
         for (let i = 0; i < 4; i++) {
-          const p = ((beacon - 0.15) * 1.4 + i / 4) % 1;
+          const p = ((beacon - 0.05) * 1.8 + i / 4) % 1;
           const [cx, cy] = at([chimney.x + p * 4, chimney.y - p * 2, chimney.top + 1 + p * 14]);
           smoke += `<circle class="fx-puff" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(1.2 + p * 2.6).toFixed(2)}" style="opacity:${((1 - p) * env).toFixed(2)}"/>`;
         }
