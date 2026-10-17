@@ -22,11 +22,14 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
   const read = () =>
     stage.evaluate((el) => (el as HTMLElement & { factoryState: () => ItemState[] }).factoryState());
 
-  const seen = new Set<number>();
+  const first = await read();
+  const queuedAtStart = new Set(first.filter((item) => item.path === 'trunk').map((item) => item.id));
+  const enteredQueue = new Set<number>();
+  let last = first;
   for (let sample = 0; sample < 80; sample++) {
     const items = await read();
     const inFunnel = items.filter((item) => item.granted && item.path !== 'trunk');
-    expect(inFunnel.length).toBeLessThanOrEqual(1);
+    expect(inFunnel.length, 'at most one PR is inside the funnel').toBeLessThanOrEqual(1);
     for (let i = 0; i < items.length; i++) {
       for (let j = i + 1; j < items.length; j++) {
         const a = items[i];
@@ -36,9 +39,14 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
         expect(overlapping, `items ${a.id} (${a.path}) and ${b.id} (${b.path}) overlap at ${a.x.toFixed(1)},${a.y.toFixed(1)}`).toBe(false);
       }
     }
-    for (const item of items) if (item.path === 'trunk') seen.add(item.id);
+    for (const item of items) if (item.path === 'trunk' && !queuedAtStart.has(item.id)) enteredQueue.add(item.id);
+    last = items;
     await page.waitForTimeout(100);
   }
-  // Over eight seconds, more than one PR reaches the queue.
-  expect(seen.size).toBeGreaterThan(1);
+  // The queue moves both ways: new PRs come in through the funnel, and PRs
+  // that were already queued leave it for main and the dock.
+  const stillThere = new Set(last.map((item) => item.id));
+  const leftQueue = [...queuedAtStart].filter((id) => !stillThere.has(id));
+  expect(enteredQueue.size, 'a PR entered the queue during the sample').toBeGreaterThan(0);
+  expect(leftQueue.length, 'a PR that was queued at the start left the line').toBeGreaterThan(0);
 });
