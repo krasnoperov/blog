@@ -64,6 +64,15 @@ export const BOOTH = { x0: 784, x1: 814, y0: TRUNK_Y - 17, y1: TRUNK_Y + 17, z: 
 export const GONE_X = 799;
 export const PROD = { x0: 828, x1: 904, y0: TRUNK_Y - 46, y1: TRUNK_Y + 46, z: 66 } as const;
 
+// Integration repair: a torch on a slide beside the stack fixes a red
+// candidate in place, on its own candidate ref.
+export const REPAIR = { x: STACK_X + 27, y: TRUNK_Y + 16 } as const;
+// Feedback: usertold listens to production's users and sends what it
+// learns back to Linear in a capsule: up over production's roof and along
+// a tube at the back of the floor.
+export const USERTOLD = { x0: 846, x1: 882, y0: 30, y1: 56, z: 34 } as const;
+export const TUBE = { x: 872, y: -150, z: 115, outY: 40, inX: LANES[0].intake, inY: LANES[0].y, inZ: 106 } as const;
+
 export const BUS = { x0: 30, x1: 900, y0: -168, y1: -158, z0: 132, z1: 140 } as const;
 export const TAP = {
   patchrelay: LANES[0].machine,

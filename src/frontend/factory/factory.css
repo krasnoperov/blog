@@ -126,3 +126,8 @@
 /* Deploy: windows are the users; they light when a release reaches them. */
 .fx-pane { fill: var(--fx-pane); stroke: var(--anatomy-lo); stroke-width: .6px; vector-effect: non-scaling-stroke; transition: fill 220ms ease; }
 .fx-pane[data-on] { fill: var(--fx-light); }
+/* Integration repair sparks, smoke-test puffs, usertold's waveform. */
+.fx-spark { fill: var(--fx-light); stroke: var(--anatomy-red); stroke-width: .3px; vector-effect: non-scaling-stroke; }
+.fx-puff { fill: var(--anatomy-paper); stroke: var(--anatomy-lo); stroke-width: .5px; vector-effect: non-scaling-stroke; }
+.fx-wave { fill: none; stroke: var(--fx-glass-ink); stroke-width: 1px; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.fx-flash { fill: var(--fx-light); opacity: .55; }

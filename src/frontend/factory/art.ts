@@ -13,6 +13,9 @@ import {
   LEVEL_H,
   MAIN_X0,
   PROD,
+  REPAIR,
+  TUBE,
+  USERTOLD,
   STACK_MAX,
   STACK_X,
   HEIGHT,
@@ -420,6 +423,15 @@ function stackFrame(side: 'back' | 'front') {
     for (let level = 1; level < STACK_MAX; level++) out.push(box(x - 2.2, y - 2.2, x + 2.2, y + 2.2, levelZ(level) - 1, levelZ(level) - 0.2, { crease: 'none' }, 0.4));
   }
   out.push(box(STACK_X - 13, y - 2, STACK_X + 13, y + 2, FRAME_TOP, FRAME_TOP + 3, {}, 0.5, 0.3));
+  if (side === 'front') {
+    // The repair slide: a post with a carriage the live model moves to the
+    // level being repaired.
+    const { x: rx, y: ry } = REPAIR;
+    out.push(box(rx - 3.5, ry - 3.5, rx + 3.5, ry + 3.5, 0, 1.4, { tone: 'lo' }, 0.6));
+    out.push(box(rx - 1.4, ry - 1.4, rx + 1.4, ry + 1.4, 1.4, FRAME_TOP + 4, { crease: 'none' }, 0.4));
+    out.push(box(rx - 2.4, ry - 2.4, rx + 2.4, ry + 2.4, FRAME_TOP + 4, FRAME_TOP + 6, {}, 0.4, 0.3));
+    out.push('<g data-part="repair"></g>');
+  }
   return out.join('');
 }
 
@@ -642,7 +654,23 @@ function booth() {
   out.push(L(ticks.minor, { tone: 'lo' }), L(ticks.major, { tone: 'mid' }));
   out.push('<path data-part="stage-needle" class="iso-line" data-tone="hi" data-free="start" style="stroke-width:0.9" d=""/>');
   out.push(L(k.ring(x, y, 1, top, P, 12), { tone: 'mid' }));
+  out.push(chimney(x0 + 5, y0 + 5, z + 3, 11, 'smoke-stage'));
   return out.join('');
+}
+
+// A smoke-test chimney: a flue with a cap and a lamp beside it. The live
+// model puffs smoke from it while the smoke test runs, then lights the lamp.
+export const CHIMNEYS = [
+  { x: BOOTH.x0 + 5, y: BOOTH.y0 + 5, top: BOOTH.z + 3 + 11 },
+  { x: PROD.x1 - 10, y: PROD.y0 + 10, top: PROD.z + 3 + 14 },
+] as const;
+function chimney(x: number, y: number, z: number, h: number, name: string) {
+  return [
+    post(x, y, 2.6, z, z + 1, { tone: 'lo' }, 18),
+    post(x, y, 1.8, z + 1, z + h - 1.2, {}, 18),
+    post(x, y, 2.4, z + h - 1.2, z + h, {}, 18, 0.3),
+    lamp(name, x + 5, y + 2, z, 1.6, 2.4),
+  ].join('');
 }
 
 function production() {
@@ -683,8 +711,69 @@ function production() {
   out.push(post(x1 - 14, y1 - 16, 3, z + 3, z + 4.4, { tone: 'lo' }, 16));
   out.push(post(x1 - 14, y1 - 16, 0.9, z + 4.4, z + 26, { crease: 'none' }, 10));
   out.push(lamp('mast', x1 - 14, y1 - 16, z + 26, 1.8, 2.6));
+  out.push(chimney(x1 - 10, y0 + 10, z + 3, 14, 'smoke-production'));
+  out.push('<g data-part="smoke"></g>');
   return out.join('');
 }
+
+// usertold: an interview booth behind production with a microphone and a
+// screen whose waveform moves while it listens to the users.
+function usertold() {
+  const { x0, x1, y0, y1, z } = USERTOLD;
+  const out: string[] = [];
+  out.push(box(x0 - 3, y0 - 2, x1 + 3, y1 + 3, 0, 2, { tone: 'lo' }, 0.8, 0.4));
+  const body = plan(x0, y0, x1, y1, 1);
+  out.push(S(k.slabOf(body, 2, z - 2, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(body, 8, P), { tone: 'faint' }) }));
+  out.push(`<path class="fx-screen" d="${faceQuad(y1, x0 + 5, x1 - 5, 13, 29)}"/>`);
+  out.push(`<path data-part="ut-wave" class="fx-wave" d=""/>`);
+  out.push(engrave(x0 + 5, y1, 9.5, 'USERTOLD', 2.6));
+  out.push(D([[x0 + 2.5, y1, 4], [x1 - 2.5, y1, 4], [x1, y1 - 2.5, 4], [x1, y0 + 2.5, 4]], 0.45));
+  out.push(box(x0 - 1.5, y0 - 1.5, x1 + 1.5, y1 + 1.5, z, z + 2.5, {}, 1, 0.5));
+  const mx = (x0 + x1) / 2 - 6;
+  const my = (y0 + y1) / 2 + 4;
+  out.push(post(mx, my, 3, z + 2.5, z + 3.5, { tone: 'lo' }, 16));
+  out.push(post(mx, my, 0.7, z + 3.5, z + 14, { crease: 'none' }, 10));
+  out.push(post(mx, my, 2.4, z + 14, z + 19, { tone: 'hi', crease: 'lo' }, 22, 0.8));
+  out.push(L(k.knurl(mx, my, 2.4, z + 14.6, z + 18.4, 20, P, 0.25), { tone: 'lo' }));
+  out.push(lamp('listen', x1 - 5, y1 - 5, z + 2.5, 1.6, 2.4));
+  out.push(feedbackTubeFront());
+  return out.join('');
+}
+
+// The feedback tube: up out of usertold, back over production's roof, along
+// the floor behind the lines on brackets from the bus posts, forward over
+// the far line and down into the Linear hopper.
+export const TUBE_PATH: Point3[] = [
+  [TUBE.x, TUBE.outY, USERTOLD.z + 2.5],
+  [TUBE.x, TUBE.outY, TUBE.z],
+  [TUBE.x, TUBE.y, TUBE.z],
+  [TUBE.inX, TUBE.y, TUBE.z],
+  [TUBE.inX, TUBE.inY, TUBE.z],
+  [TUBE.inX, TUBE.inY, TUBE.inZ],
+];
+// The first two legs are in front, drawn with usertold; the rest at the back.
+export const TUBE_FRONT_LEGS = 2;
+const TUBE_R = 1.6;
+function tubeSeg(a: Point3, b: Point3) {
+  const r = TUBE_R;
+  const flat = a[2] === b[2];
+  return box(Math.min(a[0], b[0]) - r, Math.min(a[1], b[1]) - r, Math.max(a[0], b[0]) + r, Math.max(a[1], b[1]) + r, Math.min(a[2], b[2]) - (flat ? r : 0), Math.max(a[2], b[2]) + (flat ? r : 0), { crease: 'none' }, 0.6);
+}
+const tubeJoint = (p: Point3) => box(p[0] - TUBE_R - 0.6, p[1] - TUBE_R - 0.6, p[0] + TUBE_R + 0.6, p[1] + TUBE_R + 0.6, p[2] - TUBE_R - 0.6, p[2] + TUBE_R + 0.6, {}, 0.6, 0.3);
+function feedbackTube() {
+  const out: string[] = [];
+  for (const x of [60, 240, 420, 600, 780]) out.push(box(x - 1, (BUS.y0 + BUS.y1) / 2 + 2, x + 1, TUBE.y, TUBE.z - 1, TUBE.z + 1, { crease: 'none' }, 0.3));
+  const p = TUBE_PATH;
+  out.push(tubeSeg(p[2], p[3]), tubeSeg(p[3], p[4]), tubeJoint(p[2]), tubeJoint(p[3]));
+  out.push('<g data-part="capsules-back"></g>');
+  out.push(tubeSeg(p[4], p[5]), tubeJoint(p[4]));
+  return out.join('');
+}
+function feedbackTubeFront() {
+  const p = TUBE_PATH;
+  return [tubeSeg(p[1], p[2]), tubeSeg(p[0], p[1]), '<g data-part="capsules-front"></g>', tubeJoint(p[1])].join('');
+}
+
 
 // GitHub: a hub cabinet at the end of the bus, with a column of port lights.
 export const HUB = { x0: BUS.x1, x1: BUS.x1 + 28, y0: -178, y1: -146, z: 152 } as const;
@@ -713,7 +802,7 @@ function hub() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one. A gate on it opens for each PR that is approved and green on its own branch, without a wait; a red one is teleported back. A crane sets each admitted PR on top of a stack standing on main: the bottom one sits on main and each one above is built on the one below. Behind it, a CI hall has a test drum per level, wired to it: every drum spins at once while the CI of its candidate runs, its dial filling, and its lamp turns green. The bottom PR leaves for main the moment it is green, and the ones above, often green already, drop down and follow. A candidate that goes red is teleported back to its own line, and the ones above it test again. Main lands in a small stage booth whose window lights and dial swings, then production: a building whose windows, its users, light up one column after another. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one. A gate on it opens for each PR that is approved and green on its own branch, without a wait; a red one is teleported back. A crane sets each admitted PR on top of a stack standing on main: the bottom one sits on main and each one above is built on the one below. Behind it, a CI hall has a test drum per level, wired to it: every drum spins at once while the CI of its candidate runs, its dial filling, and its lamp turns green. The bottom PR leaves for main the moment it is green, and the ones above, often green already, drop down and follow. A candidate that goes red is repaired in place: a torch on a slide beside the stack fixes it on its candidate ref, a lamp blinks for the narrow integration review, and it tests again with the ones above it. Main deploys to a small stage booth and to production, a building whose windows are its users, at the same time; each puffs smoke from its chimney for its smoke test and then lights a green lamp. In front of production, usertold listens to the users and sends what it hears back in a capsule, up over the roof and along a tube at the back of the floor, into the Linear hopper. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
 
 let cached: string | null = null;
 
@@ -723,6 +812,7 @@ export function factorySvg() {
     // Gradients for the teleport light: a glow that fades upward, a bright core.
     '<defs><linearGradient id="fx-tp-glow" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="fx-tp-a"/><stop offset="0.55" class="fx-tp-b"/><stop offset="1" class="fx-tp-c"/></linearGradient><linearGradient id="fx-tp-core" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="fx-tp-core-a"/><stop offset="1" class="fx-tp-core-b"/></linearGradient></defs>',
     floor(),
+    feedbackTube(),
     bus(),
     hub(),
     portalBack(),
@@ -733,6 +823,7 @@ export function factorySvg() {
     portalFront(),
     booth(),
     production(),
+    usertold(),
     `<g transform="${k.translateAlong(P, [BENCH_SHIFT[0], BENCH_SHIFT[1], 0])}">${evalBench()}</g>`,
   ];
   // A group, not an image: the items inside are buttons you can follow.

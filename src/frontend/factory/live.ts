@@ -11,6 +11,8 @@ import {
   GATE_X,
   GONE_X,
   CI_HALL,
+  REPAIR,
+  USERTOLD,
   ciX,
   STACK_MAX,
   STACK_X,
@@ -28,7 +30,7 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
-import { ARM_BASE, CI_DIAL, GATE_SPAN, STAGE_DIAL, WINDOWS, levelZ } from './art';
+import { ARM_BASE, CHIMNEYS, CI_DIAL, GATE_SPAN, STAGE_DIAL, TUBE_FRONT_LEGS, TUBE_PATH, WINDOWS, levelZ } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -62,6 +64,13 @@ const BRANCH_CI = 3.0;
 // CI on a stacked candidate: each PR's own pattern, scaled.
 const QUEUE_CI = 1.2;
 const TRAVEL_Z = levelZ(STACK_MAX) + 10;
+// A candidate that goes red is repaired in place on its candidate ref, then
+// passes a narrow integration review, then tests again.
+const FIX_TIME = 1.6;
+const INTEGRATION_TIME = 0.7;
+// Feedback capsules ride the tube at this speed, no more often than this.
+const CAPSULE_SPEED = 150;
+const CAPSULE_EVERY = 5;
 type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'crane' | 'stack' | 'teleport' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
@@ -89,6 +98,10 @@ interface Item {
   fade: number;
   beamFrom: [number, number, number] | null;
   ci: number;
+  // Integration repair on the candidate: seconds into it, or -1.
+  fix: number;
+  // An issue that came from what users told usertold.
+  fromUsers: boolean;
   ciNeed: number;
   flag: boolean;
   el: SVGGElement;
@@ -319,6 +332,12 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let gateOpen = 0;
   let gateKey = '';
   const stageNeedle = part('stage-needle');
+  const repairEl = part('repair');
+  const smokeEl = part('smoke');
+  const waveEl = part('ut-wave');
+  const capsulesFront = part('capsules-front');
+  const capsulesBack = part('capsules-back');
+  const CAPSULE = box(-2.6, -2.6, 2.6, 2.6, -2.6, 2.6, { tone: 'hi' }, 0.8, 0.4);
   const stagePane = svg.querySelector('[data-window="stage"]');
   const panes = WINDOWS.map((w) => ({ col: w.col, el: svg.querySelectorAll(`[data-window="${w.col}"]`) }));
   const cases = Array.from(svg.querySelectorAll<SVGGElement>('[data-case]'));
@@ -365,6 +384,30 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let reviewsDone = 0;
   let returned = 0;
   let beacon = 99;
+  let repaired = 0;
+  // The repair carriage's height, and usertold: how long it still listens,
+  // when it last sent a capsule, the capsules in the tube.
+  let repairZ = levelZ(STACK_MAX);
+  let repairKey = '';
+  let listenLeft = 0;
+  let sinceCapsule = CAPSULE_EVERY;
+  let fromUsersWaiting = 0;
+  const takeFromUsers = () => (fromUsersWaiting > 0 ? (fromUsersWaiting--, true) : false);
+  const capsules: Array<{ d: number; el: SVGGElement }> = [];
+  const tubeLengths = TUBE_PATH.slice(1).map((point, i) => Math.hypot(point[0] - TUBE_PATH[i][0], point[1] - TUBE_PATH[i][1], point[2] - TUBE_PATH[i][2]));
+  const tubeLength = tubeLengths.reduce((a, b) => a + b, 0);
+  const alongTube = (d: number): [number, number, number] => {
+    let left = d;
+    for (let i = 0; i < tubeLengths.length; i++) {
+      if (left <= tubeLengths[i]) {
+        const t = left / tubeLengths[i];
+        const [a, b] = [TUBE_PATH[i], TUBE_PATH[i + 1]];
+        return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+      }
+      left -= tubeLengths[i];
+    }
+    return TUBE_PATH[TUBE_PATH.length - 1] as [number, number, number];
+  };
   const probeTip = [44, 44, 44];
   const dialTurn = [0, 0, 0];
   const dialTarget = [0, 0, 0];
@@ -433,6 +476,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       fade: 1,
       beamFrom: null,
       ci: 0,
+      fix: -1,
+      fromUsers: lane === 0 && takeFromUsers(),
       ciNeed: CI_OF[id % CI_OF.length],
       flag: false,
       el,
@@ -719,8 +764,23 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       const target = leaving ? candidate.z : levelZ(level);
       candidate.z += (target - candidate.z) * (1 - Math.exp(-dt / 0.1));
       if (Math.abs(candidate.z - target) < 0.05) candidate.z = target;
+      if (candidate.fix >= 0) {
+        candidate.fix += dt;
+        if (candidate.fix >= FIX_TIME + INTEGRATION_TIME) {
+          // Repaired and re-reviewed: test again, and so does everything
+          // built on it.
+          candidate.fix = -1;
+          candidate.red = -1;
+          candidate.retried = true;
+          candidate.ci = 0;
+          for (const above of stack.slice(level + 1)) above.retest = true;
+          repaired += 1;
+        }
+        return;
+      }
       if (candidate.red >= 0) {
         candidate.red += dt;
+        if (candidate.red > 0.6 && !stack.some((other) => other.fix >= 0)) candidate.fix = 0;
         return;
       }
       if (candidate.retest) {
@@ -733,21 +793,16 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         if (candidate.ci >= 1 && FAILS_IN_QUEUE(candidate.id) && !candidate.retried) candidate.red = 0;
       }
     });
-    // A red candidate goes back; everything above it was built on it, so it
-    // drops a level and tests again.
     // Nothing leaves the stack while the crane is setting a PR down on it.
     const lowering = crane.phase === 'lower';
-    const red = lowering ? undefined : stack.find((candidate) => candidate.red > 1.0);
-    if (red) {
-      const at = stack.indexOf(red);
-      stack.splice(at, 1);
-      for (const above of stack.slice(at)) above.retest = true;
-      teleport(red);
-    }
+    // The repair carriage rides to the level it works on, home otherwise.
+    const fixing = stack.find((candidate) => candidate.fix >= 0 || candidate.red >= 0);
+    const repairTarget = fixing ? fixing.z + 3 : levelZ(STACK_MAX);
+    repairZ = still.matches ? repairTarget : repairZ + (repairTarget - repairZ) * (1 - Math.exp(-dt / 0.15));
     // The bottom PR sits on main: once it is green, it is delivered.
     const bottom = stack[0];
     const mainClear = !items.some((other) => other.stage === 'merged' && other.path === 'queue' && other.x < STACK_X + GAP + 6);
-    if (!lowering && !red && bottom && bottom.z === levelZ(0) && bottom.ci >= 1 && bottom.red < 0 && !bottom.retest && mainClear) {
+    if (!lowering && bottom && bottom.z === levelZ(0) && bottom.ci >= 1 && bottom.red < 0 && !bottom.retest && mainClear) {
       stack.shift();
       bottom.path = 'queue';
       bottom.stage = 'merged';
@@ -931,7 +986,33 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       const v = verdict[lane];
       if (v) v.t += dt;
     });
+    const before = beacon;
     beacon += dt;
+    // Smoke tests pass on both: the issue is Done in Linear.
+    if (before < 1.25 && beacon >= 1.25) pulse(TAP.dock, TAP.patchrelay);
+    // Once production's users have it, usertold listens, and after a while
+    // sends what it heard back to Linear.
+    if (before < 1.0 && beacon >= 1.0) listenLeft = Math.max(listenLeft, 1.8);
+    sinceCapsule += dt;
+    if (listenLeft > 0) {
+      listenLeft -= dt;
+      if (listenLeft <= 0 && sinceCapsule >= CAPSULE_EVERY && !still.matches) {
+        const el = document.createElementNS(SVG_NS, 'g');
+        el.innerHTML = CAPSULE;
+        capsulesFront.appendChild(el);
+        capsules.push({ d: 0, el });
+        sinceCapsule = 0;
+      }
+    }
+    for (let i = capsules.length - 1; i >= 0; i--) {
+      const capsule = capsules[i];
+      capsule.d += CAPSULE_SPEED * dt;
+      if (capsule.d >= tubeLength) {
+        capsule.el.remove();
+        capsules.splice(i, 1);
+        fromUsersWaiting += 1;
+      }
+    }
     // The eval reader follows the case being replayed, and jumps home.
     const headTarget = (Math.floor(clock / 1.3) % 11) * 4.8;
     headX = still.matches || headTarget < headX - 1 ? headTarget : headX + (headTarget - headX) * (1 - Math.exp(-dt / 0.12));
@@ -948,10 +1029,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
 
   function phaseOf(item: Item): string {
     const agent = AGENTS[item.lane].label;
-    if (item.done) return 'deployed · stage, then production';
-    if (item.path === 'drop') return `picked up · ${agent}`;
+    if (item.done) return 'deployed · stage and production · smoke tests green · Done';
+    if (item.path === 'drop') return item.fromUsers ? `from what users told usertold · ${agent}` : `picked up · ${agent}`;
     if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
-    if (item.path === 'teleport') return `red in the queue · teleported back to ${agent}`;
+    if (item.path === 'teleport') return `branch CI red · back to ${agent}`;
     if (item.path === 'cross') return 'approved · crossing to the queue';
     const here = (x: number) => Math.abs(item.x - x) < 0.01;
     switch (item.stage) {
@@ -968,7 +1049,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         if (item.path === 'stack') {
           const below = stack[item.level - 1];
           const base = below ? `built on ${below.name}` : 'on main';
-          const state = item.red >= 0 ? 'red' : item.retest ? 'testing again' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, to main' : 'green';
+          const state =
+            item.fix >= FIX_TIME ? 'review-quill/integration' : item.fix >= 0 ? 'integration repair on its candidate ref' : item.red >= 0 ? 'red' : item.retest ? 'testing again' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, to main' : 'green';
           return `merge queue · level ${item.level + 1} · ${base} · ${state}`;
         }
         if (item.path === 'queue') return here(ENTRY_X) ? 'admitted · waiting for the crane' : 'admitted · to the merge queue';
@@ -976,7 +1058,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         if (Math.abs(item.x - (GATE_X - 10)) < 0.5) return item.red >= 0 ? 'branch CI red · back to the line' : 'at the gate · branch CI running';
         return 'approved · to the merge queue';
       case 'merged':
-        return item.x < STACK_X + 40 ? 'main · fast-forwarded' : 'deploying · stage';
+        return item.x < STACK_X + 40 ? 'main · fast-forwarded' : 'deploying · stage and production';
     }
   }
 
@@ -1117,16 +1199,78 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (beams.innerHTML !== beamSvg) beams.innerHTML = beamSvg;
     // Deploy: the stage booth lights and its dial swings, then production's
     // windows light up column by column, round the corner, and go back.
-    stagePane?.toggleAttribute('data-on', beacon < 1.2);
-    stageNeedle.setAttribute('d', needleD(STAGE_DIAL, -0.375 + 0.75 * (ease(beacon / 0.5) - ease((beacon - 1.0) / 0.5)) * 0.85));
+    // Stage and production get the same SHA at once; each runs its smoke test
+    // (smoke from the chimney), then its lamp goes green.
+    stagePane?.toggleAttribute('data-on', beacon < 1.8);
+    stageNeedle.setAttribute('d', needleD(STAGE_DIAL, -0.375 + 0.75 * (ease(beacon / 0.5) - ease((beacon - 1.4) / 0.5)) * 0.85));
     let wave = false;
     for (const pane of panes) {
-      const at0 = 1.0 + pane.col * 0.07;
-      const on = beacon >= at0 && beacon < at0 + 1.4;
+      const at0 = 0.15 + pane.col * 0.06;
+      const on = beacon >= at0 && beacon < at0 + 1.6;
       wave ||= on;
       pane.el.forEach((el) => el.toggleAttribute('data-on', on));
     }
     setLamp('mast', wave ? 'lit' : null);
+    const smokeGreen = beacon >= 1.2 && beacon < 2.6 ? 'green' : null;
+    setLamp('smoke-stage', smokeGreen);
+    setLamp('smoke-production', smokeGreen);
+    let smoke = '';
+    if (beacon > 0.15 && beacon < 1.5 && !still.matches) {
+      const env = Math.min(1, (beacon - 0.15) * 4, (1.5 - beacon) * 4);
+      for (const chimney of CHIMNEYS) {
+        for (let i = 0; i < 4; i++) {
+          const p = ((beacon - 0.15) * 1.4 + i / 4) % 1;
+          const [cx, cy] = at([chimney.x + p * 4, chimney.y - p * 2, chimney.top + 1 + p * 14]);
+          smoke += `<circle class="fx-puff" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(1.2 + p * 2.6).toFixed(2)}" style="opacity:${((1 - p) * env).toFixed(2)}"/>`;
+        }
+      }
+    }
+    if (smokeEl.innerHTML !== smoke) smokeEl.innerHTML = smoke;
+    // usertold: the waveform moves while it listens; capsules in the tube.
+    setLamp('listen', listenLeft > 0 ? 'blink' : null);
+    const bars: string[] = [];
+    for (let i = 0; i < 13; i++) {
+      const h = listenLeft > 0 && !still.matches ? 1 + 6 * (0.5 + 0.5 * Math.sin(clock * 11 + i * 1.7) * Math.sin(clock * 3 + i)) : 0.8;
+      bars.push(k.segment([USERTOLD.x0 + 8 + i * 1.6, USERTOLD.y1, 21 - h / 2], [USERTOLD.x0 + 8 + i * 1.6, USERTOLD.y1, 21 + h / 2], P));
+    }
+    waveEl.setAttribute('d', bars.join(''));
+    const frontLength = tubeLengths.slice(0, TUBE_FRONT_LEGS).reduce((a, b) => a + b, 0);
+    for (const capsule of capsules) {
+      capsule.el.setAttribute('transform', k.translateAlong(P, alongTube(capsule.d)));
+      // Over production the capsule is in front; past it, behind the lines.
+      const layer = capsule.d < frontLength ? capsulesFront : capsulesBack;
+      if (capsule.el.parentNode !== layer) layer.appendChild(capsule.el);
+    }
+    // The repair carriage, its torch and sparks, and the integration lamp.
+    const working = stack.find((candidate) => candidate.fix >= 0);
+    const torch = working && working.fix < FIX_TIME;
+    const reviewing = working && working.fix >= FIX_TIME;
+    const key = `${repairZ.toFixed(2)}:${torch ? Math.floor(clock * 20) : 0}:${reviewing ? 1 : 0}`;
+    if (key !== repairKey) {
+      repairKey = key;
+      const { x, y } = REPAIR;
+      const z = repairZ;
+      // The carriage on its post, an arm reaching left to the stack, and a
+      // torch pointed at the candidate's front.
+      let html =
+        box(x - 3.4, y - 3.4, x + 3.4, y + 3.4, z - 3, z + 5, {}, 0.6, 0.4) +
+        box(x - 19, y - 1.2, x - 3.4, y + 1.2, z + 1, z + 3, {}, 0.3, 0.2) +
+        box(x - 20, y - 9, x - 17, y + 1.2, z + 1, z + 3, {}, 0.3, 0.2) +
+        cyl(x - 18.5, y - 9.8, 1.3, z + 0.4, z + 3.6, { tone: 'hi' }, 12, 0.3);
+      const lampSvg = cyl(x, y, 1.6, z + 5, z + 7.4, { className: 'fx-lamp', crease: 'none' }, 14);
+      html += reviewing ? lampSvg.replace('<g ', '<g data-on="blink" ') : lampSvg;
+      if (torch && !still.matches) {
+        const [fx, fy] = at([x - 18.5, y - 11.4, z + 2]);
+        html += `<circle class="fx-flash" cx="${fx.toFixed(1)}" cy="${fy.toFixed(1)}" r="${(2.2 + Math.sin(clock * 47) * 0.6).toFixed(2)}"/>`;
+        for (let i = 0; i < 10; i++) {
+          const a = clock * 30 + i * 2.1;
+          const reach = 1 + ((clock * 7 + i * 0.37) % 1) * 5;
+          const [sx, sy] = at([x - 18.5 + Math.cos(a) * reach, y - 11.5 + Math.sin(a * 0.7), z + 2 + Math.sin(a * 1.3) * reach * 0.6]);
+          html += `<circle class="fx-spark" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${(0.45 + (i % 3) * 0.25).toFixed(2)}"/>`;
+        }
+      }
+      repairEl.innerHTML = html;
+    }
 
     for (let i = pulses.length - 1; i >= 0; i--) {
       const p = pulses[i];
@@ -1165,7 +1309,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       lastText = text;
       readout.textContent = text;
     }
-    const statsText = `${merged} merged · ${deployed} deployed · ${reviewsDone} reviews · ${returned} sent back`;
+    const statsText = `${merged} merged · ${deployed} deployed · ${reviewsDone} reviews · ${returned} sent back · ${repaired} repaired in the queue`;
     if (stats && statsText !== lastStats) {
       lastStats = statsText;
       stats.textContent = statsText;

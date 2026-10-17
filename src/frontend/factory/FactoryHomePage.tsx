@@ -55,7 +55,7 @@ const STATIONS: Station[] = [
     n: '05',
     name: 'Merge queue',
     body: (
-      <>merge-steward admits a PR approved on its exact head with green checks, then builds future-main candidates, each on top of the one ahead, and runs CI on those SHAs in parallel.</>
+      <>merge-steward admits a PR approved on its exact head with green checks, then builds future-main candidates, each on top of the one ahead, and runs CI on those SHAs in parallel. A red candidate is repaired in place on its candidate ref, rechecked by a narrow integration review, and tested again; the approved PR head stays frozen.</>
     ),
     links: [
       { label: 'post', href: '/posts/merge-steward' },
@@ -74,9 +74,17 @@ const STATIONS: Station[] = [
     n: '07',
     name: 'Deploy',
     body: (
-      <>A push to <code>main</code> runs the repo’s own Actions: stage first, then production on Cloudflare Workers. UserTold runs a smoke test after each.</>
+      <>A push to <code>main</code> runs the repo’s own Actions: stage and production on Cloudflare Workers, from the same SHA at once, each with its own smoke test. The issue is Done only when both pass.</>
     ),
     links: [{ label: 'post', href: '/posts/gates-not-autonomy' }],
+  },
+  {
+    n: '08',
+    name: 'Feedback',
+    body: (
+      <>UserTold interviews the people using what shipped. Interviews become evidence, evidence is linked to Linear issues, and what users said becomes the next work on the line.</>
+    ),
+    links: [{ label: 'usertold.ai', href: 'https://usertold.ai' }],
   },
   {
     n: '—',
