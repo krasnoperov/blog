@@ -104,3 +104,6 @@
 .fx-linear-line { fill: none; stroke: var(--fx-linear); stroke-width: .9px; vector-effect: non-scaling-stroke; }
 @keyframes fx-cursor { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fx-cursor { animation: none; } }
+/* Teleport: a column of light where a red PR leaves and where it lands. */
+.fx-beam { fill: var(--anatomy-red); mix-blend-mode: normal; }
+@media (prefers-color-scheme: dark) { .fx-beam { fill: #ff8a80; } }

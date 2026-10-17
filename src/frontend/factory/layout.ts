@@ -83,11 +83,17 @@ export function curveAt(lane: LaneIndex, s: number): [number, number] {
   return [raw[i - 1][0] + (raw[i][0] - raw[i - 1][0]) * f, raw[i - 1][1] + (raw[i][1] - raw[i - 1][1]) * f];
 }
 
-// The single queue: three test pads in front of the gate, then main.
-export const PADS = [566, 539, 512, 485] as const;
+// The merge aggregate. A PR waits on the entry pad until CI on its own
+// branch is green. A crane then sets it on top of the stack, which stands on
+// the start of the main track: the bottom PR sits on main, each one above
+// sits on the one below it, the way merge-steward rebases its candidates.
+export const ENTRY_X = 506;
+export const STACK_X = 588;
+export const STACK_MAX = 4;
+export const LEVEL_H = BOX_H + 1.2;
+export const CRANE = { x0: ENTRY_X, x1: STACK_X, z: 112 } as const;
 export const QUEUE_X = MERGE_X;
-export const GATE_X = PADS[0] + 13;
-export const MAIN_X0 = 590;
+export const MAIN_X0 = 552;
 export const DOCK_X = 806;
 export const GONE_X = 840;
 
@@ -97,7 +103,7 @@ export const TAP = {
   claude: LANES[1].machine,
   codex: LANES[2].machine,
   review: REVIEW_X,
-  queue: 540,
+  queue: 548,
   dock: 866,
 } as const;
 

@@ -5,7 +5,11 @@ import {
   BUS,
   DOCK_X,
   EVAL_DIAL,
-  GATE_X,
+  CRANE,
+  ENTRY_X,
+  LEVEL_H,
+  STACK_MAX,
+  STACK_X,
   HEIGHT,
   HOIST_X,
   CURVE_X0,
@@ -15,7 +19,6 @@ import {
   LANES,
   MAIN_X0,
   P,
-  PADS,
   PLATE,
   PORTAL,
   UPPER_Z,
@@ -484,19 +487,41 @@ function stopLines() {
   return `<path class="iso-line fx-stopline" d="${out.join('')}"/>`;
 }
 
-// Stanchions with a rope on both sides of the queue, ending at the gate.
-const STANCHIONS = [MERGE_X + 8, (PADS[3] + PADS[2]) / 2, (PADS[2] + PADS[1]) / 2, (PADS[1] + PADS[0]) / 2];
-function stanchions(side: 'back' | 'front') {
-  const y = TRUNK_Y + (side === 'back' ? -1 : 1) * (HALF + 9);
+// The merge aggregate: an entry pad with a CI lamp, a guide frame standing
+// on the start of the main track that holds the stack of rebased PRs with a
+// lamp per level, and a crane that carries PRs from the pad to the stack.
+const FRAME_TOP = BELT_TOP + STACK_MAX * LEVEL_H + 6;
+function stackFrame(side: 'back' | 'front') {
+  const y = TRUNK_Y + (side === 'back' ? -11 : 11);
   const out: string[] = [];
-  const xs = [...STANCHIONS];
-  xs.forEach((x, index) => {
-    out.push(post(x, y, 2.6, 0, 1, { tone: 'lo' }, 16));
-    out.push(post(x, y, 0.9, 1, 32, { crease: 'none' }, 10));
-    out.push(post(x, y, 1.6, 32, 34, { tone: 'hi' }, 14, 0.3));
-    const next = index < xs.length - 1 ? xs[index + 1] : GATE_X - 3;
-    out.push(box(x + 1, y - 0.5, next - (index < xs.length - 1 ? 1 : 0), y + 0.5, 29.5, 31, { tone: 'lo', crease: 'none' }, 0.2));
-  });
+  for (const x of [STACK_X - 11, STACK_X + 11]) {
+    out.push(box(x - 1.6, y - 1.6, x + 1.6, y + 1.6, 17, FRAME_TOP, { crease: 'none' }, 0.4));
+    out.push(L([1, 2, 3].map((level) => k.segment([x - 1.6, y + 1.6, BELT_TOP + level * LEVEL_H - 0.6], [x + 1.6, y + 1.6, BELT_TOP + level * LEVEL_H - 0.6], P)).join(''), { tone: 'faint' }));
+  }
+  out.push(box(STACK_X - 13, y - 2, STACK_X + 13, y + 2, FRAME_TOP, FRAME_TOP + 3, {}, 0.5, 0.3));
+  if (side === 'front') {
+    // The level lamps: one per place in the stack, bottom one on main.
+    const lx = STACK_X - 19;
+    const ly = TRUNK_Y + 16;
+    out.push(post(lx, ly, 3, 0, 1.2, { tone: 'lo' }, 16), post(lx, ly, 1, 1.2, FRAME_TOP, { crease: 'none' }, 10));
+    for (let level = 0; level < STACK_MAX; level++) out.push(lamp(`lvl${level}`, lx, ly, BELT_TOP + level * LEVEL_H + 2, 2.2, 3.4));
+    out.push(engrave(STACK_X - 9, y + 1.6, 19.4, 'MAIN', 3.2));
+  }
+  return out.join('');
+}
+
+function cranePosts(side: 'back' | 'front') {
+  const y = TRUNK_Y + (side === 'back' ? -24 : 24);
+  const out: string[] = [];
+  for (const x of [CRANE.x0 - 14, CRANE.x1 + 18]) {
+    out.push(box(x - 3.5, y - 3.5, x + 3.5, y + 3.5, 0, 1.4, { tone: 'lo' }, 0.6));
+    out.push(box(x - 1.6, y - 1.6, x + 1.6, y + 1.6, 1.4, CRANE.z + 6, { crease: 'none' }, 0.3));
+  }
+  if (side === 'front') {
+    for (const x of [CRANE.x0 - 14, CRANE.x1 + 18]) out.push(box(x - 2.5, TRUNK_Y - 26, x + 2.5, TRUNK_Y + 26, CRANE.z + 6, CRANE.z + 10, {}, 0.5, 0.3));
+    out.push('<g data-part="crane"></g>');
+    out.push(box(CRANE.x0 - 16, TRUNK_Y - 3, CRANE.x1 + 20, TRUNK_Y + 3, CRANE.z + 10, CRANE.z + 15, {}, 0.6, 0.4));
+  }
   return out.join('');
 }
 
@@ -522,48 +547,35 @@ function lane(i: LaneIndex) {
   if (i === 2) out.push(codexPress(machine, y, 'back'));
   out.push(liftPosts(HOIST_X, y, 'back'), liftPosts(dropX(i), y, 'back'));
   if (isTrunk) {
-    PADS.forEach((x, index) => {
-      out.push(post(x - 6, y - HALF - 10, 3.6, 0, 1.4, { tone: 'lo' }));
-      out.push(post(x - 6, y - HALF - 10, 1.3, 1.4, 34, { crease: 'none' }, 12));
-      out.push(lamp(`pad${index}`, x - 6, y - HALF - 10, 34));
-    });
-    out.push(box(GATE_X - 3, y - HALF - 13, GATE_X + 3, y - HALF - 7, 0, 58, {}, 0.5, 0.3));
-    out.push(stanchions('back'));
+    out.push(cranePosts('back'));
+    out.push(post(ENTRY_X, y - HALF - 10, 3.6, 0, 1.4, { tone: 'lo' }), post(ENTRY_X, y - HALF - 10, 1.3, 1.4, 34, { crease: 'none' }, 12));
+    out.push(lamp('entry', ENTRY_X, y - HALF - 10, 34, 2.8, 5));
   }
   const main = belt(`belt-${i}`, x0, x1, y, BELT_TOP, false);
-  const trunk = isTrunk ? belt('belt-t', MERGE_X, MAIN_X0, y, BELT_TOP, true) : null;
+  const trunk = isTrunk ? belt('belt-t', MERGE_X, ENTRY_X + 14, y, BELT_TOP, true) : null;
   const deck = isTrunk ? funnel() : null;
   const onLane = band(y - HALF, y + HALF);
   out.push(main.back, main.carry, onLane.carry);
   if (trunk && deck) out.push(trunk.back, trunk.carry, deck.carry, stopLines());
   if (isTrunk) {
-    for (const x of PADS) {
-      const pad = plan(x - 10, y - 10, x + 10, y + 10, 1);
-      out.push(S(k.slabOf(pad, BELT_TOP, 0.8, P, 3, 0.3), { tone: 'lo' }));
-      out.push(L(k.planOutline(k.insetPlan(pad, 2), BELT_TOP + 0.8, P, 3), { tone: 'faint' }));
-    }
-    out.push(mainTrack());
+    const pad = plan(ENTRY_X - 10, y - 10, ENTRY_X + 10, y + 10, 1);
+    out.push(S(k.slabOf(pad, BELT_TOP, 0.8, P, 3, 0.3), { tone: 'lo' }));
+    out.push(L(k.planOutline(k.insetPlan(pad, 2), BELT_TOP + 0.8, P, 3), { tone: 'faint' }));
+    out.push(mainTrack(), stackFrame('back'));
   }
   out.push(`<g data-part="items-${i}"></g>`);
+  if (isTrunk) out.push('<g data-part="stack"></g>');
   out.push(`<g data-part="lift-${i}"></g>`);
   out.push(main.front, onLane.front);
   if (trunk && deck) {
-    out.push(trunk.front, deck.front);
-    // Engraved place numbers on the queue's front frame, 1 at the gate.
-    PADS.forEach((x, index) => out.push(k.faceTextSvg(k.sideMatrix([x - 2, y + HALF + 3], BELT_TOP - 2.4, P, 'left'), String(index + 1), { size: 5.6, tone: 'hi' })));
-    out.push(stanchions('front'));
+    out.push(trunk.front, deck.front, stackFrame('front'));
   }
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
   if (i === 0) out.push(drop(TAP.patchrelay, [machine - 6, y - 20, 56]), patchrelayMachine(machine, y));
   if (i === 1) out.push(drop(TAP.claude, [machine, y - 23, 44]), claudeMachine(machine, y));
   if (i === 2) out.push(drop(TAP.codex, [machine, y - HALF - 12, 76]), codexPress(machine, y, 'front'));
   if (i === 0) out.push(k.wireSvg(at([intake + 20, y + 8, 100]), at([machine - 6, y + 8, 69]), { tone: 'mid', via: [at([intake + 40, y + 8, 120]), at([machine - 6, y + 8, 120])] }));
-  if (isTrunk) {
-    out.push(box(GATE_X - 3, y + HALF + 7, GATE_X + 3, y + HALF + 13, 0, 58, {}, 0.5, 0.3));
-    out.push(box(GATE_X - 4, y - HALF - 14, GATE_X + 4, y + HALF + 14, 58, 63, {}, 0.8, 0.4));
-    out.push(D([[GATE_X, y - HALF - 11, 63], [GATE_X, y + HALF + 11, 63]], 0.4));
-    out.push('<g data-part="links"></g>');
-  }
+  if (isTrunk) out.push('<g data-part="links"></g>', cranePosts('front'));
   out.push(`<g data-part="probe-${i}"></g>`);
   out.push(liftPosts(HOIST_X, y, 'front'), liftPosts(dropX(i), y, 'front'));
   // The upper return belt, from the lift past review back to the lift ahead
@@ -678,7 +690,7 @@ function dock() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a terminal cabinet and an open press with an app window behind it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. The outer lines curve smoothly into the middle one, which becomes the single queue, where candidates test on pads at the same time and each passes the gate as soon as it is green, onto the main track and into the deploy dock. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a terminal cabinet and an open press with an app window behind it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. The outer lines curve smoothly into the middle one, which runs to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the deploy dock as soon as it is green; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
 
 let cached: string | null = null;
 
