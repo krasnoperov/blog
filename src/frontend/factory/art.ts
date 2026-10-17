@@ -229,9 +229,13 @@ function windowScreen(y: number, x0: number, x1: number, z0: number, z1: number,
 }
 
 // Intake for patchrelay: the Linear hopper, its face an issue list.
+// The hopper stands astride the belt: its back legs go behind the belt,
+// the rest is drawn after it.
+function hopperBack(x: number, y: number) {
+  return [-17, 17].map((dx) => box(x + dx - 1.4, y - 18.4, x + dx + 1.4, y - 15.6, 0, 70, { crease: 'none' }, 0.4)).join('');
+}
 function hopper(x: number, y: number) {
   const out: string[] = [];
-  for (const dx of [-17, 17]) out.push(box(x + dx - 1.4, y - 18.4, x + dx + 1.4, y - 15.6, 0, 70, { crease: 'none' }, 0.4));
   out.push('<g data-part="intake-0"></g>');
   out.push(box(x - 6, y - 6, x + 6, y + 6, 33, 50, {}, 0.8, 0.4));
   out.push(box(x - 12, y - 12, x + 12, y + 12, 50, 60, {}, 1, 0.5));
@@ -263,7 +267,8 @@ function hopper(x: number, y: number) {
 
 // Intake for Claude Code and Codex: a console where I start a session. Its
 // arm reaches over the belt and drops the issue.
-function sessionConsole(x: number, y: number, lane: LaneIndex) {
+// A console stands behind the belt; only its arm and chute reach over it.
+function consoleBack(x: number, y: number, lane: LaneIndex) {
   const out: string[] = [];
   const back = y - HALF - 4;
   out.push(box(x - 16, back - 16, x + 16, back, 0, 1.6, { tone: 'lo' }, 1));
@@ -271,6 +276,11 @@ function sessionConsole(x: number, y: number, lane: LaneIndex) {
   // Screen on top: a terminal for Claude Code, an app window for Codex.
   out.push(box(x - 14, back - 12, x + 14, back - 9, 41.6, 64, {}, 0.8, 0.4));
   out.push(lane === 1 ? terminalScreen(back - 9, x - 11, x + 11, 44.5, 61, `c${lane}`, 4) : windowScreen(back - 9, x - 11, x + 11, 44.5, 61, `c${lane}`));
+  return out.join('');
+}
+function sessionConsole(x: number, y: number, lane: LaneIndex) {
+  const out: string[] = [];
+  const back = y - HALF - 4;
   // Arm and chute over the belt.
   out.push(box(x - 4, back - 4, x + 4, y + 2, 40, 44, {}, 0.6, 0.3));
   out.push(`<g data-part="intake-${lane}"></g>`);
@@ -365,6 +375,18 @@ function liftMast(x: number, y: number) {
   out.push(box(x - 5, my - 1.5, x + 5, y - 6, UPPER_Z - 4, UPPER_Z - 1.5, {}, 0.4, 0.2));
   out.push(box(x - 5.5, my - 2, x + 5.5, my + 2, UPPER_Z + 4, UPPER_Z + 6, {}, 0.4, 0.3));
   return out.join('');
+}
+
+// A support for a long upper return belt: one post behind the line and a
+// bracket under the belt, like a lift mast without the lift.
+const UPPER_POSTS: Record<LaneIndex, number[]> = { 0: [200], 1: [230], 2: [] };
+function upperPost(x: number, y: number) {
+  const my = y - MAST_Y;
+  return [
+    box(x - 4, my - 3, x + 4, my + 3, 0, 1.4, { tone: 'lo' }, 0.6),
+    box(x - 1.4, my - 1.4, x + 1.4, my + 1.4, 1.4, UPPER_Z - 1.5, { crease: 'none' }, 0.4),
+    box(x - 3, my - 1.5, x + 3, y - 6, UPPER_Z - 4, UPPER_Z - 1.5, {}, 0.4, 0.2),
+  ].join('');
 }
 
 // The merge queue. A gate past the collector: two posts, a bar that rises
@@ -473,7 +495,8 @@ function lane(i: LaneIndex) {
   out.push(screenPod(machine, y, i));
   if (i === 2) out.push(codexPress(machine, y, 'back'));
   else out.push(armColumn(machine, y));
-  out.push(liftMast(dropX(i), y), liftMast(HOIST_X, y));
+  out.push(liftMast(dropX(i), y), liftMast(HOIST_X, y), ...UPPER_POSTS[i].map((x) => upperPost(x, y)));
+  out.push(i === 0 ? hopperBack(intake, y) : consoleBack(intake, y, i));
   if (isTrunk) {
     out.push(legs([JOIN_X + 50], y), gate('back'), cranePosts('back'));
   }
