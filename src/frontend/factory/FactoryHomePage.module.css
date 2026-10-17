@@ -176,9 +176,17 @@
   border-bottom-color: var(--anatomy-strong);
 }
 
-.evalGrid,
+.evalGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
 
-.evalCard,
+.evalCard {
+  padding: 24px;
+  background: var(--anatomy-card);
+  box-shadow: 0 0 0 1px var(--anatomy-faint);
+}
 
 .evalCard p {
   margin: 10px 0 0;
@@ -202,13 +210,6 @@
   font-weight: 500;
   color: var(--anatomy-strong);
 }
-
-
-
-
-
-
-
 
 .footnote {
   margin: 14px 0 0;
@@ -247,7 +248,9 @@
   }
 
   .stationList,
-  .evalGrid,
+  .evalGrid {
+    grid-template-columns: 1fr;
+  }
 
   .figure,
   .stations,
