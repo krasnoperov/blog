@@ -404,6 +404,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item.path === 'belt' && item.stage === 'changes') {
       const lift = lifts[lane].up;
       if (lift.item || Math.abs(lift.z - BELT_Z) > 0.5) return true;
+      // Don't raise a PR into the spot where a teleported one is landing.
+      if (items.some((other) => other.lane === lane && other.path === 'teleport' && other.beamFrom === null)) return true;
       lift.item = item;
       item.path = 'liftUp';
       item.t = 0;
@@ -630,7 +632,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         item.fade = Math.max(0, 1 - item.t / 0.6);
         if (item.t < 0.6) continue;
         const lane = item.lane;
-        const room = !lifts[lane].up.item && !items.some((other) => other.lane === lane && other.path === 'upper' && other.x > HOIST_X - GAP);
+        // Land only on a clear spot: no PR riding there, none still landing
+        // from another teleport, and the lift not handing one up.
+        const landingBusy = items.some(
+          (other) =>
+            other !== item &&
+            other.lane === lane &&
+            ((other.path === 'upper' && other.x > HOIST_X - GAP) || (other.path === 'teleport' && other.beamFrom === null)),
+        );
+        const room = !lifts[lane].up.item && !landingBusy;
         if (!room) continue;
         item.beamFrom = null;
         item.x = HOIST_X;
