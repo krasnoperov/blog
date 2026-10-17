@@ -469,7 +469,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       reviewsDone += 1;
       item.stage = passing ? 'approved' : 'changes';
       item.flag = !passing;
-      if (!passing) item.pre = 0;
+      // Changes requested: the fix is a new revision, so its branch CI starts
+      // over, and a failure on the old one counts as the one this PR had.
+      if (!passing) {
+        if (item.red >= 0) item.retried = true;
+        item.red = -1;
+        item.pre = 0;
+      }
       verdict[lane] = { kind: passing ? 'approve' : 'changes', t: 0 };
       dialTarget[lane] = 0;
       item.t = 0;
