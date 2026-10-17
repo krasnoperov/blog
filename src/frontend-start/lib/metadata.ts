@@ -4,6 +4,7 @@ import {
   type BlogPostSummary,
 } from '../../shared/content/blog-posts';
 import {
+  HOME_DESCRIPTION,
   SITE_DESCRIPTION,
   SITE_FEED_PATH,
   SITE_AUTHOR_NAME,
@@ -69,7 +70,7 @@ function baseMetadata({
 export function homePageHead() {
   return baseMetadata({
     title: SITE_NAME,
-    description: SITE_DESCRIPTION,
+    description: HOME_DESCRIPTION,
     path: '/',
     jsonLd: {
       '@context': 'https://schema.org',

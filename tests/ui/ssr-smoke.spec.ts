@@ -12,8 +12,8 @@ test.describe('SSR smoke', () => {
     expect(response.headers()['x-frontend-renderer']).toBe('tanstack-start');
     expect(response.headers()['x-llms-txt']).toBe('/llms.txt');
     const body = await response.text();
-    expect(body).toContain('I build what I need. Agents run it.');
-    expect(body).toContain('Four products, each born from the last');
+    expect(body).toContain('The software factory behind my products');
+    expect(body).toContain('class="iso-svg fx-svg"');
     expect(body).toContain('rel="canonical" href="https://krasnoperov.me/"');
     expect(body).toContain('property="og:title" content="Krasnoperov Blog"');
   });

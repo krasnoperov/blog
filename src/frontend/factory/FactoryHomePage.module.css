@@ -1,0 +1,308 @@
+.page {
+  min-height: 100vh;
+  background: var(--anatomy-page);
+  color: var(--anatomy-text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  color: var(--anatomy-strong);
+}
+
+.bar,
+.main,
+.footer {
+  width: min(1240px, calc(100% - 32px));
+  margin: 0 auto;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.brand {
+  color: var(--anatomy-strong);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.brand span {
+  color: var(--anatomy-muted);
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+}
+
+.navLink {
+  color: var(--anatomy-muted);
+  transition: color 140ms ease;
+}
+
+.navLink:hover {
+  color: var(--anatomy-strong);
+}
+
+.main {
+  padding: 56px 0 24px;
+}
+
+.hero {
+  max-width: 720px;
+  margin-bottom: 44px;
+}
+
+.eyebrow {
+  margin: 0 0 18px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--anatomy-muted);
+}
+
+.headline {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--anatomy-strong);
+}
+
+.lede {
+  margin: 22px 0 0;
+  max-width: 660px;
+  font-size: 1.06rem;
+  line-height: 1.65;
+}
+
+.figure {
+  margin: 0 0 88px;
+}
+
+.sectionTitle {
+  margin: 0 0 22px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--anatomy-muted);
+}
+
+.stations,
+.evals,
+.projects {
+  margin-bottom: 88px;
+}
+
+.stationList {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--anatomy-faint);
+  box-shadow: 0 0 0 1px var(--anatomy-faint);
+}
+
+.station {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 20px 18px;
+  background: var(--anatomy-card);
+}
+
+.stationNumber {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--anatomy-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.stationName {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--anatomy-strong);
+  letter-spacing: -0.01em;
+}
+
+.stationBody {
+  flex: 1;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.stationLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.link {
+  color: var(--anatomy-strong);
+  border-bottom: 1px solid var(--anatomy-lo);
+  transition: border-color 140ms ease;
+}
+
+.link:hover {
+  border-bottom-color: var(--anatomy-strong);
+}
+
+.evalGrid,
+.projectGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.evalCard,
+.project {
+  padding: 24px;
+  background: var(--anatomy-card);
+  box-shadow: 0 0 0 1px var(--anatomy-faint);
+}
+
+.evalCard p {
+  margin: 10px 0 0;
+  font-size: 14px;
+}
+
+.evalFigure {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--anatomy-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.evalName {
+  margin: 14px 0 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--anatomy-strong);
+}
+
+.projectHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.projectName {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--anatomy-strong);
+}
+
+.projectLine {
+  margin: 6px 0 20px;
+  font-size: 14px;
+}
+
+.numbers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+  margin: 0;
+}
+
+.number {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+}
+
+.number dt {
+  font-size: 12.5px;
+  color: var(--anatomy-muted);
+}
+
+.number dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--anatomy-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.footnote {
+  margin: 14px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--anatomy-muted);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 28px 0 44px;
+  border-top: 1px solid var(--anatomy-faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--anatomy-muted);
+}
+
+.footerLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+@media (max-width: 1000px) {
+  .stationList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding-top: 28px;
+  }
+
+  .stationList,
+  .evalGrid,
+  .projectGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .figure,
+  .stations,
+  .evals,
+  .projects {
+    margin-bottom: 60px;
+  }
+}

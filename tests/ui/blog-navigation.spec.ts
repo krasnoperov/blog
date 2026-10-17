@@ -4,8 +4,9 @@ test.describe('blog navigation', () => {
   test('reader can move from home to archive to a post', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: 'I build what I need. Agents run it.' })).toBeVisible();
-    await page.getByRole('link', { name: 'browse archive' }).click();
+    await expect(page.getByRole('heading', { name: 'The software factory behind my products' })).toBeVisible();
+    await expect(page.getByRole('img', { name: /isometric software factory/i })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Elsewhere' }).getByRole('link', { name: 'notes' }).click();
 
     await expect(page).toHaveURL(/\/posts$/);
     await expect(page.getByRole('heading', { name: 'Notes and essays, one post at a time.' })).toBeVisible();
