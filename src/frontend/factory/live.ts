@@ -6,12 +6,12 @@ import {
   BUS,
   CARD_H,
   EVAL_DIAL,
-  CRANE,
-  ENTRY_X,
-  LEVEL_H,
-  STACK_MAX,
-  STACK_X,
+  GATE_X,
+  GAUGE,
   GONE_X,
+  HEAD_X,
+  SLOTS,
+  slotX,
   HOIST_X,
   JOIN_X,
   LANES,
@@ -26,7 +26,7 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
-import { ARM_BASE, BAYS, BAY_Z } from './art';
+import { ARM_BASE, GATE_SPAN, STAGE_DIAL, WINDOWS } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -50,16 +50,16 @@ export const AGENTS = [
 const ROUNDS_OF = [1, 2, 1, 1, 1, 3, 1, 1, 1, 1];
 const CI_OF = [4.2, 6.8, 3.4, 5.6, 7.4, 3.9, 5.1];
 const SPAWN_EVERY = [3.6, 4.4, 5.2];
-// Some PRs fail CI on their own branch at the entry pad; some go red once in
-// the stack, rebased on the PRs below them.
+// Some PRs fail CI on their own branch and are turned back at the gate;
+// some go red in the queue, built on the PRs ahead of them.
 const FAILS_ENTRY = (id: number) => id % 13 === 4;
-const FAILS_IN_STACK = (id: number) => id % 7 === 2;
-const ENTRY_CI = 1.2;
-// CI on a stacked candidate runs this much faster than on a lone branch.
-const STACK_CI = 1.0;
-const TRAVEL_Z = BELT_Z + STACK_MAX * LEVEL_H + 10;
-const levelZ = (level: number) => BELT_Z + level * LEVEL_H;
-type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'crane' | 'stack' | 'teleport' | 'gone';
+const FAILS_IN_QUEUE = (id: number) => id % 7 === 2;
+// CI on the PR's own branch starts when the PR is opened and runs while it
+// is reviewed, so it is usually green by the time it reaches the gate.
+const BRANCH_CI = 3.0;
+// CI on a queued candidate: each PR's own pattern, scaled.
+const QUEUE_CI = 1.5;
+type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'cross' | 'trunk' | 'queue' | 'teleport' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
 interface Item {
@@ -76,11 +76,11 @@ interface Item {
   t: number;
   s: number;
   morph: number;
-  // The merge aggregate: CI on the PR's own branch at the entry pad, its
-  // place in the stack, a red candidate's countdown, and the teleport fade.
+  // The merge: CI on the PR's own branch, a red PR's countdown, a candidate
+  // draining its CI to test again, and the teleport fade.
   pre: number;
-  level: number;
   red: number;
+  retest: boolean;
   retried: boolean;
   fade: number;
   beamFrom: [number, number, number] | null;
@@ -169,16 +169,6 @@ function teleportSvg(x: number, y: number, z: number, env: number, time: number,
   }
   out.push(sparks.join(''));
   return `<g class="fx-tp">${out.join('')}</g>`;
-}
-
-// The crane's trolley on its beam, the hoist and a gripper.
-function craneSvg(x: number, hook: number) {
-  const y = TRUNK_Y;
-  const trolley = box(x - 8, y - 6, x + 8, y + 6, CRANE.z + 4, CRANE.z + 10, {}, 0.8, 0.4);
-  const rope = k.lineSvg(k.segment([x - 3, y, CRANE.z + 4], [x - 3, y, hook + 3], P) + k.segment([x + 3, y, CRANE.z + 4], [x + 3, y, hook + 3], P), { tone: 'mid' });
-  const head = box(x - 9, y - 9, x + 9, y + 9, hook + 1, hook + 3.5, { tone: 'mid' }, 0.8, 0.3);
-  const jaws = box(x - 9, y + 8, x + 9, y + 9.5, hook - 5, hook + 1, { tone: 'lo' }, 0.2);
-  return rope + head + trolley + jaws;
 }
 
 // The SCARA arms: two horizontal links on a column, a wrist with a quill,
@@ -285,7 +275,16 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     cyl(CASE0, 44, 0.6, 35.2, 43, { crease: 'none' }, 10) +
     cyl(CASE0, 44, 1.2, 34, 35.2, { tone: 'hi' }, 12);
   let headX = 0;
-  const shutters = BAYS.map((bay) => ({ el: part(`shutter-${bay.name}`), open: 0, key: '' }));
+  // The queue's gauges, the gate's bar, and deploy: the stage booth's window
+  // and dial, production's windows.
+  const gaugeEls = Array.from({ length: SLOTS }, (_, slot) => part(`gauge-${slot}`));
+  const gauges = gaugeEls.map(() => ({ level: 0, state: 'none', key: '' }));
+  const gateBar = part('gate-bar');
+  let gateOpen = 0;
+  let gateKey = '';
+  const stageNeedle = part('stage-needle');
+  const stagePane = svg.querySelector('[data-window="stage"]');
+  const panes = WINDOWS.map((w) => ({ col: w.col, el: svg.querySelectorAll(`[data-window="${w.col}"]`) }));
   const cases = Array.from(svg.querySelectorAll<SVGGElement>('[data-case]'));
   const pegs = Array.from(svg.querySelectorAll<SVGGElement>('[data-peg]'));
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -293,16 +292,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const CARD = cardSvg();
   const BOX = boxSvg();
 
-  const stackEl = part('stack');
-  const craneEl = part('crane');
-  const craneRig = document.createElementNS(SVG_NS, 'g');
-  const craneCargo = document.createElementNS(SVG_NS, 'g');
-  craneEl.appendChild(craneRig);
-  craneEl.appendChild(craneCargo);
-  const beams = document.createElementNS(SVG_NS, 'g');
-  craneEl.appendChild(beams);
-  const stack: Item[] = [];
-  const crane = { x: ENTRY_X as number, hook: CRANE.z - 8, item: null as Item | null, phase: 'idle', t: 0, key: '', target: 0 };
+  const beams = part('beams');
 
   // Two lifts per lane: one past review that raises a rejected PR to the
   // upper return belt, one ahead of the machine that sets it back down.
@@ -341,7 +331,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let lastText = '';
   let lastStats = '';
 
-  const onBelt = (item: Item) => item.path === 'belt' || item.path === 'trunk';
+  const onBelt = (item: Item) => item.path === 'belt' || item.path === 'trunk' || item.path === 'queue';
+  const onTrunk = (item: Item) => item.path === 'trunk' || item.path === 'queue';
   // The junction: the cell where the collector meets the middle line. One
   // PR in it at a time; everyone else simply queues on their own belt.
   const inJunction = (item: Item) =>
@@ -354,7 +345,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     let best: Item | null = null;
     for (const other of items) {
       if (other === item || other.done || !onBelt(other)) continue;
-      const sameStretch = item.path === 'trunk' ? other.path === 'trunk' : other.lane === item.lane && other.path === 'belt' || (item.lane === 1 && other.path === 'trunk');
+      const sameStretch = onTrunk(item) ? onTrunk(other) : (other.lane === item.lane && other.path === 'belt') || (item.lane === 1 && onTrunk(other));
       if (!sameStretch) continue;
       if (other.x > item.x && (!best || other.x < best.x)) best = other;
     }
@@ -391,8 +382,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       s: 0,
       morph: 0,
       pre: 0,
-      level: -1,
       red: -1,
+      retest: false,
       retried: false,
       fade: 1,
       beamFrom: null,
@@ -435,7 +426,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }
 
   function stopFor(item: Item): number {
-    if (item.path === 'trunk') return item.stage === 'merged' ? GONE_X + 40 : ENTRY_X;
+    if (item.path === 'trunk') return GATE_X - 10;
+    if (item.path === 'queue') return item.stage === 'merged' ? GONE_X + 40 : HEAD_X;
     switch (item.stage) {
       case 'new':
       case 'fixing':
@@ -477,6 +469,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       reviewsDone += 1;
       item.stage = passing ? 'approved' : 'changes';
       item.flag = !passing;
+      if (!passing) item.pre = 0;
       verdict[lane] = { kind: passing ? 'approve' : 'changes', t: 0 };
       dialTarget[lane] = 0;
       item.t = 0;
@@ -507,15 +500,16 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       item.t = 0;
       return false;
     }
-    if (item.path === 'trunk' && item.stage === 'approved') {
-      // The entry pad: CI on the PR's own branch must be green first.
-      if (item.pre < 1 || item.red >= 0) return true;
-      if (crane.item || crane.phase !== 'idle' || stack.length >= STACK_MAX) return true;
-      crane.item = item;
-      crane.phase = 'grab';
-      crane.t = 0;
-      item.path = 'crane';
-      return true;
+    // At the gate: wait for CI on the branch; admission is in runMerge.
+    if (item.path === 'trunk') return true;
+    // At the head: leave for main the moment the candidate is green.
+    if (item.path === 'queue' && item.stage === 'approved') {
+      if (item.ci < 1 || item.red >= 0 || item.retest) return true;
+      item.stage = 'merged';
+      item.t = 0;
+      merged += 1;
+      pulse(TAP.queue, TAP.dock);
+      return false;
     }
     return false;
   }
@@ -589,117 +583,62 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     item.red = -1;
     item.ci = 0;
     item.pre = 0;
+    item.retest = false;
     returned += 1;
     pulse(TAP.queue, TAP[LANES[item.lane].key]);
   }
 
   function runMerge(dt: number) {
-    // CI on each queued PR's own branch runs while it waits; a red one leaves
-    // from the pad.
+    // CI on each PR's own branch runs from the moment it is opened.
     for (const item of items) {
-      if (item.path === 'trunk' && item.stage === 'approved' && item.pre < 1) {
-        item.pre = Math.min(1, item.pre + dt / ENTRY_CI);
+      if ((item.stage === 'built' || item.stage === 'approved') && (item.path === 'belt' || item.path === 'cross' || item.path === 'trunk') && item.pre < 1) {
+        item.pre = Math.min(1, item.pre + dt / BRANCH_CI);
         if (item.pre >= 1 && FAILS_ENTRY(item.id) && !item.retried) item.red = 0;
       }
     }
+    // The gate: an approved PR with a green branch is admitted as it comes
+    // up to the gate, without stopping; a red one is turned back from it.
     for (const item of items) {
-      if (item.path === 'trunk' && item.red >= 0 && Math.abs(item.x - ENTRY_X) < 0.5) {
-        item.red += dt;
+      if (item.path !== 'trunk') continue;
+      const atGate = Math.abs(item.x - (GATE_X - 10)) < 0.5;
+      if (item.red >= 0) {
+        if (atGate) item.red += dt;
         if (item.red > 0.9) teleport(item);
+      } else if (item.pre >= 1 && item.x >= GATE_X - 40) {
+        item.path = 'queue';
+        item.ci = 0;
       }
     }
-
-    // The crane: grab from the pad, lift clear of the frame, carry, set the
-    // PR down on top of the stack, come back.
-    crane.t += dt;
-    const item = crane.item;
-    const rest = CRANE.z - 8;
-    if (item) {
-      if (crane.phase === 'grab') {
-        crane.x = ENTRY_X;
-        crane.hook = rest + (BELT_Z + BOX_H - rest) * ease(crane.t / 0.3);
-        if (crane.t >= 0.3) Object.assign(crane, { phase: 'lift', t: 0 });
-      } else if (crane.phase === 'lift') {
-        item.z = BELT_Z + (TRAVEL_Z - BELT_Z) * ease(crane.t / 0.45);
-        crane.hook = item.z + BOX_H;
-        if (crane.t >= 0.45) Object.assign(crane, { phase: 'carry', t: 0 });
-      } else if (crane.phase === 'carry') {
-        item.x = ENTRY_X + (STACK_X - ENTRY_X) * ease(crane.t / 0.7);
-        crane.x = item.x;
-        // Hover until the stack has settled: nothing leaving the frame, no
-        // red PR fading out of it, every level at rest.
-        const settled =
-          !items.some((other) => (other.stage === 'merged' && other.path === 'trunk' && other.x < STACK_X + 18) || (other.path === 'teleport' && other.beamFrom !== null && Math.abs(other.beamFrom[0] - STACK_X) < 1)) &&
-          stack.every((candidate, level) => candidate.z === levelZ(level));
-        if (crane.t >= 0.7 && settled) Object.assign(crane, { phase: 'lower', t: 0, target: levelZ(stack.length) });
-      } else if (crane.phase === 'lower') {
-        item.z = TRAVEL_Z + (crane.target - TRAVEL_Z) * ease(crane.t / 0.45);
-        crane.hook = item.z + BOX_H;
-        if (crane.t >= 0.45) {
-          item.z = crane.target;
-          item.path = 'stack';
-          item.level = stack.length;
-          item.ci = 0;
-          stack.push(item);
-          crane.item = null;
-          Object.assign(crane, { phase: 'rise', t: 0 });
-        }
+    // The queue: every candidate tests at once, each built on the ones ahead.
+    const queued = items.filter((item) => item.path === 'queue' && item.stage === 'approved').sort((a, b) => b.x - a.x);
+    for (const item of queued) {
+      if (item.red >= 0) {
+        item.red += dt;
+      } else if (item.retest) {
+        item.ci = Math.max(0, item.ci - dt * 3);
+        if (item.ci === 0) item.retest = false;
+      } else if (item.ci < 1) {
+        item.ci = Math.min(1, item.ci + dt / (item.ciNeed * QUEUE_CI));
+        if (item.ci >= 1 && FAILS_IN_QUEUE(item.id) && !item.retried) item.red = 0;
       }
-    } else if (crane.phase === 'rise') {
-      crane.hook += (rest - crane.hook) * (1 - Math.exp(-dt / 0.12));
-      if (crane.t >= 0.25) Object.assign(crane, { phase: 'return', t: 0 });
-    } else if (crane.phase === 'return') {
-      crane.x = STACK_X + (ENTRY_X - STACK_X) * ease(crane.t / 0.55);
-      if (crane.t >= 0.55) Object.assign(crane, { phase: 'idle', t: 0 });
-    } else {
-      crane.hook += (rest - crane.hook) * (1 - Math.exp(-dt / 0.12));
     }
-
-    // The stack: every level tests at once, each rebased on the one below.
-    // A delivered PR has to clear the frame before the stack settles onto
-    // main behind it.
-    const leaving =
-      items.some((other) => other.stage === 'merged' && other.path === 'trunk' && other.x < STACK_X + 18) ||
-      items.some((other) => other.path === 'teleport' && other.beamFrom !== null && Math.abs(other.beamFrom[0] - STACK_X) < 1);
-    stack.forEach((candidate, level) => {
-      candidate.level = level;
-      // While anything is leaving the frame, the stack holds still.
-      const target = leaving ? candidate.z : levelZ(level);
-      candidate.z += (target - candidate.z) * (1 - Math.exp(-dt / 0.1));
-      if (Math.abs(candidate.z - target) < 0.05) candidate.z = target;
-      if (candidate.red >= 0) {
-        candidate.red += dt;
-        return;
-      }
-      if (candidate.ci < 1) {
-        candidate.ci = Math.min(1, candidate.ci + dt / (candidate.ciNeed * STACK_CI));
-        if (candidate.ci >= 1 && FAILS_IN_STACK(candidate.id) && !candidate.retried) candidate.red = 0;
-      }
-    });
-    // A red candidate goes back; everything above it was built on it, so it
-    // drops a level and tests again.
-    // Nothing leaves the stack while the crane is setting a PR down on it.
-    const lowering = crane.phase === 'lower';
-    const red = lowering ? undefined : stack.find((candidate) => candidate.red > 1.0);
+    // A red candidate goes back; everything behind it was built on it, so it
+    // drains its CI and tests again.
+    const red = queued.find((item) => item.red > 1.0);
     if (red) {
-      const at = stack.indexOf(red);
-      stack.splice(at, 1);
-      for (const above of stack.slice(at)) above.ci = 0;
+      for (const behind of queued) if (behind.x < red.x) behind.retest = true;
       teleport(red);
     }
-    // The bottom PR sits on main: once it is green, it is delivered.
-    const bottom = stack[0];
-    const mainClear = !items.some((other) => other.stage === 'merged' && other.path === 'trunk' && other.x < STACK_X + GAP + 6);
-    if (!lowering && !red && bottom && bottom.z === levelZ(0) && bottom.ci >= 1 && bottom.red < 0 && mainClear) {
-      stack.shift();
-      bottom.path = 'trunk';
-      bottom.stage = 'merged';
-      bottom.level = -1;
-      bottom.x = STACK_X;
-      bottom.t = 0;
-      merged += 1;
-      pulse(TAP.queue, TAP.dock);
-    }
+    // The gate's bar rises while a PR is being let through.
+    const passing = items.some((item) => item.path === 'queue' && item.x > GATE_X - 40 && item.x < GATE_X + 12);
+    gateOpen = still.matches ? (passing ? 1 : 0) : gateOpen + ((passing ? 1 : 0) - gateOpen) * (1 - Math.exp(-dt / 0.08));
+    // Gauges read the candidate standing at their place.
+    gauges.forEach((gauge, slot) => {
+      const here = queued.find((item) => Math.abs(item.x - slotX(slot)) < GAP / 2);
+      const target = here ? here.ci : 0;
+      gauge.state = !here ? 'none' : here.red >= 0 ? 'red' : here.ci >= 1 ? 'green' : 'running';
+      gauge.level = still.matches ? target : gauge.level + (target - gauge.level) * (1 - Math.exp(-dt / 0.1));
+    });
 
     // Teleports: fade out, wait for room at the far end of the upper belt,
     // fade in there.
@@ -749,7 +688,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
     });
 
-    const belts = items.filter((item) => item.path === 'belt' || item.path === 'trunk' || item.path === 'drop').sort((a, b) => b.x - a.x);
+    const belts = items.filter((item) => item.path === 'belt' || item.path === 'trunk' || item.path === 'queue' || item.path === 'drop').sort((a, b) => b.x - a.x);
     for (const item of belts) {
       if (item.path === 'drop') {
         item.t += dt;
@@ -763,7 +702,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
       const stop = stopFor(item);
       if (Math.abs(item.x - stop) < 0.01 && work(item, dt)) continue;
-      if (item.path !== 'belt' && item.path !== 'trunk') continue;
+      if (!onBelt(item)) continue;
       let limit = stopFor(item);
       const next = ahead(item);
       if (next) limit = Math.min(limit, next.x - GAP);
@@ -772,12 +711,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (item.path === 'belt' && item.lane !== 1 && items.some((other) => other.lane === item.lane && other.path === 'cross' && Math.abs(other.y - LANES[item.lane].y) < GAP)) limit = Math.min(limit, JOIN_X - GAP);
       // The middle line holds back while a PR crosses into the junction.
       if (item.path === 'belt' && item.lane === 1 && item.x <= JOIN_X - GAP + 0.01 && items.some((other) => other.path === 'cross' && Math.abs(other.y - TRUNK_Y) < GAP)) limit = Math.min(limit, JOIN_X - GAP);
-      // The pad stays clear while the crane is still low over it or a red PR
-      // is leaving from it.
-      if (item.path === 'trunk' && item.stage === 'approved') {
-        const padBusy = (crane.item !== null && crane.item.z < BELT_Z + BOX_H + 6 && Math.abs(crane.item.x - ENTRY_X) < 1) ||
-          items.some((other) => other.path === 'teleport' && other.beamFrom !== null && Math.abs(other.beamFrom[0] - ENTRY_X) < 1);
-        if (padBusy) limit = Math.min(limit, ENTRY_X - GAP);
+      // Nothing passes the gate until its bar is up, and nothing moves into
+      // the spot of a red PR that is still leaving.
+      if (item.path === 'queue' && item.x <= GATE_X - 10 + 0.01 && gateOpen < 0.9) limit = Math.min(limit, GATE_X - 10);
+      if (onTrunk(item)) {
+        for (const other of items) {
+          if (other.path === 'teleport' && other.beamFrom !== null && Math.abs(other.beamFrom[1] - TRUNK_Y) < 1 && other.beamFrom[0] > item.x) limit = Math.min(limit, other.beamFrom[0] - GAP);
+        }
       }
       // Hold back for a returned PR being set down ahead of the machine, and
       // for a lift that is still low where it stands.
@@ -857,12 +797,6 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (v) v.t += dt;
     });
     beacon += dt;
-    // A bay's shutter rolls up while its beacon is on, and back down after.
-    const bayOn = [beacon < 0.9, beacon > 0.6 && beacon < 1.7];
-    shutters.forEach((shutter, i) => {
-      const target = bayOn[i] ? 1 : 0;
-      shutter.open = still.matches ? target : shutter.open + (target - shutter.open) * (1 - Math.exp(-dt / 0.25));
-    });
     // The eval reader follows the case being replayed, and jumps home.
     const headTarget = (Math.floor(clock / 1.3) % 11) * 4.8;
     headX = still.matches || headTarget < headX - 1 ? headTarget : headX + (headTarget - headX) * (1 - Math.exp(-dt / 0.12));
@@ -879,7 +813,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
 
   function phaseOf(item: Item): string {
     const agent = AGENTS[item.lane].label;
-    if (item.done) return 'deployed · stage → production';
+    if (item.done) return 'deployed · stage, then production';
     if (item.path === 'drop') return `picked up · ${agent}`;
     if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
     if (item.path === 'teleport') return `red in the queue · teleported back to ${agent}`;
@@ -895,17 +829,17 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       case 'changes':
         return `changes requested · round ${item.reviews}`;
       case 'approved':
-        if (item.path === 'crane') return 'merge queue · stacking on the PR ahead';
-        if (item.path === 'stack') {
-          const below = stack[item.level - 1];
-          const base = below ? `rebased on ${below.name}` : 'rebased on main';
-          return `merge queue · level ${item.level + 1} · ${base} · ${item.red >= 0 ? 'red' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, delivering' : 'green, waiting'}`;
+        if (item.path === 'queue') {
+          const queued = items.filter((other) => other.path === 'queue' && other.stage === 'approved' && other.x > item.x).sort((a, b) => a.x - b.x);
+          const base = queued.length ? `built on ${queued[0].name}` : 'built on main';
+          const state = item.red >= 0 ? 'red' : item.retest ? 'retesting' : item.ci < 1 ? 'CI running' : here(HEAD_X) ? 'green, to main' : 'green';
+          return `merge queue · ${base} · ${state}`;
         }
-        if (item.path !== 'trunk') return 'approved · to the queue';
-        if (Math.abs(item.x - ENTRY_X) < 0.5) return item.red >= 0 ? 'branch CI red · back to the line' : item.pre < 1 ? 'merge queue · branch CI running' : 'merge queue · branch green, waiting for the crane';
+        if (item.path !== 'trunk') return item.pre < 1 ? 'approved · branch CI running' : 'approved · to the queue';
+        if (Math.abs(item.x - (GATE_X - 10)) < 0.5) return item.red >= 0 ? 'branch CI red · back to the line' : 'at the gate · branch CI running';
         return 'approved · to the merge queue';
       case 'merged':
-        return 'main · fast-forwarded · deploying';
+        return item.x < HEAD_X + 20 ? 'main · fast-forwarded' : 'deploying · stage';
     }
   }
 
@@ -927,10 +861,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (item.y > LANES[1].y + 11) return item.y > LANES[2].y - 11 ? laneItems[2] : gaps[1];
       return laneItems[1];
     }
-    if (item.path === 'stack') return stackEl;
-    if (item.path === 'crane') return craneCargo;
-    if (item.path === 'teleport') return item.beamFrom ? (item.level >= 0 || item.z > BELT_Z + 1 ? stackEl : laneItems[1]) : upperEls[item.lane];
-    if (item.path === 'trunk') return laneItems[1];
+    if (item.path === 'teleport') return item.beamFrom ? laneItems[1] : upperEls[item.lane];
+    if (item.path === 'trunk' || item.path === 'queue') return laneItems[1];
     return laneItems[item.lane];
   }
 
@@ -943,15 +875,17 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       item.box.style.display = morph <= 0 ? 'none' : '';
       item.card.style.opacity = morph > 0 && morph < 1 ? String(1 - morph) : '';
       item.box.style.opacity = morph > 0 && morph < 1 ? String(morph) : '';
-      item.ciDot.setAttribute('data-state', item.stage === 'merged' || item.ci >= 1 ? 'green' : item.ci > 0 ? 'running' : 'none');
+      // The dot shows the branch's CI, then the candidate's in the queue.
+      const ci = item.path === 'queue' ? item.ci : item.pre;
+      const running = item.path === 'queue' || item.stage === 'built' || item.stage === 'approved';
+      item.ciDot.setAttribute('data-state', item.red >= 0 ? 'red' : item.stage === 'merged' || ci >= 1 ? 'green' : running ? 'running' : 'none');
       item.el.toggleAttribute('data-flag', item.flag);
       // A teleporting box flickers as it dematerialises and comes back.
       const flicker = item.path === 'teleport' ? 0.72 + 0.28 * Math.sin(clock * 55 + item.id) : 1;
       item.el.style.opacity = item.fade < 1 ? (item.fade * flicker).toFixed(2) : '';
       const layer = layerOf(item);
       if (!groups.has(layer)) groups.set(layer, []);
-      // In the stack, paint bottom to top.
-      groups.get(layer)?.push({ el: item.el, key: layer === stackEl ? item.z : depth(item.x, item.y) });
+      groups.get(layer)?.push({ el: item.el, key: depth(item.x, item.y) });
     }
     for (const [layer, list] of groups) {
       list.sort((a, b) => a.key - b.key);
@@ -959,15 +893,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (children.length !== list.length || list.some((entry, i) => children[i] !== entry.el)) for (const entry of list) layer.appendChild(entry.el);
     }
 
-    // Links on the trunk: queued candidates dotted to the one ahead, main solid.
-    const chain = items.filter((item) => item.path === 'trunk' && item.stage === 'merged').sort((a, b) => a.x - b.x);
+    // Links in the queue: each candidate dotted to the one it is built on.
+    const chain = items.filter((item) => item.path === 'queue' && item.stage === 'approved' && item.red < 0).sort((a, b) => a.x - b.x);
     let links = '';
     for (let i = 0; i < chain.length - 1; i++) {
       const a = chain[i];
       const b = chain[i + 1];
-      if (b.x > GONE_X - 30) continue;
-      const solid = a.stage === 'merged';
-      links += k.wireSvg(at([a.x + 8, a.y, BELT_Z + 5]), at([b.x - 8, b.y, BELT_Z + 5]), { tone: solid ? 'hi' : 'mid', dotted: !solid, size: 0.9 });
+      if (b.x - a.x > GAP * 1.6) continue;
+      links += k.wireSvg(at([a.x + 8, a.y, BELT_Z + 5]), at([b.x - 8, b.y, BELT_Z + 5]), { tone: 'mid', dotted: true, size: 0.9 });
     }
     if (linksEl.innerHTML !== links) linksEl.innerHTML = links;
 
@@ -1007,18 +940,24 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       ramEl.innerHTML = ramSvg(LANES[2].machine, LANES[2].y, ramBottom);
     }
 
-    const onPad = items.find((item) => item.path === 'trunk' && item.stage === 'approved' && Math.abs(item.x - ENTRY_X) < 0.5);
-    setLamp('entry', !onPad ? null : onPad.red >= 0 ? 'red' : onPad.pre >= 1 ? 'green' : 'blink');
-    for (let level = 0; level < STACK_MAX; level++) {
-      const candidate = stack[level];
-      setLamp(`lvl${level}`, !candidate ? null : candidate.red >= 0 ? 'red' : candidate.ci >= 1 ? 'green' : 'blink');
+    // The gate: a lamp for the review, one for the branch's CI, and the bar.
+    const atGate = items.find((item) => (item.path === 'trunk' && item.x > GATE_X - 40) || (item.path === 'queue' && item.stage === 'approved' && item.x < GATE_X + 12));
+    setLamp('gate-review', atGate ? 'green' : null);
+    setLamp('gate-ci', !atGate ? null : atGate.red >= 0 ? 'red' : atGate.path === 'queue' || atGate.pre >= 1 ? 'green' : 'blink');
+    const barKey = gateOpen.toFixed(3);
+    if (barKey !== gateKey) {
+      gateKey = barKey;
+      const lift = 16 * gateOpen;
+      gateBar.innerHTML = box(GATE_X - 1.5, TRUNK_Y - GATE_SPAN + 1.8, GATE_X + 1.5, TRUNK_Y + GATE_SPAN - 1.8, 27 + lift, 30.5 + lift, {}, 0.4, 0.3);
     }
-    // The crane, and the beams of PRs teleporting back.
-    const craneKey = `${crane.x.toFixed(1)}:${crane.hook.toFixed(1)}`;
-    if (craneKey !== crane.key) {
-      crane.key = craneKey;
-      craneRig.innerHTML = craneSvg(crane.x, crane.hook);
-    }
+    gauges.forEach((gauge, slot) => {
+      const key = `${gauge.level.toFixed(3)}:${gauge.state}`;
+      if (key === gauge.key) return;
+      gauge.key = key;
+      const top = GAUGE.z0 + 2.4 + (GAUGE.z1 - GAUGE.z0 - 4.8) * gauge.level;
+      gaugeEls[slot].setAttribute('data-state', gauge.state);
+      gaugeEls[slot].innerHTML = gauge.level > 0.01 ? cyl(slotX(slot), GAUGE.y, GAUGE.r - 0.7, GAUGE.z0 + 2.4, top, { className: 'fx-fill', crease: 'none' }, 20) : '';
+    });
     let beamSvg = '';
     for (const item of items) {
       if (item.path !== 'teleport') continue;
@@ -1028,15 +967,18 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (env > 0.01) beamSvg += teleportSvg(bx, by, bz, env, clock, item.id);
     }
     if (beams.innerHTML !== beamSvg) beams.innerHTML = beamSvg;
-    const bayOn = [beacon < 0.9, beacon > 0.6 && beacon < 1.7];
-    setLamp('stage', bayOn[0] ? 'lit' : null);
-    setLamp('production', bayOn[1] ? 'lit' : null);
-    shutters.forEach((shutter) => {
-      const key = shutter.open.toFixed(3);
-      if (key === shutter.key) return;
-      shutter.key = key;
-      shutter.el.setAttribute('transform', k.translateAlong(P, [0, 0, shutter.open * (BAY_Z[1] - BAY_Z[0]) * 0.72]));
-    });
+    // Deploy: the stage booth lights and its dial swings, then production's
+    // windows light up column by column, round the corner, and go back.
+    stagePane?.toggleAttribute('data-on', beacon < 1.2);
+    stageNeedle.setAttribute('d', needleD(STAGE_DIAL, -0.375 + 0.75 * (ease(beacon / 0.5) - ease((beacon - 1.0) / 0.5)) * 0.85));
+    let wave = false;
+    for (const pane of panes) {
+      const at0 = 1.0 + pane.col * 0.07;
+      const on = beacon >= at0 && beacon < at0 + 1.4;
+      wave ||= on;
+      pane.el.forEach((el) => el.toggleAttribute('data-on', on));
+    }
+    setLamp('mast', wave ? 'lit' : null);
 
     for (let i = pulses.length - 1; i >= 0; i--) {
       const p = pulses[i];
@@ -1083,7 +1025,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   }
 
   // A read-only snapshot of where every item is, for tests.
-  Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, stage: item.stage, level: item.level, x: item.x, y: item.y, z: item.z })) });
+  Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, stage: item.stage, ci: item.path === 'queue' ? item.ci : null, x: item.x, y: item.y, z: item.z })) });
 
   // Warm the line up so the first frame is already busy.
   for (let i = 0; i < 30 * 30; i++) step(1 / 30);

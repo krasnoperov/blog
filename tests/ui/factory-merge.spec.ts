@@ -4,7 +4,7 @@ interface ItemState {
   id: number;
   path: string;
   stage: string;
-  level: number;
+  ci: number | null;
   x: number;
   y: number;
   z: number;
@@ -12,7 +12,8 @@ interface ItemState {
 
 // PRs from the three lines cross a square collector and queue up behind
 // each other; boxes never share a spot anywhere on the line. Past the
-// collector, the queue is the entry pad, the crane and the stack on main.
+// collector, a gate admits each PR into the merge queue, where every
+// candidate's CI runs at the same time.
 test('factory merge node never overlaps and keeps the queue moving', async ({ page }) => {
   await page.goto('/');
   const stage = page.locator('.fx-stage');
@@ -24,9 +25,10 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
     stage.evaluate((el) => (el as HTMLElement & { factoryState: () => ItemState[] }).factoryState());
 
   const first = await read();
-  const inQueue = (item: ItemState) => item.stage === 'approved' && ['trunk', 'crane', 'stack'].includes(item.path);
+  const inQueue = (item: ItemState) => item.stage === 'approved' && ['trunk', 'queue'].includes(item.path);
   const queuedAtStart = new Set(first.filter(inQueue).map((item) => item.id));
   const enteredQueue = new Set<number>();
+  let parallel = 0;
   let last = first;
   for (let sample = 0; sample < 120; sample++) {
     const items = await read();
@@ -40,9 +42,9 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
       }
     }
     for (const item of items) if (inQueue(item) && !queuedAtStart.has(item.id)) enteredQueue.add(item.id);
-    // The stack holds one PR per level.
-    const levels = items.filter((item) => item.path === 'stack').map((item) => item.level);
-    expect(new Set(levels).size, 'one PR per stack level').toBe(levels.length);
+    // Candidates in the queue test in parallel: several CIs part way at once.
+    const running = items.filter((item) => item.path === 'queue' && item.ci !== null && item.ci > 0 && item.ci < 1).length;
+    parallel = Math.max(parallel, running);
     last = items;
     await page.waitForTimeout(100);
   }
@@ -52,4 +54,5 @@ test('factory merge node never overlaps and keeps the queue moving', async ({ pa
   const leftQueue = [...queuedAtStart].filter((id) => !stillQueued.has(id));
   expect(enteredQueue.size, 'a PR entered the queue during the sample').toBeGreaterThan(0);
   expect(leftQueue.length, 'a PR that was queued at the start left the queue').toBeGreaterThan(0);
+  expect(parallel, 'several queued candidates were testing at the same time').toBeGreaterThan(1);
 });
