@@ -90,6 +90,8 @@ When a PR can't make it through the queue — speculative CI fails, retry budget
 
 The agent decides what to do with that. A flake gets a retry. A real failure gets a code change. A conflict gets a rebase. The steward doesn't care; it just publishes facts an agent can act on.
 
+> **Update, September 2026.** Ordinary conflicts and red candidates no longer evict. The candidate stays in place in the queue and patchrelay repairs it on its own candidate ref (`integration_repair`, up to ten attempts); a narrow integration review then checks that the approved feature survived the merge. Eviction is now reserved for product ambiguity, policy failure, an exhausted repair budget, or a change to the feature itself.
+
 ## Known gaps
 
 The queue supports cumulative speculative validation, cascade invalidation, bounded retry, durable incidents, eviction check runs, and re-admission from fresh GitHub truth. What it doesn't do yet:
