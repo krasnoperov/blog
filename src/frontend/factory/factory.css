@@ -105,5 +105,16 @@
 @keyframes fx-cursor { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .fx-cursor { animation: none; } }
 /* Teleport: a column of light where a red PR leaves and where it lands. */
-.fx-beam { fill: var(--anatomy-red); mix-blend-mode: normal; }
-@media (prefers-color-scheme: dark) { .fx-beam { fill: #ff8a80; } }
+.iso { --fx-tp: #2f8cff; --fx-tp-core: #e8f4ff; }
+@media (prefers-color-scheme: dark) { .iso { --fx-tp: #5cc8ff; --fx-tp-core: #ffffff; } }
+.fx-tp-a { stop-color: var(--fx-tp); stop-opacity: .55; }
+.fx-tp-b { stop-color: var(--fx-tp); stop-opacity: .22; }
+.fx-tp-c { stop-color: var(--fx-tp); stop-opacity: 0; }
+.fx-tp-core-a { stop-color: var(--fx-tp-core); stop-opacity: .95; }
+.fx-tp-core-b { stop-color: var(--fx-tp-core); stop-opacity: 0; }
+.fx-tp-pad { fill: none; stroke: var(--fx-tp); stroke-width: 1.2px; vector-effect: non-scaling-stroke; }
+.fx-tp-ring { fill: none; stroke: var(--fx-tp); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.fx-tp-ray { fill: none; stroke: var(--fx-tp); stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 5 9; animation: fx-tp-rise 0.6s linear infinite; }
+.fx-tp-spark { fill: var(--fx-tp-core); stroke: var(--fx-tp); stroke-width: .4px; vector-effect: non-scaling-stroke; }
+@keyframes fx-tp-rise { to { stroke-dashoffset: -28; } }
+@media (prefers-reduced-motion: reduce) { .fx-tp-ray { animation: none; } }

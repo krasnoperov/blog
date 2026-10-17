@@ -134,6 +134,38 @@ function ramSvg(x: number, y: number, bottom: number) {
   return cyl(x, y, 2.4, bottom + 6, 66, { crease: 'none' }, 14) + box(x - 9, y - 9, x + 9, y + 9, bottom, bottom + 6, { tone: 'mid' }, 1, 0.5);
 }
 
+// A teleport: a column of light with a bright core on a glowing pad, thin
+// rays streaming up, rings sweeping up the column and sparks rising.
+const TP_HEIGHT = 110;
+function teleportSvg(x: number, y: number, z: number, env: number, time: number, seed: number) {
+  const face = y + 8;
+  const quad = (x0: number, x1: number, z0: number, z1: number) => k.pathOf([at([x0, face, z0]), at([x1, face, z0]), at([x1, face, z1]), at([x0, face, z1])], true);
+  const out: string[] = [];
+  out.push(`<path class="fx-tp-pad" style="opacity:${(0.9 * env).toFixed(2)}" d="${k.ring(x, y, 14, z, P, 32)}${k.ring(x, y, 10, z, P, 28)}"/>`);
+  out.push(`<path fill="url(#fx-tp-glow)" style="opacity:${env.toFixed(2)}" d="${quad(x - 10, x + 10, z, z + TP_HEIGHT)}"/>`);
+  out.push(`<path fill="url(#fx-tp-core)" style="opacity:${(0.85 * env).toFixed(2)}" d="${quad(x - 2.2, x + 2.2, z, z + TP_HEIGHT * 0.85)}"/>`);
+  const rays = [-8, -5.5, -3, -0.8, 1.6, 4, 6.4, 8.4];
+  rays.forEach((dx, index) => {
+    const top = z + TP_HEIGHT * (0.55 + 0.45 * ((index * 37 + seed * 13) % 10) / 10);
+    out.push(`<path class="fx-tp-ray" style="opacity:${env.toFixed(2)};animation-delay:-${((index * 0.13) % 0.6).toFixed(2)}s;stroke-width:${index % 3 === 0 ? 1.1 : 0.6}px" d="${k.segment([x + dx, face, z], [x + dx, face, top], P)}"/>`);
+  });
+  for (let index = 0; index < 3; index++) {
+    const rise = ((time * 70 + index * 30) % (TP_HEIGHT * 0.75));
+    const fade = env * (1 - rise / (TP_HEIGHT * 0.75));
+    out.push(`<path class="fx-tp-ring" style="opacity:${fade.toFixed(2)}" d="${k.ring(x, y, 12 - index * 1.5, z + 4 + rise, P, 28)}"/>`);
+  }
+  const sparks: string[] = [];
+  for (let index = 0; index < 12; index++) {
+    const r1 = ((seed * 7 + index * 53) % 97) / 97;
+    const r2 = ((seed * 11 + index * 31) % 89) / 89;
+    const rise = ((time * (40 + r1 * 40) + index * 9) % 90);
+    const [sx, sy] = at([x - 9 + r1 * 18, y - 7 + r2 * 14, z + rise]);
+    sparks.push(`<circle class="fx-tp-spark" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="${(0.5 + r2 * 0.6).toFixed(2)}" style="opacity:${(env * (1 - rise / 90)).toFixed(2)}"/>`);
+  }
+  out.push(sparks.join(''));
+  return `<g class="fx-tp">${out.join('')}</g>`;
+}
+
 // The crane's trolley on its beam, the hoist and a gripper.
 function craneSvg(x: number, hook: number) {
   const y = TRUNK_Y;
@@ -803,7 +835,9 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       item.box.style.opacity = morph > 0 && morph < 1 ? String(morph) : '';
       item.ciDot.setAttribute('data-state', item.stage === 'merged' || item.ci >= 1 ? 'green' : item.ci > 0 ? 'running' : 'none');
       item.el.toggleAttribute('data-flag', item.flag);
-      item.el.style.opacity = item.fade < 1 ? item.fade.toFixed(2) : '';
+      // A teleporting box flickers as it dematerialises and comes back.
+      const flicker = item.path === 'teleport' ? 0.72 + 0.28 * Math.sin(clock * 55 + item.id) : 1;
+      item.el.style.opacity = item.fade < 1 ? (item.fade * flicker).toFixed(2) : '';
       const layer = layerOf(item);
       if (!groups.has(layer)) groups.set(layer, []);
       // In the stack, paint bottom to top.
@@ -872,8 +906,9 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     for (const item of items) {
       if (item.path !== 'teleport') continue;
       const [bx, by, bz] = item.beamFrom ?? [item.x, item.y, item.z];
-      const strength = item.beamFrom ? 1 - item.fade : item.fade;
-      beamSvg += `<path class="fx-beam" style="opacity:${(0.85 * Math.sin(Math.PI * Math.min(1, strength + 0.15))).toFixed(2)}" d="${k.pathOf([at([bx - 6, by + 7, bz]), at([bx + 6, by + 7, bz]), at([bx + 6, by + 7, bz + 90]), at([bx - 6, by + 7, bz + 90])], true)}"/>`;
+      // The light swells and fades over each half: leaving, then arriving.
+      const env = Math.sin(Math.PI * clamp01(item.t / 0.6));
+      if (env > 0.01) beamSvg += teleportSvg(bx, by, bz, env, clock, item.id);
     }
     if (beams.innerHTML !== beamSvg) beams.innerHTML = beamSvg;
     setLamp('stage', beacon < 0.9 ? 'lit' : null);

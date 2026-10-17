@@ -592,6 +592,8 @@ let cached: string | null = null;
 export function factorySvg() {
   if (cached) return cached;
   const body = [
+    // Gradients for the teleport light: a glow that fades upward, a bright core.
+    '<defs><linearGradient id="fx-tp-glow" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="fx-tp-a"/><stop offset="0.55" class="fx-tp-b"/><stop offset="1" class="fx-tp-c"/></linearGradient><linearGradient id="fx-tp-core" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="fx-tp-core-a"/><stop offset="1" class="fx-tp-core-b"/></linearGradient></defs>',
     floor(),
     bus(),
     portalBack(),
