@@ -27,6 +27,7 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
+import { curveSlats } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -144,6 +145,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const upperEls = [part('upper-0'), part('upper-1'), part('upper-2')];
   const slats = [part('belt-0'), part('belt-1'), part('belt-2')];
   const upperSlats = [part('ubelt-0'), part('ubelt-1'), part('ubelt-2')];
+  const curveSlatEls = Array.from(svg.querySelectorAll<SVGPathElement>('[data-curve-slats]')).map((el) => ({
+    el,
+    lane: Number(el.dataset.curveSlats) as LaneIndex,
+    lo: Number(el.dataset.lo),
+    hi: Number(el.dataset.hi),
+  }));
+  let lastSlatPhase = -1;
   const ramEl = part('ram');
   const linksEl = part('links');
   const pulsesEl = part('pulses');
@@ -654,6 +662,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     const travel = still.matches ? 0 : clock * SPEED;
     for (const el of slats) el.setAttribute('transform', k.translateAlong(P, [travel % 6, 0, 0]));
     for (const el of upperSlats) el.setAttribute('transform', k.translateAlong(P, [-(travel % 6), 0, 0]));
+    const phase = Math.round((travel % 6) * 4) / 4;
+    if (phase !== lastSlatPhase) {
+      lastSlatPhase = phase;
+      for (const curve of curveSlatEls) curve.el.setAttribute('d', curveSlats(curve.lane, curve.lo, curve.hi, phase));
+    }
 
     const caseAt = Math.floor(clock / 1.3) % 11;
     cases.forEach((el, i) => {

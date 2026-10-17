@@ -170,6 +170,23 @@ function belt(id: string, x0: number, x1: number, y: number, top: number, endDru
   return { back, carry, front };
 }
 
+// Slats across a merge curve at arc positions phase, phase + 6, ... that fall
+// in the band lo..hi.
+export function curveSlats(lane: LaneIndex, lo: number, hi: number, phase: number) {
+  const total = curveLength(lane);
+  const out: string[] = [];
+  for (let s0 = phase; s0 <= total; s0 += 6) {
+    const p = curveAt(lane, s0);
+    if (p[1] < lo || p[1] > hi) continue;
+    const q = curveAt(lane, Math.min(total, s0 + 0.5));
+    const b = curveAt(lane, Math.max(0, s0 - 0.5));
+    const len = Math.hypot(q[0] - b[0], q[1] - b[1]) || 1;
+    const n: [number, number] = [-(q[1] - b[1]) / len, (q[0] - b[0]) / len];
+    out.push(k.lineOnTop([p[0] - n[0] * (HALF - 0.6), p[1] - n[1] * (HALF - 0.6)], [p[0] + n[0] * (HALF - 0.6), p[1] + n[1] * (HALF - 0.6)], BELT_TOP, P));
+  }
+  return out.join('');
+}
+
 // One lane's merge curve: a curved belt from the end of its straight run into
 // the trunk. Pieces are cut by y so each lands in the layer it belongs to.
 function curvePieces(lane: LaneIndex, from: number, to: number) {
@@ -201,8 +218,9 @@ function curvePieces(lane: LaneIndex, from: number, to: number) {
     const right = off(HALF);
     const ring = [...left, ...right.reverse()];
     out.carry += S(k.extrude(ring, BELT_TOP - 5, 5, P, { convex: false }), { tone: 'mid', crease: 'none' });
-    const slats = piece.map(({ p, n }) => k.lineOnTop([p[0] - n[0] * HALF, p[1] - n[1] * HALF], [p[0] + n[0] * HALF, p[1] + n[1] * HALF], BELT_TOP, P));
-    out.carry += L(slats.join(''), { tone: 'faint' });
+    // Slats are laid along the curve by the live model, so they move with
+    // the straight belts.
+    out.carry += `<path class="iso-line" data-tone="faint" data-curve-slats="${lane}" data-lo="${from}" data-hi="${to}" d=""/>`;
     out.carry += L(k.onTop(off(-HALF + 1.4), BELT_TOP, P) + k.onTop(off(HALF - 1.4), BELT_TOP, P), { tone: 'lo' });
     // The outer frame: a low wall along the side nearer the viewer.
     const wall = [...off(HALF), ...off(HALF + 3).reverse()];
