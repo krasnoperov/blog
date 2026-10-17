@@ -26,6 +26,8 @@ const GH = { x: 530, y: 20, w: 360, h: 560 };
 
 type EdgeId = 'linear-pr' | 'pr-codex' | 'codex-gh' | 'session-gh' | 'gh-pr' | 'gh-rq' | 'rq-codex' | 'gh-ms' | 'ms-git' | 'git-gh' | 'gh-actions' | 'actions-cf';
 
+// A packet travels from a to b unless the step marks the edge `back`;
+// `gh-pr` therefore runs GitHub → patchrelay (a webhook waking it).
 const EDGES: Record<EdgeId, { a: [number, number]; b: [number, number]; nodes: NodeId[] }> = {
   'linear-pr': { a: [210, 72], b: [260, 72], nodes: ['linear', 'patchrelay'] },
   'pr-codex': { a: [370, 104], b: [370, 136], nodes: ['patchrelay', 'prCodex'] },

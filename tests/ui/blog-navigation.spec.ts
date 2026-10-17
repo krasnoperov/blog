@@ -7,6 +7,9 @@ test.describe('blog navigation', () => {
     await expect(page.getByRole('heading', { name: 'How my code gets from an issue to production' })).toBeVisible();
     await page.getByRole('button', { name: /Landing/ }).click();
     await expect(page.getByRole('img', { name: /Landing/ })).toBeVisible();
+    // Play runs while the pointer is still over the figure.
+    await page.getByRole('button', { name: 'Play' }).first().click();
+    await expect(page.getByRole('img', { name: /Step 11 of 11/ })).toBeVisible({ timeout: 6000 });
     await page.getByRole('button', { name: 'one goes red' }).click();
     await page.getByRole('button', { name: 'Next step' }).nth(1).click();
     await expect(page.getByRole('heading', { name: 'Build the train' })).toBeVisible();
