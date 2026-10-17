@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
+import { QUEUE_H, QUEUE_W, queueDynamic, queueShift, queueStatic, queueTag } from './isoQueue';
+import type { QueueScene, Row } from './isoQueue';
 import { StepControls } from './StepControls';
 import { useStepper } from './useStepper';
 
@@ -8,22 +10,21 @@ import { useStepper } from './useStepper';
 // candidate is the exact future main it would become, and CI runs on all of
 // them at once.
 
-const ROW = { main: 80, 41: 160, 42: 230, 43: 300, heads: 390 } as const;
 
 type CommitId = 'm1' | 'm2' | 'm3' | 'h41' | 'h42' | 'h43' | 'c41' | 'c42' | 'c43' | 'r42' | 'c43b';
 
-const AT: Record<CommitId, { x: number; y: number; sha: string }> = {
-  m1: { x: 230, y: ROW.main, sha: '' },
-  m2: { x: 290, y: ROW.main, sha: '' },
-  m3: { x: 350, y: ROW.main, sha: '4e1b07c' },
-  h41: { x: 430, y: ROW.heads, sha: '#41' },
-  h42: { x: 520, y: ROW.heads, sha: '#42' },
-  h43: { x: 610, y: ROW.heads, sha: '#43' },
-  c41: { x: 470, y: ROW[41], sha: '9a20f31' },
-  c42: { x: 570, y: ROW[42], sha: 'd5c8e02' },
-  c43: { x: 670, y: ROW[43], sha: '17be4a9' },
-  r42: { x: 660, y: ROW[42], sha: 'e03a7d6' },
-  c43b: { x: 760, y: ROW[43], sha: 'b8f9150' },
+const AT: Record<CommitId, { x: number; row: Row; sha: string }> = {
+  m1: { x: 230, row: 'main', sha: '' },
+  m2: { x: 290, row: 'main', sha: '' },
+  m3: { x: 350, row: 'main', sha: '4e1b07c' },
+  h41: { x: 430, row: 'heads', sha: '#41' },
+  h42: { x: 520, row: 'heads', sha: '#42' },
+  h43: { x: 610, row: 'heads', sha: '#43' },
+  c41: { x: 470, row: 41, sha: '9a20f31' },
+  c42: { x: 570, row: 42, sha: 'd5c8e02' },
+  c43: { x: 670, row: 43, sha: '17be4a9' },
+  r42: { x: 660, row: 42, sha: 'e03a7d6' },
+  c43b: { x: 760, row: 43, sha: 'b8f9150' },
 };
 
 type Tone = 'running' | 'green' | 'red' | 'idle';
@@ -163,21 +164,15 @@ const RED: Frame[] = [
 ];
 
 const SCENARIOS = { green: GREEN, red: RED } as const;
+const TAG = queueTag();
 
 const FIRST_PARENT: Partial<Record<CommitId, CommitId>> = { c41: 'm3', c42: 'c41', c43: 'c42', r42: 'c42', c43b: 'r42' };
-
-function curve([ax, ay]: [number, number], [bx, by]: [number, number]) {
-  if (ay === by) return `M${ax} ${ay}L${bx} ${by}`;
-  const mid = (ax + bx) / 2;
-  return `M${ax} ${ay}C${mid} ${ay} ${mid} ${by} ${bx} ${by}`;
-}
 
 export function QueueFigure() {
   const [scenario, setScenario] = useState<keyof typeof SCENARIOS>('green');
   const frames = SCENARIOS[scenario];
   const { step, playing, setPlaying, go, rootRef, hold } = useStepper(frames.length, 3600);
   const frame = frames[Math.min(step, frames.length - 1)];
-  const main = AT[frame.main];
   // What main now contains: walk first parents back from every landed commit.
   const landedLinks = new Set<string>();
   for (const id of frame.landed) {
@@ -188,6 +183,20 @@ export function QueueFigure() {
       at = parent;
     }
   }
+
+  const scene: QueueScene = {
+    commits: [
+      ...(['m1', 'm2', 'm3'] as CommitId[]).map((id) => ({ id, x: AT[id].x, row: AT[id].row, sha: id === 'm3' ? AT[id].sha : '' })),
+      ...(frame.ghosts ?? []).map((id) => ({ id, x: AT[id].x, row: AT[id].row, sha: '', state: 'ghost' })),
+      ...frame.commits.map((id) => ({ id, x: AT[id].x, row: AT[id].row, sha: AT[id].sha, state: frame.states?.[id] })),
+    ],
+    links: [
+      { from: [200, 'main'], to: [AT.m3.x, 'main'], landed: true },
+      ...frame.links.map(([from, to]) => ({ from: [AT[from].x, AT[from].row] as [number, Row], to: [AT[to].x, AT[to].row] as [number, Row], landed: landedLinks.has(`${from}-${to}`) })),
+    ],
+    lanes: frame.lanes,
+    ci: frame.ci,
+  };
 
   const pick = (next: keyof typeof SCENARIOS) => {
     setScenario(next);
@@ -202,45 +211,18 @@ export function QueueFigure() {
           <span>speculativeDepth 3 · UserTold runs 10</span>
         </div>
         <div className="fx-scroll">
-          <svg className="fx-svg" viewBox="0 0 1200 440" role="img" aria-label={`Merge queue, ${scenario === 'green' ? 'all green' : 'one red candidate'}: ${frame.title}.`}>
-            <text x={20} y={ROW.main + 4} className="fx-ref">main</text>
-            {([41, 42, 43] as const).map((n) => (
-              <text key={n} x={20} y={ROW[n] + 4} className="fx-ref">merge-steward/main/pr-{n}</text>
-            ))}
-            <text x={20} y={ROW.heads + 4} className="fx-ref">PR heads, approved</text>
-            <line x1={200} y1={ROW.main} x2={350} y2={ROW.main} className="fx-edge-line" />
-            {frame.links.map(([from, to]) => (
-              <path key={`${from}-${to}`} d={curve([AT[from].x, AT[from].y], [AT[to].x, AT[to].y])} className="fx-edge-line" data-landed={landedLinks.has(`${from}-${to}`) || undefined} />
-            ))}
-            {(['m1', 'm2', 'm3'] as const).map((id) => <circle key={id} cx={AT[id].x} cy={AT[id].y} r={5} className="fx-commit" />)}
-            {(frame.ghosts ?? []).map((id) => <circle key={id} cx={AT[id].x} cy={AT[id].y} r={6} className="fx-commit" data-ghost />)}
-            {frame.commits.map((id) => (
-              <g key={id}>
-                <circle cx={AT[id].x} cy={AT[id].y} r={id.startsWith('h') ? 5 : 6} className="fx-commit" data-state={frame.states?.[id]} data-landed={frame.landed.includes(id) || undefined} />
-                {id.startsWith('h')
-                  ? <text x={AT[id].x} y={AT[id].y + 22} className="fx-sha" textAnchor="middle">{AT[id].sha}</text>
-                  : <text x={AT[id].x + 11} y={AT[id].y + 18} className="fx-sha">{AT[id].sha}</text>}
-              </g>
-            ))}
-            <text x={AT.m3.x} y={ROW.main + 22} className="fx-sha" textAnchor="middle">{AT.m3.sha}</text>
-            <g className="fx-tag" style={{ transform: `translate(${main.x}px, ${main.y - 20}px)` }}>
-              <rect x={-20} y={-10} width={40} height={16} rx={2} />
-              <text x={0} y={2} textAnchor="middle">main</text>
-            </g>
-            {([41, 42, 43] as const).map((n) => (
-              <text key={n} x={850} y={ROW[n] + 4} className="fx-lane" data-tone={frame.lanes[n].tone}>{frame.lanes[n].text}</text>
-            ))}
-            <g className="fx-meter">
-              <text x={850} y={ROW.heads - 22} className="fx-key">CI cycles of waiting</text>
-              <text x={850} y={ROW.heads} className="fx-key">serial queue</text>
-              <rect x={960} y={ROW.heads - 9} width={200} height={10} className="fx-meter-track" />
-              <rect x={960} y={ROW.heads - 9} width={(200 * frame.ci.serial) / 4} height={10} className="fx-meter-fill" data-tone="idle" />
-              <text x={1168} y={ROW.heads} className="fx-key">{frame.ci.serial}</text>
-              <text x={850} y={ROW.heads + 22} className="fx-key">merge-steward</text>
-              <rect x={960} y={ROW.heads + 13} width={200} height={10} className="fx-meter-track" />
-              <rect x={960} y={ROW.heads + 13} width={(200 * frame.ci.queue) / 4} height={10} className="fx-meter-fill" />
-              <text x={1168} y={ROW.heads + 22} className="fx-key">{frame.ci.queue}</text>
-            </g>
+          <svg
+            className="iso-svg fx-svg"
+            viewBox={`0 0 ${QUEUE_W} ${QUEUE_H}`}
+            role="img"
+            aria-label={`Merge queue, ${scenario === 'green' ? 'all green' : 'one red candidate'}: ${frame.title}.`}
+            data-lane-41={frame.lanes[41].tone}
+            data-lane-42={frame.lanes[42].tone}
+            data-lane-43={frame.lanes[43].tone}
+          >
+            <g dangerouslySetInnerHTML={{ __html: queueStatic() }} />
+            <g dangerouslySetInnerHTML={{ __html: queueDynamic(scene) }} />
+            <g className="fx-iso-tag" style={{ transform: queueShift(AT[frame.main].x, AT[frame.main].row) }} dangerouslySetInnerHTML={{ __html: TAG }} />
           </svg>
         </div>
       </div>

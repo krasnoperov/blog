@@ -20,6 +20,7 @@
     "dist",
     ".wrangler",
     "node_modules",
-    "worker-configuration*.d.ts"
+    "worker-configuration*.d.ts",
+    "src/frontend/factory/iso-kit.ts"
   ]
 }

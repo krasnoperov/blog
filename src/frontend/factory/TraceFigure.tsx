@@ -1,53 +1,34 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
+import * as k from './iso-kit';
+import { COMMITS, TRACE_H, TRACE_P, TRACE_W, cablePath, mainTag, traceDynamic, traceStatic } from './isoTrace';
+import type { TraceEdge, TraceNode, TraceState } from './isoTrace';
 import { StepControls } from './StepControls';
 import { useStepper } from './useStepper';
 
 // One issue, end to end, through the services that actually run it. Every
 // event name, Codex call and git command below is the one the code uses.
 
-type NodeId = 'linear' | 'session' | 'patchrelay' | 'prCodex' | 'github' | 'rq' | 'rqCodex' | 'ms' | 'msGit' | 'actions' | 'cf';
-
-interface Box { x: number; y: number; w: number; h: number; title: string; sub: string }
-
-const NODES: Record<Exclude<NodeId, 'github'>, Box> = {
-  linear: { x: 20, y: 40, w: 190, h: 64, title: 'Linear', sub: 'issue delegated' },
-  session: { x: 20, y: 236, w: 190, h: 64, title: 'Any coding session', sub: 'Claude Code · Codex, by hand' },
-  patchrelay: { x: 260, y: 40, w: 220, h: 64, title: 'patchrelay', sub: 'Linear + GitHub webhooks' },
-  prCodex: { x: 260, y: 136, w: 220, h: 64, title: 'codex app-server', sub: 'thread + worktree per issue' },
-  rq: { x: 940, y: 40, w: 240, h: 64, title: 'review-quill', sub: 'pull_request webhooks' },
-  rqCodex: { x: 940, y: 136, w: 240, h: 64, title: 'codex app-server', sub: 'fresh thread per review' },
-  ms: { x: 940, y: 236, w: 240, h: 64, title: 'merge-steward', sub: 'reviews · check suites · push' },
-  msGit: { x: 940, y: 332, w: 240, h: 64, title: 'git worktree', sub: 'merge --no-ff · push candidate' },
-  actions: { x: 940, y: 428, w: 240, h: 64, title: 'GitHub Actions', sub: 'CI on every pushed ref' },
-  cf: { x: 940, y: 524, w: 240, h: 56, title: 'Cloudflare Workers', sub: 'stage → production' },
-};
-
-const GH = { x: 530, y: 20, w: 360, h: 560 };
-
-type EdgeId = 'linear-pr' | 'pr-codex' | 'codex-gh' | 'session-gh' | 'gh-pr' | 'gh-rq' | 'rq-codex' | 'gh-ms' | 'ms-git' | 'git-gh' | 'gh-actions' | 'actions-cf';
-
-// A packet travels from a to b unless the step marks the edge `back`;
-// `gh-pr` therefore runs GitHub → patchrelay (a webhook waking it).
-const EDGES: Record<EdgeId, { a: [number, number]; b: [number, number]; nodes: NodeId[] }> = {
-  'linear-pr': { a: [210, 72], b: [260, 72], nodes: ['linear', 'patchrelay'] },
-  'pr-codex': { a: [370, 104], b: [370, 136], nodes: ['patchrelay', 'prCodex'] },
-  'codex-gh': { a: [480, 168], b: [530, 168], nodes: ['prCodex', 'github'] },
-  'gh-pr': { a: [530, 72], b: [480, 72], nodes: ['github', 'patchrelay'] },
-  'session-gh': { a: [210, 268], b: [530, 268], nodes: ['session', 'github'] },
-  'gh-rq': { a: [890, 72], b: [940, 72], nodes: ['github', 'rq'] },
-  'rq-codex': { a: [1060, 104], b: [1060, 136], nodes: ['rq', 'rqCodex'] },
-  'gh-ms': { a: [890, 268], b: [940, 268], nodes: ['github', 'ms'] },
-  'ms-git': { a: [1060, 300], b: [1060, 332], nodes: ['ms', 'msGit'] },
-  'git-gh': { a: [940, 364], b: [890, 364], nodes: ['msGit', 'github'] },
-  'gh-actions': { a: [890, 460], b: [940, 460], nodes: ['github', 'actions'] },
-  'actions-cf': { a: [1060, 492], b: [1060, 524], nodes: ['actions', 'cf'] },
+const EDGE_NODES: Record<TraceEdge, [TraceNode, TraceNode]> = {
+  'linear-pr': ['linear', 'patchrelay'],
+  'pr-codex': ['patchrelay', 'prCodex'],
+  'codex-gh': ['prCodex', 'github'],
+  'gh-pr': ['github', 'patchrelay'],
+  'session-gh': ['session', 'github'],
+  'gh-rq': ['github', 'rq'],
+  'rq-codex': ['rq', 'rqCodex'],
+  'gh-ms': ['github', 'ms'],
+  'ms-git': ['ms', 'msGit'],
+  'git-gh': ['msGit', 'github'],
+  'gh-actions': ['github', 'actions'],
+  'actions-cf': ['actions', 'cf'],
 };
 
 interface PrState { head: string; review: string; checks: string; queue: string }
 interface Step {
   title: string;
   event: string;
-  edges: Array<{ id: EdgeId; back?: boolean }>;
+  edges: Array<{ id: TraceEdge; back?: boolean }>;
   log: string;
   pr: PrState;
   body: ReactNode;
@@ -146,68 +127,86 @@ const STEPS: Step[] = [
   },
 ];
 
-const LOG_DEPTH = 6;
+const LOG_DEPTH = 4;
+const TAG = mainTag();
 
-function NodeBox({ id, active }: { id: Exclude<NodeId, 'github'>; active: boolean }) {
-  const node = NODES[id];
-  return (
-    <g className="fx-node" data-active={active || undefined}>
-      <rect x={node.x} y={node.y} width={node.w} height={node.h} rx={3} />
-      <text x={node.x + 14} y={node.y + 27} className="fx-node-title">{node.title}</text>
-      <text x={node.x + 14} y={node.y + 47} className="fx-node-sub">{node.sub}</text>
-    </g>
-  );
+function tone(value: string): 'green' | 'red' | undefined {
+  if (/✓|approved|merged/.test(value)) return 'green';
+  if (/changes/.test(value)) return 'red';
+  return undefined;
 }
 
-function Graph({ step }: { step: number }) {
-  // Rows: main, the issue branch, the candidate ref.
-  const rows = { main: 400, branch: 460, cand: 520 };
-  const b1 = step >= 2;
-  const b2 = step >= 5;
-  const cand = step >= 8;
-  const landed = step >= 9;
-  const mainAt: [number, number] = landed ? [845, rows.cand] : [700, rows.main];
-  return (
-    <g className="fx-graph">
-      <text x={548} y={rows.main - 14} className="fx-ref">main</text>
-      <text x={548} y={rows.branch - 14} className="fx-ref">usertold/USE-1412</text>
-      <text x={548} y={rows.cand - 14} className="fx-ref">merge-steward/main/pr-1601</text>
-      <line x1={560} y1={rows.main} x2={700} y2={rows.main} className="fx-edge-line" />
-      {b1 && <path d={`M650 ${rows.main} C 665 ${rows.main} 675 ${rows.branch} 690 ${rows.branch} L 720 ${rows.branch}`} className="fx-edge-line" />}
-      {b2 && <line x1={720} y1={rows.branch} x2={780} y2={rows.branch} className="fx-edge-line" />}
-      {cand && (
-        <>
-          <path d={`M700 ${rows.main} C 790 ${rows.main} 800 ${rows.cand} 845 ${rows.cand}`} className="fx-edge-line" />
-          <path d={`M780 ${rows.branch} C 815 ${rows.branch} 820 ${rows.cand} 845 ${rows.cand}`} className="fx-edge-line" />
-        </>
-      )}
-      {[600, 650, 700].map((x) => <circle key={x} cx={x} cy={rows.main} r={5} className="fx-commit" />)}
-      {b1 && <circle cx={720} cy={rows.branch} r={5} className="fx-commit" data-new={step === 2 || undefined} />}
-      {b1 && <text x={720} y={rows.branch + 22} className="fx-sha" textAnchor="middle">a1f3c9e</text>}
-      {b2 && <circle cx={780} cy={rows.branch} r={5} className="fx-commit" data-new={step === 5 || undefined} />}
-      {b2 && <text x={780} y={rows.branch + 22} className="fx-sha" textAnchor="middle">b72d0e4</text>}
-      {cand && <circle cx={845} cy={rows.cand} r={6} className="fx-commit" data-state={landed ? 'green' : 'running'} />}
-      {cand && <text x={845} y={rows.cand + 24} className="fx-sha" textAnchor="middle">c90e1aa</text>}
-      <g className="fx-tag" style={{ transform: `translate(${mainAt[0]}px, ${mainAt[1] - 22}px)` }}>
-        <rect x={-20} y={-10} width={40} height={16} rx={2} />
-        <text x={0} y={2} textAnchor="middle">main</text>
-      </g>
-    </g>
-  );
+function shift([x, y]: [number, number]) {
+  const [dx, dy] = k.axisVector(TRACE_P, [x, y, 0]);
+  return `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`;
+}
+
+// Packets: one dot per active cable, run along the cable's route in turn.
+function usePackets(ref: React.RefObject<SVGGElement | null>, step: number, edges: Step['edges']) {
+  useEffect(() => {
+    const layer = ref.current;
+    if (!layer) return undefined;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const runs = edges.map((edge, index) => {
+      const points = cablePath(edge.id, edge.back);
+      const lengths = points.slice(1).map((point, i) => Math.hypot(point[0] - points[i][0], point[1] - points[i][1]));
+      const total = lengths.reduce((sum, value) => sum + value, 0);
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('r', '3.4');
+      dot.setAttribute('class', 'fx-packet-dot');
+      layer.appendChild(dot);
+      return { points, lengths, total, dot, delay: index * 350 };
+    });
+    const place = (run: (typeof runs)[number], t: number) => {
+      let rest = t * run.total;
+      for (let i = 0; i < run.lengths.length; i++) {
+        if (rest <= run.lengths[i] || i === run.lengths.length - 1) {
+          const f = run.lengths[i] ? Math.min(1, rest / run.lengths[i]) : 1;
+          const [a, b] = [run.points[i], run.points[i + 1]];
+          run.dot.setAttribute('cx', (a[0] + (b[0] - a[0]) * f).toFixed(1));
+          run.dot.setAttribute('cy', (a[1] + (b[1] - a[1]) * f).toFixed(1));
+          return;
+        }
+        rest -= run.lengths[i];
+      }
+    };
+    let frame = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      let busy = false;
+      for (const run of runs) {
+        const t = Math.min(1, Math.max(0, (now - start - run.delay) / 750));
+        const eased = t * t * (3 - 2 * t);
+        place(run, eased);
+        run.dot.style.opacity = t <= 0 ? '0' : t >= 1 ? '0' : '1';
+        if (t < 1) busy = true;
+      }
+      frame = busy ? requestAnimationFrame(tick) : 0;
+    };
+    if (still) runs.forEach((run) => { place(run, 1); run.dot.style.opacity = '1'; });
+    else frame = requestAnimationFrame(tick);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      runs.forEach((run) => run.dot.remove());
+    };
+  }, [ref, step, edges]);
 }
 
 export function TraceFigure() {
   const { step, playing, setPlaying, go, rootRef, hold } = useStepper(STEPS.length, 4200);
   const current = STEPS[step];
-  const active = new Set<NodeId>();
-  for (const edge of current.edges) for (const node of EDGES[edge.id].nodes) active.add(node);
-  const log = STEPS.slice(Math.max(0, step - LOG_DEPTH + 1), step + 1).map((entry) => entry.log);
-  const rows: Array<[string, string]> = [
-    ['head', current.pr.head],
-    ['review', current.pr.review],
-    ['checks', current.pr.checks],
-    ['queue', current.pr.queue],
-  ];
+  const packetsRef = useRef<SVGGElement>(null);
+  usePackets(packetsRef, step, current.edges);
+  const art = traceStatic();
+  const active = new Set<TraceNode>();
+  for (const edge of current.edges) for (const node of EDGE_NODES[edge.id]) active.add(node);
+  const state: TraceState = {
+    rows: (['head', 'review', 'checks', 'queue'] as const).map((key) => [key, current.pr[key], tone(current.pr[key])]),
+    log: STEPS.slice(Math.max(0, step - LOG_DEPTH + 1), step + 1).map((entry) => entry.log),
+    commits: [...(step >= 2 ? ['b1' as const] : []), ...(step >= 5 ? ['b2' as const] : []), ...(step >= 8 ? ['c' as const] : [])],
+    candidate: step >= 9 ? 'green' : 'running',
+  };
+  const tagAt: [number, number] = step >= 9 ? [...COMMITS.c] : [...COMMITS.m3];
 
   return (
     <div className="fx-figure" ref={rootRef} {...hold}>
@@ -217,36 +216,19 @@ export function TraceFigure() {
           <span>{current.event}</span>
         </div>
         <div className="fx-scroll">
-          <svg className="fx-svg" viewBox="0 0 1200 600" role="img" aria-label={`Step ${step + 1} of ${STEPS.length}: ${current.title}. ${current.event}.`}>
-            {(Object.keys(EDGES) as EdgeId[]).map((id) => {
-              const edge = EDGES[id];
-              const on = current.edges.some((entry) => entry.id === id);
-              return <line key={id} x1={edge.a[0]} y1={edge.a[1]} x2={edge.b[0]} y2={edge.b[1]} className="fx-wire" data-active={on || undefined} data-optional={id === 'session-gh' || undefined} />;
-            })}
-            <g className="fx-node fx-github" data-active={active.has('github') || undefined}>
-              <rect x={GH.x} y={GH.y} width={GH.w} height={GH.h} rx={3} />
-              <text x={GH.x + 18} y={GH.y + 30} className="fx-node-title">GitHub</text>
-              <text x={GH.x + 18} y={GH.y + 50} className="fx-node-sub">the only state the services share</text>
-              <text x={GH.x + 18} y={GH.y + 86} className="fx-ref">PR #1601</text>
-              {rows.map(([label, value], index) => (
-                <g key={label}>
-                  <text x={GH.x + 18} y={GH.y + 110 + index * 20} className="fx-key">{label}</text>
-                  <text x={GH.x + 90} y={GH.y + 110 + index * 20} className="fx-value" data-tone={/✓|approved|merged/.test(value) ? 'green' : /changes/.test(value) ? 'red' : undefined}>{value}</text>
-                </g>
-              ))}
-              <text x={GH.x + 18} y={GH.y + 210} className="fx-ref">webhook deliveries</text>
-              {log.map((line, index) => (
-                <text key={`${step}-${index}`} x={GH.x + 18} y={GH.y + 232 + index * 17} className="fx-log" data-latest={index === log.length - 1 || undefined}>{line}</text>
-              ))}
-              <Graph step={step} />
-            </g>
-            {(Object.keys(NODES) as Array<Exclude<NodeId, 'github'>>).map((id) => <NodeBox key={id} id={id} active={active.has(id)} />)}
-            {current.edges.map((entry, index) => {
-              const edge = EDGES[entry.id];
-              const [from, to] = entry.back ? [edge.b, edge.a] : [edge.a, edge.b];
-              const style = { '--x1': `${from[0]}px`, '--y1': `${from[1]}px`, '--x2': `${to[0]}px`, '--y2': `${to[1]}px`, animationDelay: `${index * 0.35}s` } as CSSProperties;
-              return <circle key={`${step}-${index}`} r={4} className="fx-packet" style={style} />;
-            })}
+          <svg
+            className="iso-svg fx-svg"
+            viewBox={`0 0 ${TRACE_W} ${TRACE_H}`}
+            role="img"
+            aria-label={`Step ${step + 1} of ${STEPS.length}: ${current.title}. ${current.event}.`}
+            data-active={[...active].join(' ')}
+            data-edges={current.edges.map((edge) => edge.id).join(' ')}
+          >
+            <g dangerouslySetInnerHTML={{ __html: art.back }} />
+            <g dangerouslySetInnerHTML={{ __html: traceDynamic(state) }} />
+            <g className="fx-iso-tag" style={{ transform: shift(tagAt) }} dangerouslySetInnerHTML={{ __html: TAG }} />
+            <g dangerouslySetInnerHTML={{ __html: art.front }} />
+            <g ref={packetsRef} />
           </svg>
         </div>
       </div>
