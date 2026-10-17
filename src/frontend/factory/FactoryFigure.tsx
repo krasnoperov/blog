@@ -31,7 +31,7 @@ export function FactoryFigure() {
           <span className="iso-key"><Swatch mark="lit" />Issue card, then pull request; the heavy outline is the one followed</span>
           <span className="iso-key"><Swatch mark="dotted" />Queued candidate, built on the one ahead</span>
           <span className="iso-key"><Swatch mark="green" />Green CI</span>
-          <span className="iso-key"><Swatch mark="red" />Changes requested: hoisted back to its own machine</span>
+          <span className="iso-key"><Swatch mark="red" />Changes requested: lifted up and carried back to its own machine</span>
         </span>
         <span className="fx-stats">simulated · <span ref={statsRef} /></span>
       </figcaption>

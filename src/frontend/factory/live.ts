@@ -8,15 +8,17 @@ import {
   EVAL_DIAL,
   GATE_X,
   GONE_X,
-  HANG_Z,
   HOIST_X,
-  JOIN_X,
+  MERGE_X,
+  CURVE_X0,
   LANES,
   P,
   PADS,
   PORTAL,
   QUEUE_X,
-  RAIL_Z,
+  UPPER_Z,
+  curveAt,
+  curveLength,
   REVIEW_X,
   TAP,
   TRUNK_Y,
@@ -33,7 +35,6 @@ import type { LaneIndex } from './layout';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SPEED = 46;
-const HOIST_SPEED = 80;
 const GAP = 27;
 const TAU = Math.PI * 2;
 
@@ -49,7 +50,7 @@ const ROUNDS_OF = [1, 2, 1, 1, 3, 1, 2, 1, 1, 2];
 const CI_OF = [4.2, 6.8, 3.4, 5.6, 7.4, 3.9, 5.1];
 const SPAWN_EVERY = [3.6, 4.4, 5.2];
 
-type Path = 'drop' | 'belt' | 'hoist' | 'return' | 'lower' | 'cross' | 'trunk' | 'gone';
+type Path = 'drop' | 'belt' | 'liftUp' | 'upper' | 'liftDown' | 'curve' | 'trunk' | 'gone';
 type Stage = 'new' | 'fixing' | 'built' | 'changes' | 'approved' | 'merged';
 
 interface Item {
@@ -64,6 +65,7 @@ interface Item {
   y: number;
   z: number;
   t: number;
+  s: number;
   morph: number;
   ci: number;
   ciNeed: number;
@@ -117,11 +119,9 @@ function ramSvg(x: number, y: number, bottom: number) {
   return cyl(x, y, 2.4, bottom + 6, 66, { crease: 'none' }, 14) + box(x - 9, y - 9, x + 9, y + 9, bottom, bottom + 6, { tone: 'mid' }, 1, 0.5);
 }
 
-function rigSvg(x: number, y: number, hook: number) {
-  const carriage = box(x - 6, y - 4, x + 6, y + 4, RAIL_Z - 6, RAIL_Z, {}, 0.8, 0.4);
-  const rope = k.lineSvg(k.segment([x, y, RAIL_Z - 6], [x, y, hook + 3], P), { tone: 'mid' });
-  const hookBar = box(x - 7, y - 1, x + 7, y + 1, hook, hook + 3, { tone: 'lo' }, 0.3);
-  return carriage + rope + hookBar;
+// A lift platform: a deck with guide shoes reaching to the posts.
+function platformSvg(x: number, y: number, z: number) {
+  return box(x - 13, y - 9, x - 10, y + 9, z - 4, z, { tone: 'lo' }, 0.3) + box(x + 10, y - 9, x + 13, y + 9, z - 4, z, { tone: 'lo' }, 0.3) + box(x - 10, y - 10, x + 10, y + 10, z - 2, z, { tone: 'mid' }, 0.6, 0.3);
 }
 
 export interface FactoryHandles {
@@ -140,8 +140,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const intakes = [part('intake-0'), part('intake-1'), part('intake-2')];
   const probes = [part('probe-0'), part('probe-1'), part('probe-2')];
   const needles = [part('needle-0'), part('needle-1'), part('needle-2')];
-  const hoistEls = [part('hoist-0'), part('hoist-1'), part('hoist-2')];
+  const liftEls = [part('lift-0'), part('lift-1'), part('lift-2')];
+  const upperEls = [part('upper-0'), part('upper-1'), part('upper-2')];
   const slats = [part('belt-0'), part('belt-1'), part('belt-2')];
+  const upperSlats = [part('ubelt-0'), part('ubelt-1'), part('ubelt-2')];
   const ramEl = part('ram');
   const linksEl = part('links');
   const pulsesEl = part('pulses');
@@ -157,14 +159,20 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   blade.innerHTML = box(GATE_X - 1.2, TRUNK_Y - 11, GATE_X + 1.2, TRUNK_Y + 11, 24.6, 44, { tone: 'mid' }, 0.4, 0.3);
   laneItems[1].appendChild(blade);
 
-  // Each lane's hoist: a carriage on the overhead rail, its rope and hook,
-  // and the PR it is carrying back.
-  const rigs = LANES.map((_, lane) => {
-    const rig = document.createElementNS(SVG_NS, 'g');
-    const cargo = document.createElementNS(SVG_NS, 'g');
-    hoistEls[lane].appendChild(rig);
-    hoistEls[lane].appendChild(cargo);
-    return { el: rig, cargo, x: HOIST_X, hook: RAIL_Z - 14, key: '', item: null as Item | null };
+  // Two lifts per lane: one past review that raises a rejected PR to the
+  // upper return belt, one ahead of the machine that sets it back down.
+  const lifts = LANES.map((_, lane) => {
+    const make = (x: number, z: number) => {
+      const deck = document.createElementNS(SVG_NS, 'g');
+      const cargo = document.createElementNS(SVG_NS, 'g');
+      liftEls[lane].appendChild(deck);
+      liftEls[lane].appendChild(cargo);
+      return { x, z, rest: z, deck, cargo, key: '', item: null as Item | null };
+    };
+    // Paint the nearer (larger x) lift last.
+    const down = make(dropX(lane as LaneIndex), UPPER_Z);
+    const up = make(HOIST_X, BELT_Z);
+    return { up, down };
   });
 
   const items: Item[] = [];
@@ -190,6 +198,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   let lastStats = '';
 
   const onBelt = (item: Item) => item.path === 'belt' || item.path === 'trunk';
+  const inMerge = (item: Item) =>
+    (item.path === 'curve' && item.s > curveLength(item.lane) - GAP) ||
+    (item.path === 'trunk' && item.x < MERGE_X + GAP) ||
+    (item.path === 'belt' && item.lane === 1 && item.stage === 'approved' && item.x > MERGE_X - GAP);
+  const mergeBusy = (except: Item) => items.some((other) => other !== except && inMerge(other));
   // The next item ahead on the same stretch of belt. Lane 1 feeds the trunk
   // directly, so its items see the trunk ahead of them.
   const ahead = (item: Item) => {
@@ -230,6 +243,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       y: LANES[lane].y,
       z: BELT_Z + 12,
       t: 0,
+      s: 0,
       morph: 0,
       ci: 0,
       ciNeed: CI_OF[id % CI_OF.length],
@@ -280,12 +294,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       case 'changes':
         return HOIST_X;
       default:
-        return JOIN_X;
+        return item.lane === 1 ? MERGE_X : CURVE_X0;
     }
   }
 
-  const junctionBusy = () =>
-    items.some((other) => other.path === 'cross' || (other.path === 'trunk' && other.x < JOIN_X + GAP));
 
   // Station work. Returns true while the item must stay put.
   function work(item: Item, dt: number): boolean {
@@ -321,19 +333,22 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       return false;
     }
     if (item.path === 'belt' && item.stage === 'changes') {
-      const rig = rigs[lane];
-      if (rig.item) return true;
-      rig.item = item;
-      item.path = 'hoist';
+      const lift = lifts[lane].up;
+      if (lift.item || Math.abs(lift.z - BELT_Z) > 0.5) return true;
+      lift.item = item;
+      item.path = 'liftUp';
       item.t = 0;
       returned += 1;
       return true;
     }
     if (item.path === 'belt' && item.stage === 'approved') {
-      const crossing = lane !== 1;
-      if (junctionBusy()) return true;
-      if (crossing && items.some((other) => other.lane === 1 && other.path === 'belt' && Math.abs(other.x - JOIN_X) < GAP)) return true;
-      item.path = crossing ? 'cross' : 'trunk';
+      if (lane === 1) {
+        if (mergeBusy(item)) return true;
+        item.path = 'trunk';
+      } else {
+        item.path = 'curve';
+        item.s = 0;
+      }
       item.t = 0;
       return true;
     }
@@ -350,54 +365,60 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     return false;
   }
 
-  function runRigs(dt: number) {
-    rigs.forEach((rig, lane) => {
-      const item = rig.item;
-      const rest = RAIL_Z - 14;
-      if (!item) {
-        rig.x += (HOIST_X - rig.x) * (1 - Math.exp(-dt / 0.3));
-        rig.hook += (rest - rig.hook) * (1 - Math.exp(-dt / 0.15));
-        return;
-      }
-      item.t += dt;
-      const t = item.t;
-      if (item.path === 'hoist') {
-        rig.x = HOIST_X;
-        if (t < 0.4) {
-          rig.hook = rest + (BELT_Z + BOX_H - rest) * ease(t / 0.4);
-        } else {
-          item.z = BELT_Z + (HANG_Z - BELT_Z) * ease((t - 0.4) / 0.6);
-          rig.hook = item.z + BOX_H;
-        }
-        if (t >= 1.0) {
-          item.path = 'return';
+  function runLifts(dt: number) {
+    lifts.forEach(({ up, down }, index) => {
+      const lane = index as LaneIndex;
+      // Up: raise the PR to the upper belt, hand it over, come back down.
+      if (up.item) {
+        const item = up.item;
+        item.t += dt;
+        item.z = BELT_Z + (UPPER_Z - BELT_Z) * ease(item.t / 1.1);
+        up.z = item.z;
+        if (item.t >= 1.1) {
+          item.z = UPPER_Z;
+          item.path = 'upper';
           item.t = 0;
+          up.item = null;
         }
-      } else if (item.path === 'return') {
-        item.x = Math.max(dropX(item.lane), item.x - HOIST_SPEED * dt);
-        rig.x = item.x;
-        if (item.x <= dropX(item.lane)) {
-          item.path = 'lower';
+      } else up.z += (BELT_Z - up.z) * (1 - Math.exp(-dt / 0.25));
+      // Down: wait at the top; take the PR at the end of the upper belt and
+      // lower it once the belt below is clear.
+      if (down.item) {
+        const item = down.item;
+        if (item.t < 0) {
+          const clear = !items.some((other) => other.lane === lane && other.path === 'belt' && Math.abs(other.x - item.x) < GAP);
+          if (clear) item.t = 0;
+        } else {
+          item.t += dt;
+          item.z = UPPER_Z + (BELT_Z - UPPER_Z) * ease(item.t / 1.1);
+          down.z = item.z;
+          if (item.t >= 1.1) {
+            item.z = BELT_Z;
+            item.path = 'belt';
+            item.stage = 'fixing';
+            item.t = 0;
+            down.item = null;
+          }
+        }
+      } else down.z += (UPPER_Z - down.z) * (1 - Math.exp(-dt / 0.25));
+    });
+
+    // The upper belts run backward; PRs accumulate at the down lift.
+    for (const index of [0, 1, 2] as LaneIndex[]) {
+      const riding = items.filter((item) => item.lane === index && item.path === 'upper').sort((a, b) => a.x - b.x);
+      riding.forEach((item, order) => {
+        const drop = dropX(index);
+        let limit = drop;
+        if (order > 0) limit = Math.max(limit, riding[order - 1].x + GAP);
+        if (item.x > limit) item.x = Math.max(limit, item.x - SPEED * dt);
+        const down = lifts[index].down;
+        if (Math.abs(item.x - drop) < 0.01 && !down.item && Math.abs(down.z - UPPER_Z) < 0.5) {
+          down.item = item;
+          item.path = 'liftDown';
           item.t = -1;
         }
-      } else if (item.path === 'lower') {
-        if (item.t < 0) {
-          // Wait for a clear stretch of belt under the hook.
-          const clear = !items.some((other) => other.lane === lane && other.path === 'belt' && Math.abs(other.x - item.x) < GAP);
-          item.t = clear ? 0 : -1;
-          return;
-        }
-        item.z = HANG_Z + (BELT_Z - HANG_Z) * ease(t / 0.6);
-        rig.hook = item.z + BOX_H;
-        if (t >= 0.6) {
-          item.z = BELT_Z;
-          item.path = 'belt';
-          item.stage = 'fixing';
-          item.t = 0;
-          rig.item = null;
-        }
-      }
-    });
+      });
+    }
   }
 
   function step(dt: number) {
@@ -433,11 +454,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       let limit = stopFor(item);
       const next = ahead(item);
       if (next) limit = Math.min(limit, next.x - GAP);
-      // Hold back for a returned PR being set down ahead of the machine.
-      const rig = rigs[item.lane];
-      if (item.path === 'belt' && rig.item && rig.item.path === 'lower' && rig.item.t >= 0 && item.x < dropX(item.lane) - 1) limit = Math.min(limit, dropX(item.lane) - GAP);
-      // Lane 1 holds back while another lane crosses into the trunk.
-      if (item.path === 'belt' && item.lane === 1 && items.some((other) => other.path === 'cross') && item.x < JOIN_X - 1) limit = Math.min(limit, JOIN_X - GAP);
+      // Hold back for a returned PR being set down ahead of the machine, and
+      // for a lift that is still low where it stands.
+      const lift = lifts[item.lane];
+      if (item.path === 'belt' && lift.down.item && lift.down.item.t >= 0 && item.x < dropX(item.lane) - 1) limit = Math.min(limit, dropX(item.lane) - GAP);
+      if (item.path === 'belt' && lift.up.item && lift.up.z < BELT_Z + 16 && item.x < HOIST_X - 1) limit = Math.min(limit, HOIST_X - GAP);
+      // The middle lane holds back while a curve merges in.
+      if (item.path === 'belt' && item.lane === 1 && item.x < MERGE_X - 1 && items.some((other) => other.path === 'curve' && inMerge(other))) limit = Math.min(limit, MERGE_X - GAP);
       if (limit > item.x) item.x = Math.min(limit, item.x + SPEED * dt);
       if (item.stage === 'merged' && item.x >= GONE_X) {
         deployed += 1;
@@ -446,18 +469,26 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       }
     }
 
-    // The collector: lanes 0 and 2 cross onto the trunk.
-    for (const item of items.filter((candidate) => candidate.path === 'cross')) {
-      const dir = Math.sign(TRUNK_Y - item.y);
-      item.y += dir * Math.min(Math.abs(TRUNK_Y - item.y), SPEED * dt);
-      if (Math.abs(item.y - TRUNK_Y) < 0.01) {
-        item.y = TRUNK_Y;
-        item.path = 'trunk';
-        item.t = 0;
-      }
+    // The merge curves: each outer lane flows into the trunk.
+    for (const index of [0, 2] as LaneIndex[]) {
+      const total = curveLength(index);
+      const riding = items.filter((item) => item.lane === index && item.path === 'curve').sort((a, b) => b.s - a.s);
+      riding.forEach((item, order) => {
+        let limit = total;
+        if (order > 0) limit = Math.min(limit, riding[order - 1].s - GAP);
+        if (item.s < total - GAP + 0.01 && limit > total - GAP && mergeBusy(item)) limit = Math.min(limit, total - GAP);
+        if (limit > item.s) item.s = Math.min(limit, item.s + SPEED * dt);
+        [item.x, item.y] = curveAt(index, item.s);
+        if (item.s >= total - 0.01) {
+          item.path = 'trunk';
+          item.x = MERGE_X;
+          item.y = TRUNK_Y;
+          item.t = 0;
+        }
+      });
     }
 
-    runRigs(dt);
+    runLifts(dt);
 
     // Machines and gauges.
     const pressing = items.find((item) => item.lane === 2 && item.path === 'belt' && item.stage !== 'built' && Math.abs(item.x - LANES[2].machine) < 0.01 && (item.stage === 'new' || item.stage === 'fixing'));
@@ -494,8 +525,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     const agent = AGENTS[item.lane].label;
     if (item.done) return 'deployed · stage → production';
     if (item.path === 'drop') return `picked up · ${agent}`;
-    if (item.path === 'hoist' || item.path === 'return' || item.path === 'lower') return `changes requested · back to ${agent}`;
-    if (item.path === 'cross') return 'approved · joining the queue';
+    if (item.path === 'liftUp' || item.path === 'upper' || item.path === 'liftDown') return `changes requested · back to ${agent}`;
+    if (item.path === 'curve') return 'approved · merging into the queue';
     const here = (x: number) => Math.abs(item.x - x) < 0.01;
     switch (item.stage) {
       case 'new':
@@ -525,11 +556,12 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
 
   function layerOf(item: Item): SVGGElement {
     if (item.path === 'drop') return item.z > BELT_Z + 3 ? intakes[item.lane] : laneItems[item.lane];
-    if (item.path === 'hoist' || item.path === 'return' || item.path === 'lower') return rigs[item.lane].cargo;
-    if (item.path === 'cross') {
-      if (item.y < LANES[1].y - 11) return item.y < LANES[0].y + 11 ? laneItems[0] : gaps[0];
-      if (item.y > LANES[1].y + 11) return item.y > LANES[2].y - 11 ? laneItems[2] : gaps[1];
-      return laneItems[1];
+    if (item.path === 'liftUp') return lifts[item.lane].up.cargo;
+    if (item.path === 'liftDown') return lifts[item.lane].down.cargo;
+    if (item.path === 'upper') return upperEls[item.lane];
+    if (item.path === 'curve') {
+      if (item.lane === 0) return item.y < LANES[0].y + 11 ? laneItems[0] : item.y < LANES[1].y - 11 ? gaps[0] : laneItems[1];
+      return item.y > LANES[2].y - 11 ? laneItems[2] : item.y > LANES[1].y + 11 ? gaps[1] : laneItems[1];
     }
     if (item.path === 'trunk') return laneItems[1];
     return laneItems[item.lane];
@@ -572,12 +604,14 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     }
     if (linksEl.innerHTML !== links) linksEl.innerHTML = links;
 
-    // Rigs, probes, the press.
-    rigs.forEach((rig, lane) => {
-      const key = `${rig.x.toFixed(1)}:${rig.hook.toFixed(1)}`;
-      if (key !== rig.key) {
-        rig.key = key;
-        rig.el.innerHTML = rigSvg(rig.x, LANES[lane].y, rig.hook);
+    // Lifts, probes, the press.
+    lifts.forEach(({ up, down }, lane) => {
+      for (const lift of [down, up]) {
+        const key = lift.z.toFixed(2);
+        if (key !== lift.key) {
+          lift.key = key;
+          lift.deck.innerHTML = platformSvg(lift.x, LANES[lane].y, lift.z);
+        }
       }
       const probeKey = probeTip[lane].toFixed(2);
       if (probeKey !== keys.probe[lane]) {
@@ -618,7 +652,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     }
 
     const travel = still.matches ? 0 : clock * SPEED;
-    for (const el of slats) el.setAttribute('transform', k.translateAlong(P, [travel % 8, 0, 0]));
+    for (const el of slats) el.setAttribute('transform', k.translateAlong(P, [travel % 6, 0, 0]));
+    for (const el of upperSlats) el.setAttribute('transform', k.translateAlong(P, [-(travel % 6), 0, 0]));
 
     const caseAt = Math.floor(clock / 1.3) % 11;
     cases.forEach((el, i) => {
@@ -690,7 +725,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (frame) cancelAnimationFrame(frame);
     while (items.length) finish(items[0]);
     blade.remove();
-    rigs.forEach((rig) => { rig.el.remove(); rig.cargo.remove(); });
+    lifts.forEach(({ up, down }) => [up, down].forEach((lift) => { lift.deck.remove(); lift.cargo.remove(); }));
     for (const p of pulses) p.el.remove();
   };
 }

@@ -24,23 +24,54 @@ export type LaneIndex = 0 | 1 | 2;
 
 // review-quill: one portal across all three belts.
 export const REVIEW_X = 312;
-// Past the portal, a rejected PR is hoisted onto its lane's overhead rail.
+// Past the portal, a lift raises a rejected PR to an upper return belt that
+// runs back over its machine; a second lift sets it down just ahead of it.
 export const HOIST_X = 346;
-export const RAIL_Z = 104;
-export const HANG_Z = 78;
-// Where a returned PR is set back down: just ahead of its machine.
+export const UPPER_Z = 128;
 export const dropX = (lane: LaneIndex) => LANES[lane].machine - 42;
 
-// The collector: a cross belt that brings every lane onto one trunk.
-export const JOIN_X = 398;
+// The merge: the outer lanes leave their straight run and curve smoothly
+// into the middle lane, which carries on as the single queue.
 export const TRUNK_Y = LANES[1].y;
-export const LANE_END = JOIN_X + 12;
+export const CURVE_X0 = 372;
+export const MERGE_X = 470;
+
+// Points along a lane's merge curve, sampled evenly by arc length.
+function sampleCurve(lane: LaneIndex) {
+  const y0 = LANES[lane].y;
+  const p0: [number, number] = [CURVE_X0, y0];
+  const p1: [number, number] = [CURVE_X0 + 52, y0];
+  const p2: [number, number] = [MERGE_X - 52, TRUNK_Y];
+  const p3: [number, number] = [MERGE_X, TRUNK_Y];
+  const raw: Array<[number, number]> = [];
+  for (let i = 0; i <= 200; i++) {
+    const t = i / 200;
+    const u = 1 - t;
+    raw.push([
+      u * u * u * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t * t * t * p3[0],
+      u * u * u * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t * t * t * p3[1],
+    ]);
+  }
+  const lengths = [0];
+  for (let i = 1; i < raw.length; i++) lengths.push(lengths[i - 1] + Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]));
+  return { raw, lengths, total: lengths[lengths.length - 1] };
+}
+const CURVES = [sampleCurve(0), sampleCurve(1), sampleCurve(2)];
+export const curveLength = (lane: LaneIndex) => CURVES[lane].total;
+export function curveAt(lane: LaneIndex, s: number): [number, number] {
+  const { raw, lengths, total } = CURVES[lane];
+  const at = Math.min(Math.max(s, 0), total);
+  let i = 1;
+  while (i < lengths.length - 1 && lengths[i] < at) i++;
+  const f = (at - lengths[i - 1]) / (lengths[i] - lengths[i - 1] || 1);
+  return [raw[i - 1][0] + (raw[i][0] - raw[i - 1][0]) * f, raw[i - 1][1] + (raw[i][1] - raw[i - 1][1]) * f];
+}
 
 // The single queue: three test pads in front of the gate, then main.
-export const PADS = [530, 503, 476] as const;
-export const QUEUE_X = 452;
+export const PADS = [566, 539, 512] as const;
+export const QUEUE_X = 490;
 export const GATE_X = PADS[0] + 13;
-export const MAIN_X0 = 552;
+export const MAIN_X0 = 590;
 export const DOCK_X = 806;
 export const GONE_X = 840;
 
@@ -50,7 +81,7 @@ export const TAP = {
   claude: LANES[1].machine,
   codex: LANES[2].machine,
   review: REVIEW_X,
-  queue: 500,
+  queue: 540,
   dock: 866,
 } as const;
 

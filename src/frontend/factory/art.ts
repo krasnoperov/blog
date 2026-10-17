@@ -8,20 +8,22 @@ import {
   GATE_X,
   HEIGHT,
   HOIST_X,
-  JOIN_X,
+  CURVE_X0,
   LANES,
   MAIN_X0,
   P,
   PADS,
   PLATE,
   PORTAL,
-  RAIL_Z,
+  UPPER_Z,
   REVIEW_X,
   TAP,
   TRUNK_Y,
   WIDTH,
   at,
   depth,
+  curveAt,
+  curveLength,
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
@@ -51,8 +53,8 @@ const rectOnX = (x: number, y0: number, y1: number, z0: number, z1: number) =>
   `${k.segment([x, y0, z0], [x, y1, z0], P)}${k.segment([x, y1, z0], [x, y1, z1], P)}${k.segment([x, y1, z1], [x, y0, z1], P)}${k.segment([x, y0, z1], [x, y0, z0], P)}`;
 const byDepth = <T extends { x: number; y: number }>(list: T[]) => [...list].sort((a, b) => depth(a.x, a.y) - depth(b.x, b.y));
 
-const LANE_X1 = JOIN_X - 12;
 const HALF = 11;
+const BELT_TOP = 24;
 
 function floor() {
   const out = [`<path class="iso-halo" d="${k.haloOf(PLATE, -7, 7, P)}"/>`];
@@ -117,44 +119,98 @@ function legs(xs: number[], y: number) {
   return out.join('');
 }
 
-function beltTop(id: string, x0: number, x1: number, y: number) {
-  const [y0, y1] = [y - HALF, y + HALF];
-  const top = k.onTop([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], 24, P, true);
-  const slats: string[] = [];
-  for (let x = x0 - 8; x <= x1 + 8; x += 8) slats.push(k.lineOnTop([x, y0], [x, y1], 24, P));
-  return [
-    box(x0, y0, x1, y1, 18, 24, { tone: 'mid' }, 0.5),
-    `<clipPath id="${id}"><path d="${top}"/></clipPath>`,
-    `<g clip-path="url(#${id})"><g data-part="${id}">${L(slats.join(''), { tone: 'faint' })}</g></g>`,
-  ].join('');
-}
-
-// One rail of a belt, with gaps where the collector crosses it.
-function rail(x0: number, x1: number, y: number, gaps: Array<[number, number]> = []) {
-  const out: string[] = [];
-  let from = x0;
-  for (const [g0, g1] of [...gaps].sort((a, b) => a[0] - b[0])) {
-    if (g0 > from) out.push(box(from, y, g0, y + 3, 16, 24.8, {}, 0.5, 0.3));
-    from = g1;
+// A belt conveyor, drawn in three passes around the items it carries: the
+// return strand and back frame, then the carrying side with its end drums,
+// then the front frame with the idler axles along it.
+function drum(x: number, y: number, zc: number, r: number, half = HALF) {
+  const front: Point3[] = [];
+  const back: Point3[] = [];
+  for (let i = 0; i <= 12; i++) {
+    const a = Math.PI / 2 - (i / 12) * Math.PI;
+    front.push([x + Math.cos(a) * r, y + half, zc + Math.sin(a) * r]);
+    back.push([x + Math.cos(a) * r, y - half, zc + Math.sin(a) * r]);
   }
-  if (x1 > from) out.push(box(from, y, x1, y + 3, 16, 24.8, {}, 0.5, 0.3));
-  return out.join('');
+  const ring = [...front, ...back.reverse()].map((point) => at(point));
+  const d = k.pathOf(ring, true);
+  return `<g class="iso-solid"><path class="iso-fill" d="${d}"/><path class="iso-shade" data-shade="2" d="${d}"/><path class="iso-line iso-edge" data-tone="mid" d="${d}"/></g>`;
 }
 
-// The collector's cross belt, cut into pieces at y0..y1 so each piece is
-// drawn in the layer it belongs to.
-function collector(y0: number, y1: number) {
-  const x0 = JOIN_X - 12;
-  const x1 = JOIN_X + 12;
-  const out = [box(x0, y0, x1, y1, 18, 24, { tone: 'mid', crease: 'none' }, 0.3)];
-  const rollers: string[] = [];
-  for (let y = Math.ceil(y0 / 4) * 4; y <= y1; y += 4) rollers.push(k.lineOnTop([x0, y], [x1, y], 24, P));
-  out.push(L(rollers.join(''), { tone: 'faint' }));
-  out.push(box(x0 - 2, y0, x0, y1, 16, 24.8, {}, 0.3), box(x1, y0, x1 + 2, y1, 16, 24.8, {}, 0.3));
-  return out.join('');
+function belt(id: string, x0: number, x1: number, y: number, top: number, endDrum = true, half = HALF, light = false) {
+  const z0 = top - (light ? 4 : 9);
+  const r = light ? 2.4 : 4;
+  const zc = top - r;
+  const back = light
+    ? box(x0, y - half - 2, x1, y - half, z0, top + 0.8, {}, 0.4, 0.2)
+    : [
+        box(x0 + 2, y - half + 1.5, x1 - 2, y + half - 1.5, z0, z0 + 1, { tone: 'lo', crease: 'none' }, 0.3),
+        box(x0, y - half - 3, x1, y - half, z0, top + 0.8, {}, 0.5, 0.3),
+      ].join('');
+  const surface = k.onTop([[x0, y - half], [x1, y - half], [x1, y + half], [x0, y + half]], top, P, true);
+  const slats: string[] = [];
+  for (let x = x0 - 8; x <= x1 + 8; x += 6) slats.push(k.lineOnTop([x, y - half], [x, y + half], top, P));
+  const edges = [k.lineOnTop([x0, y - half + 1.4], [x1, y - half + 1.4], top, P), k.lineOnTop([x0, y + half - 1.4], [x1, y + half - 1.4], top, P)].join('');
+  const carry = [
+    box(x0, y - half, x1, y + half, zc - 1, top, { tone: 'mid', crease: 'none' }, 0.3),
+    `<clipPath id="${id}"><path d="${surface}"/></clipPath>`,
+    `<g clip-path="url(#${id})"><g data-part="${id}">${L(slats.join(''), { tone: 'faint' })}</g></g>`,
+    L(edges, { tone: 'lo' }),
+    endDrum ? drum(x1, y, zc, r, half) : '',
+  ].join('');
+  const face = y + half + (light ? 2 : 3);
+  const idlers: string[] = [];
+  if (!light) for (let x = x0 + 10; x < x1 - 6; x += 14) idlers.push(k.sideRing([x, face, zc - 1], 1.2, 'y', P, 12));
+  const hubs = [k.sideRing([x0 + r, face, zc], r * 0.6, 'y', P, 16), k.sideRing([x1 - r, face, zc], r * 0.6, 'y', P, 16)];
+  const front = [
+    S(k.slabOf(plan(x0, y + half, x1, face, 0.4), z0, top + 0.8 - z0, P, 3, 0.3), {
+      tone: 'mid',
+      inner: L(idlers.join(''), { tone: 'lo' }) + L(hubs.join(''), { tone: 'mid' }),
+    }),
+    D([[x0 + r, face, zc], [x1 - r, face, zc]], 0.45),
+  ].join('');
+  return { back, carry, front };
 }
 
-// Intake for patchrelay: the Linear hopper.
+// One lane's merge curve: a curved belt from the end of its straight run into
+// the trunk. Pieces are cut by y so each lands in the layer it belongs to.
+function curvePieces(lane: LaneIndex, from: number, to: number) {
+  const total = curveLength(lane);
+  const steps = 40;
+  const samples: Array<{ p: [number, number]; n: [number, number] }> = [];
+  for (let i = 0; i <= steps; i++) {
+    const s0 = (total * i) / steps;
+    const p = curveAt(lane, s0);
+    const q = curveAt(lane, Math.min(total, s0 + 0.5));
+    const b = curveAt(lane, Math.max(0, s0 - 0.5));
+    const dx = q[0] - b[0];
+    const dy = q[1] - b[1];
+    const len = Math.hypot(dx, dy) || 1;
+    samples.push({ p, n: [-dy / len, dx / len] });
+  }
+  const inBand = samples.map(({ p }) => p[1] >= from && p[1] <= to);
+  const out = { carry: '', front: '' };
+  let i = 0;
+  while (i < samples.length) {
+    if (!inBand[i]) { i++; continue; }
+    const start = Math.max(0, i - 1);
+    while (i < samples.length && inBand[i]) i++;
+    const end = Math.min(samples.length - 1, i);
+    const piece = samples.slice(start, end + 1);
+    if (piece.length < 2) continue;
+    const off = (d: number) => piece.map(({ p, n }) => [p[0] + n[0] * d, p[1] + n[1] * d] as [number, number]);
+    const left = off(-HALF);
+    const right = off(HALF);
+    const ring = [...left, ...right.reverse()];
+    out.carry += S(k.extrude(ring, BELT_TOP - 5, 5, P, { convex: false }), { tone: 'mid', crease: 'none' });
+    const slats = piece.map(({ p, n }) => k.lineOnTop([p[0] - n[0] * HALF, p[1] - n[1] * HALF], [p[0] + n[0] * HALF, p[1] + n[1] * HALF], BELT_TOP, P));
+    out.carry += L(slats.join(''), { tone: 'faint' });
+    out.carry += L(k.onTop(off(-HALF + 1.4), BELT_TOP, P) + k.onTop(off(HALF - 1.4), BELT_TOP, P), { tone: 'lo' });
+    // The outer frame: a low wall along the side nearer the viewer.
+    const wall = [...off(HALF), ...off(HALF + 3).reverse()];
+    out.front += S(k.extrude(wall, BELT_TOP - 9, 9.8, P, { convex: false }), { tone: 'mid' });
+  }
+  return out;
+}
+
 function hopper(x: number, y: number) {
   const out: string[] = [];
   for (const dx of [-17, 17]) out.push(box(x + dx - 1.4, y - 18.4, x + dx + 1.4, y - 15.6, 0, 70, { crease: 'none' }, 0.4));
@@ -257,19 +313,22 @@ function codexPress(x: number, y: number, part: 'back' | 'front') {
   return out.join('');
 }
 
-function overheadRail(lane: LaneIndex) {
-  const y = LANES[lane].y;
-  const x0 = dropX(lane) - 8;
-  const x1 = HOIST_X + 10;
+// A lift: four posts and a platform that runs between the belt and the
+// upper return belt. Back posts sit behind the belt, front posts in front.
+function liftPosts(x: number, y: number, side: 'back' | 'front') {
+  const py = side === 'back' ? y - HALF - 6 : y + HALF + 6;
   const out: string[] = [];
-  out.push(`<g data-part="hoist-${lane}"></g>`);
-  for (const x of [x0, x1]) {
-    out.push(box(x - 4, y - HALF - 14, x + 4, y - HALF - 6, 0, 1.4, { tone: 'lo' }, 0.6));
-    out.push(box(x - 2, y - HALF - 12, x + 2, y - HALF - 8, 1.4, RAIL_Z + 9, { crease: 'none' }, 0.3));
-    out.push(box(x - 3, y - HALF - 13, x + 3, y + 4, RAIL_Z + 5, RAIL_Z + 9, {}, 0.5, 0.3));
+  for (const px of [x - 12, x + 12]) {
+    out.push(box(px - 3.5, py - 3.5, px + 3.5, py + 3.5, 0, 1.4, { tone: 'lo' }, 0.6));
+    out.push(box(px - 1.2, py - 1.2, px + 1.2, py + 1.2, 1.4, UPPER_Z + 6, { crease: 'none' }, 0.3));
+    out.push(L([30, 60, 90].map((z) => k.segment([px - 1.2, py + 1.2, z], [px + 1.2, py + 1.2, z], P)).join(''), { tone: 'faint' }));
   }
-  const beam = plan(x0 - 4, y - 3, x1 + 4, y + 3, 0.6);
-  out.push(S(k.slabOf(beam, RAIL_Z, 5, P, 3, 0.3), { tone: 'mid' }));
+  out.push(box(x - 14, py - 2, x + 14, py + 2, UPPER_Z + 6, UPPER_Z + 10, {}, 0.5, 0.3));
+  if (side === 'front') {
+    out.push(box(x - 14, y - HALF - 8, x - 10, y + HALF + 8, UPPER_Z + 6, UPPER_Z + 10, {}, 0.5, 0.3));
+    out.push(box(x + 10, y - HALF - 8, x + 14, y + HALF + 8, UPPER_Z + 6, UPPER_Z + 10, {}, 0.5, 0.3));
+    out.push(D([[x - 12, py, UPPER_Z + 10], [x + 12, py, UPPER_Z + 10]], 0.4));
+  }
   return out.join('');
 }
 
@@ -277,19 +336,24 @@ function lane(i: LaneIndex) {
   const { y, intake, machine } = LANES[i];
   const isTrunk = i === 1;
   const x0 = intake - 30;
-  const x1 = isTrunk ? MAIN_X0 : LANE_X1;
+  const x1 = isTrunk ? MAIN_X0 : CURVE_X0;
   const out: string[] = [];
-  // The stretch of collector between the lane behind and this one, and the
-  // items crossing it, sit just before this lane.
-  if (i > 0) out.push(collector(LANES[i - 1].y + HALF, y - HALF));
-  out.push(`<g data-part="gap-${i}"></g>`);
-  // Things behind the belt.
+  const band = (lo: number, hi: number) => {
+    const pieces = [curvePieces(0, lo, hi), curvePieces(2, lo, hi)];
+    return { carry: pieces.map((p) => p.carry).join(''), front: pieces.map((p) => p.front).join('') };
+  };
+  // The stretch of merge curve between the lane behind and this one, and
+  // the items riding it, sit just before this lane.
+  if (i > 0) {
+    const gap = band(LANES[i - 1].y + HALF, y - HALF);
+    out.push(gap.carry, `<g data-part="gap-${i}"></g>`, gap.front);
+  }
   const legXs: number[] = [];
   for (let x = x0 + 10; x < x1 - 4; x += 58) legXs.push(x);
   out.push(legs(legXs, y));
   if (i === 2) out.push(codexPress(machine, y, 'back'));
+  out.push(liftPosts(HOIST_X, y, 'back'), liftPosts(dropX(i), y, 'back'));
   if (isTrunk) {
-    // A CI lamp behind each test pad.
     PADS.forEach((x, index) => {
       out.push(post(x - 6, y - HALF - 10, 3.6, 0, 1.4, { tone: 'lo' }));
       out.push(post(x - 6, y - HALF - 10, 1.3, 1.4, 34, { crease: 'none' }, 12));
@@ -297,20 +361,20 @@ function lane(i: LaneIndex) {
     });
     out.push(box(GATE_X - 3, y - HALF - 13, GATE_X + 3, y - HALF - 7, 0, 58, {}, 0.5, 0.3));
   }
-  out.push(rail(x0, x1, y - HALF - 3, isTrunk ? [[JOIN_X - 12, JOIN_X + 12]] : []));
-  out.push(beltTop(`belt-${i}`, x0, x1, y));
-  out.push(collector(y - HALF, y + HALF));
+  const main = belt(`belt-${i}`, x0, x1, y, BELT_TOP, isTrunk);
+  const onLane = band(y - HALF, y + HALF);
+  out.push(main.back, main.carry, onLane.carry);
   if (isTrunk) {
     for (const x of PADS) {
       const pad = plan(x - 10, y - 10, x + 10, y + 10, 1);
-      out.push(S(k.slabOf(pad, 24, 0.8, P, 3, 0.3), { tone: 'lo' }));
-      out.push(L(k.planOutline(k.insetPlan(pad, 2), 24.8, P, 3), { tone: 'faint' }));
+      out.push(S(k.slabOf(pad, BELT_TOP, 0.8, P, 3, 0.3), { tone: 'lo' }));
+      out.push(L(k.planOutline(k.insetPlan(pad, 2), BELT_TOP + 0.8, P, 3), { tone: 'faint' }));
     }
     out.push(mainTrack());
   }
   out.push(`<g data-part="items-${i}"></g>`);
-  out.push(rail(x0, x1, y + HALF, isTrunk ? [[JOIN_X - 12, JOIN_X + 12]] : []));
-  // Things on and in front of the belt.
+  out.push(`<g data-part="lift-${i}"></g>`);
+  out.push(main.front, onLane.front);
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
   if (i === 0) out.push(drop(TAP.patchrelay, [machine - 6, y - 20, 56]), patchrelayMachine(machine, y));
   if (i === 1) out.push(drop(TAP.claude, [machine, y - 23, 44]), claudeMachine(machine, y));
@@ -323,7 +387,11 @@ function lane(i: LaneIndex) {
     out.push('<g data-part="links"></g>');
   }
   out.push(`<g data-part="probe-${i}"></g>`);
-  out.push(overheadRail(i));
+  out.push(liftPosts(HOIST_X, y, 'front'), liftPosts(dropX(i), y, 'front'));
+  // The upper return belt, from the lift past review back to the lift ahead
+  // of the machine.
+  const upper = belt(`ubelt-${i}`, dropX(i) - 10, HOIST_X + 10, y, UPPER_Z, true, 8, true);
+  out.push(upper.back, upper.carry, `<g data-part="upper-${i}"></g>`, upper.front);
   return out.join('');
 }
 
@@ -432,7 +500,7 @@ function dock() {
 }
 
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a round drum and an open press. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones are hoisted onto an overhead rail and carried back to their own machine. A cross conveyor merges the three lines into one queue, where candidates test on pads at the same time and each passes the gate as soon as it is green, onto the main track and into the deploy dock. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper into a closed machining cell; Claude Code and Codex take theirs from session consoles into a round drum and an open press. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. The outer lines curve smoothly into the middle one, which becomes the single queue, where candidates test on pads at the same time and each passes the gate as soon as it is green, onto the main track and into the deploy dock. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
 
 let cached: string | null = null;
 
