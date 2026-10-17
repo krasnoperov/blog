@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
-  background: var(--anatomy-page);
-  color: var(--anatomy-text);
+  background: var(--fx-page);
+  color: var(--fx-text);
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
@@ -11,7 +11,7 @@
 .page code {
   font-family: var(--font-mono);
   font-size: 0.86em;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
 }
 
 .bar,
@@ -32,13 +32,13 @@
 }
 
 .brand {
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
   font-weight: 500;
   letter-spacing: -0.01em;
 }
 
 .brand span {
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
 }
 
 .nav {
@@ -48,12 +48,12 @@
 }
 
 .navLink {
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
   transition: color 140ms ease;
 }
 
 .navLink:hover {
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
 }
 
 .main {
@@ -71,7 +71,7 @@
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
 }
 
 .headline {
@@ -81,7 +81,7 @@
   font-weight: 500;
   line-height: 1.05;
   letter-spacing: -0.035em;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
 }
 
 .lede {
@@ -102,7 +102,7 @@
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
 }
 
 .stations,
@@ -118,8 +118,8 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  background: var(--anatomy-faint);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
+  background: var(--fx-faint);
+  box-shadow: 0 0 0 1px var(--fx-faint);
 }
 
 .station {
@@ -127,13 +127,13 @@
   flex-direction: column;
   gap: 8px;
   padding: 20px 20px 18px;
-  background: var(--anatomy-card);
+  background: var(--fx-card);
 }
 
 .stationNumber {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -141,7 +141,7 @@
   margin: 0;
   font-size: 15px;
   font-weight: 500;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
   letter-spacing: -0.01em;
 }
 
@@ -162,13 +162,13 @@
 }
 
 .link {
-  color: var(--anatomy-strong);
-  border-bottom: 1px solid var(--anatomy-lo);
+  color: var(--fx-strong);
+  border-bottom: 1px solid var(--fx-lo);
   transition: border-color 140ms ease;
 }
 
 .link:hover {
-  border-bottom-color: var(--anatomy-strong);
+  border-bottom-color: var(--fx-strong);
 }
 
 .evalGrid,
@@ -181,8 +181,8 @@
 .evalCard,
 .project {
   padding: 24px;
-  background: var(--anatomy-card);
-  box-shadow: 0 0 0 1px var(--anatomy-faint);
+  background: var(--fx-card);
+  box-shadow: 0 0 0 1px var(--fx-faint);
 }
 
 .evalCard p {
@@ -197,7 +197,7 @@
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.03em;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
   font-variant-numeric: tabular-nums;
 }
 
@@ -205,7 +205,7 @@
   margin: 14px 0 0;
   font-size: 15px;
   font-weight: 500;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
 }
 
 .projectHead {
@@ -223,7 +223,7 @@
   font-size: 20px;
   font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
 }
 
 .projectLine {
@@ -246,14 +246,14 @@
 
 .number dt {
   font-size: 12.5px;
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
 }
 
 .number dd {
   margin: 0;
   font-family: var(--font-mono);
   font-size: 22px;
-  color: var(--anatomy-strong);
+  color: var(--fx-strong);
   font-variant-numeric: tabular-nums;
 }
 
@@ -261,7 +261,7 @@
   margin: 14px 0 0;
   font-family: var(--font-mono);
   font-size: 11.5px;
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
 }
 
 .footer {
@@ -270,10 +270,10 @@
   justify-content: space-between;
   gap: 12px;
   padding: 28px 0 44px;
-  border-top: 1px solid var(--anatomy-faint);
+  border-top: 1px solid var(--fx-faint);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--anatomy-muted);
+  color: var(--fx-muted);
 }
 
 .footerLinks {
@@ -304,5 +304,79 @@
   .evals,
   .projects {
     margin-bottom: 60px;
+  }
+}
+
+.queue {
+  margin-bottom: 88px;
+}
+
+.sectionLede {
+  max-width: 720px;
+  margin: -8px 0 22px;
+  font-size: 15px;
+}
+
+.serviceTable {
+  display: grid;
+  gap: 1px;
+  background: var(--fx-faint);
+  box-shadow: 0 0 0 1px var(--fx-faint);
+}
+
+.serviceHead,
+.service {
+  display: grid;
+  grid-template-columns: 1.1fr 1.3fr 1.5fr 1.4fr;
+  gap: 24px;
+  padding: 18px 20px;
+  background: var(--fx-card);
+}
+
+.serviceHead {
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fx-muted);
+}
+
+.service p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+.service header p {
+  margin-top: 4px;
+}
+
+.serviceRole {
+  color: var(--fx-muted);
+}
+
+.cellLabel {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .serviceHead {
+    display: none;
+  }
+
+  .service {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .cellLabel {
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fx-muted);
   }
 }
