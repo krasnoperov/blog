@@ -35,6 +35,10 @@ export const dropX = (lane: LaneIndex) => LANES[lane].machine - 42;
 export const TRUNK_Y = LANES[1].y;
 export const CURVE_X0 = 372;
 export const MERGE_X = 470;
+// The funnel: one deck where the three belt ends converge. Only one PR is in
+// it at a time; each lane waits at its own stop line just before it.
+export const FUNNEL_X0 = 430;
+export const STOP_BACK = 14;
 
 // Points along a lane's merge curve, sampled evenly by arc length.
 function sampleCurve(lane: LaneIndex) {
@@ -58,6 +62,18 @@ function sampleCurve(lane: LaneIndex) {
 }
 const CURVES = [sampleCurve(0), sampleCurve(1), sampleCurve(2)];
 export const curveLength = (lane: LaneIndex) => CURVES[lane].total;
+// Arc length along a lane's curve where it reaches x.
+export function curveSAtX(lane: LaneIndex, x: number) {
+  const { raw, lengths } = CURVES[lane];
+  for (let i = 1; i < raw.length; i++) {
+    if (raw[i][0] >= x) {
+      const f = (x - raw[i - 1][0]) / (raw[i][0] - raw[i - 1][0] || 1);
+      return lengths[i - 1] + (lengths[i] - lengths[i - 1]) * f;
+    }
+  }
+  return CURVES[lane].total;
+}
+
 export function curveAt(lane: LaneIndex, s: number): [number, number] {
   const { raw, lengths, total } = CURVES[lane];
   const at = Math.min(Math.max(s, 0), total);
@@ -68,8 +84,8 @@ export function curveAt(lane: LaneIndex, s: number): [number, number] {
 }
 
 // The single queue: three test pads in front of the gate, then main.
-export const PADS = [566, 539, 512] as const;
-export const QUEUE_X = 490;
+export const PADS = [566, 539, 512, 485] as const;
+export const QUEUE_X = MERGE_X;
 export const GATE_X = PADS[0] + 13;
 export const MAIN_X0 = 590;
 export const DOCK_X = 806;

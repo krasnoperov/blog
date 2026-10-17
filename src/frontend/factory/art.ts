@@ -9,6 +9,9 @@ import {
   HEIGHT,
   HOIST_X,
   CURVE_X0,
+  FUNNEL_X0,
+  MERGE_X,
+  STOP_BACK,
   LANES,
   MAIN_X0,
   P,
@@ -23,6 +26,7 @@ import {
   at,
   depth,
   curveAt,
+  curveSAtX,
   curveLength,
   dropX,
 } from './layout';
@@ -173,7 +177,7 @@ function belt(id: string, x0: number, x1: number, y: number, top: number, endDru
 // Slats across a merge curve at arc positions phase, phase + 6, ... that fall
 // in the band lo..hi.
 export function curveSlats(lane: LaneIndex, lo: number, hi: number, phase: number) {
-  const total = curveLength(lane);
+  const total = curveSAtX(lane, FUNNEL_X0);
   const out: string[] = [];
   for (let s0 = phase; s0 <= total; s0 += 6) {
     const p = curveAt(lane, s0);
@@ -190,7 +194,8 @@ export function curveSlats(lane: LaneIndex, lo: number, hi: number, phase: numbe
 // One lane's merge curve: a curved belt from the end of its straight run into
 // the trunk. Pieces are cut by y so each lands in the layer it belongs to.
 function curvePieces(lane: LaneIndex, from: number, to: number) {
-  const total = curveLength(lane);
+  // Each curve runs only to the funnel; the funnel deck takes it from there.
+  const total = curveSAtX(lane, FUNNEL_X0);
   const steps = 40;
   const samples: Array<{ p: [number, number]; n: [number, number] }> = [];
   for (let i = 0; i <= steps; i++) {
@@ -350,11 +355,83 @@ function liftPosts(x: number, y: number, side: 'back' | 'front') {
   return out.join('');
 }
 
+// The funnel: one deck from the stop lines to the queue. Its back edge is
+// the far side of the patchrelay curve, its front edge the near side of the
+// Codex curve, so all three belt ends meet it flush.
+function funnelEdge(lane: LaneIndex, side: number, offset: number) {
+  const s0 = curveSAtX(lane, FUNNEL_X0);
+  const total = curveLength(lane);
+  const out: Array<[number, number]> = [];
+  for (let i = 0; i <= 16; i++) {
+    const s1 = s0 + ((total - s0) * i) / 16;
+    const p = curveAt(lane, s1);
+    const q = curveAt(lane, Math.min(total, s1 + 0.5));
+    const b = curveAt(lane, Math.max(0, s1 - 0.5));
+    const len = Math.hypot(q[0] - b[0], q[1] - b[1]) || 1;
+    const n: [number, number] = [-(q[1] - b[1]) / len, (q[0] - b[0]) / len];
+    const sign = Math.sign(n[1]) * side;
+    out.push([p[0] + n[0] * sign * offset, p[1] + n[1] * sign * offset]);
+  }
+  return out;
+}
+
+function funnel() {
+  const backEdge = funnelEdge(0, -1, HALF);
+  const frontEdge = funnelEdge(2, 1, HALF);
+  const deck = [...backEdge, ...[...frontEdge].reverse()];
+  const surface = k.onTop(deck, BELT_TOP, P, true);
+  const slats: string[] = [];
+  for (let x = FUNNEL_X0 - 8; x <= MERGE_X + 8; x += 6) slats.push(k.lineOnTop([x, TRUNK_Y - 40], [x, TRUNK_Y + 40], BELT_TOP, P));
+  const carry = [
+    S(k.extrude(backEdge.map(([x, y]) => [x, y - 3] as [number, number]).concat([...backEdge].reverse()), BELT_TOP - 9, 9.8, P, { convex: false }), { tone: 'mid' }),
+    S(k.extrude(deck, BELT_TOP - 5, 5, P, { convex: false }), { tone: 'mid', crease: 'none' }),
+    `<clipPath id="belt-f"><path d="${surface}"/></clipPath>`,
+    `<g clip-path="url(#belt-f)"><g data-part="belt-f">${L(slats.join(''), { tone: 'faint' })}</g></g>`,
+    L(k.onTop(funnelEdge(0, -1, HALF - 1.4), BELT_TOP, P) + k.onTop(funnelEdge(2, 1, HALF - 1.4), BELT_TOP, P), { tone: 'lo' }),
+  ].join('');
+  const front = S(k.extrude(frontEdge.concat(frontEdge.map(([x, y]) => [x, y + 3] as [number, number]).reverse()), BELT_TOP - 9, 9.8, P, { convex: false }), { tone: 'mid' });
+  return { carry, front };
+}
+
+// A painted stop line across each incoming belt, just ahead of where a PR
+// waits for its turn into the funnel.
+function stopLines() {
+  const out: string[] = [];
+  for (const lane of [0, 2] as LaneIndex[]) {
+    const s0 = curveSAtX(lane, FUNNEL_X0) - STOP_BACK + 9.5;
+    const p = curveAt(lane, s0);
+    const q = curveAt(lane, s0 + 0.5);
+    const b = curveAt(lane, s0 - 0.5);
+    const len = Math.hypot(q[0] - b[0], q[1] - b[1]) || 1;
+    const n: [number, number] = [-(q[1] - b[1]) / len, (q[0] - b[0]) / len];
+    out.push(k.lineOnTop([p[0] - n[0] * (HALF - 1.4), p[1] - n[1] * (HALF - 1.4)], [p[0] + n[0] * (HALF - 1.4), p[1] + n[1] * (HALF - 1.4)], BELT_TOP + 0.05, P));
+  }
+  const x = FUNNEL_X0 - STOP_BACK + 9.5;
+  out.push(k.lineOnTop([x, TRUNK_Y - HALF + 1.4], [x, TRUNK_Y + HALF - 1.4], BELT_TOP + 0.05, P));
+  return `<path class="iso-line fx-stopline" d="${out.join('')}"/>`;
+}
+
+// Stanchions with a rope on both sides of the queue, ending at the gate.
+const STANCHIONS = [MERGE_X + 8, (PADS[3] + PADS[2]) / 2, (PADS[2] + PADS[1]) / 2, (PADS[1] + PADS[0]) / 2];
+function stanchions(side: 'back' | 'front') {
+  const y = TRUNK_Y + (side === 'back' ? -1 : 1) * (HALF + 9);
+  const out: string[] = [];
+  const xs = [...STANCHIONS];
+  xs.forEach((x, index) => {
+    out.push(post(x, y, 2.6, 0, 1, { tone: 'lo' }, 16));
+    out.push(post(x, y, 0.9, 1, 32, { crease: 'none' }, 10));
+    out.push(post(x, y, 1.6, 32, 34, { tone: 'hi' }, 14, 0.3));
+    const next = index < xs.length - 1 ? xs[index + 1] : GATE_X - 3;
+    out.push(box(x + 1, y - 0.5, next - (index < xs.length - 1 ? 1 : 0), y + 0.5, 29.5, 31, { tone: 'lo', crease: 'none' }, 0.2));
+  });
+  return out.join('');
+}
+
 function lane(i: LaneIndex) {
   const { y, intake, machine } = LANES[i];
   const isTrunk = i === 1;
   const x0 = intake - 30;
-  const x1 = isTrunk ? MAIN_X0 : CURVE_X0;
+  const x1 = isTrunk ? FUNNEL_X0 : CURVE_X0;
   const out: string[] = [];
   const band = (lo: number, hi: number) => {
     const pieces = [curvePieces(0, lo, hi), curvePieces(2, lo, hi)];
@@ -378,10 +455,14 @@ function lane(i: LaneIndex) {
       out.push(lamp(`pad${index}`, x - 6, y - HALF - 10, 34));
     });
     out.push(box(GATE_X - 3, y - HALF - 13, GATE_X + 3, y - HALF - 7, 0, 58, {}, 0.5, 0.3));
+    out.push(stanchions('back'));
   }
-  const main = belt(`belt-${i}`, x0, x1, y, BELT_TOP, isTrunk);
+  const main = belt(`belt-${i}`, x0, x1, y, BELT_TOP, false);
+  const trunk = isTrunk ? belt('belt-t', MERGE_X, MAIN_X0, y, BELT_TOP, true) : null;
+  const deck = isTrunk ? funnel() : null;
   const onLane = band(y - HALF, y + HALF);
   out.push(main.back, main.carry, onLane.carry);
+  if (trunk && deck) out.push(trunk.back, trunk.carry, deck.carry, stopLines());
   if (isTrunk) {
     for (const x of PADS) {
       const pad = plan(x - 10, y - 10, x + 10, y + 10, 1);
@@ -393,6 +474,12 @@ function lane(i: LaneIndex) {
   out.push(`<g data-part="items-${i}"></g>`);
   out.push(`<g data-part="lift-${i}"></g>`);
   out.push(main.front, onLane.front);
+  if (trunk && deck) {
+    out.push(trunk.front, deck.front);
+    // Engraved place numbers on the queue's front frame, 1 at the gate.
+    PADS.forEach((x, index) => out.push(k.faceTextSvg(k.sideMatrix([x - 2, y + HALF + 3], BELT_TOP - 2.4, P, 'left'), String(index + 1), { size: 5.6, tone: 'hi' })));
+    out.push(stanchions('front'));
+  }
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
   if (i === 0) out.push(drop(TAP.patchrelay, [machine - 6, y - 20, 56]), patchrelayMachine(machine, y));
   if (i === 1) out.push(drop(TAP.claude, [machine, y - 23, 44]), claudeMachine(machine, y));
