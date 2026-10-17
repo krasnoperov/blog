@@ -86,6 +86,9 @@ const BRANCH_CI = 3.0;
 // CI on a stacked candidate: each PR's own pattern, scaled.
 const QUEUE_CI = 0.9;
 const TRAVEL_Z = levelZ(STACK_MAX) + 10;
+// Where a PR teleported back to its line lands: on the upper belt, just past
+// the up lift.
+const LANDING_X = HOIST_X - 18;
 // A candidate that goes red is repaired in place on its candidate ref, then
 // passes a narrow integration review, then tests again.
 const FIX_TIME = 1.2;
@@ -652,6 +655,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     if (item.path === 'belt' && item.stage === 'changes') {
       const lift = lifts[lane].up;
       if (lift.item || Math.abs(lift.z - BELT_Z) > 0.5) return true;
+      // Not while a PR at the start of the upper belt is still in the way.
+      if (items.some((other) => other.lane === lane && other.path === 'upper' && other.x > HOIST_X - GAP)) return true;
       // Don't raise a PR into the spot where a teleported one is landing.
       if (items.some((other) => other.lane === lane && other.path === 'teleport' && other.beamFrom === null)) return true;
       lift.item = item;
@@ -967,13 +972,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
           (other) =>
             other !== item &&
             other.lane === lane &&
-            ((other.path === 'upper' && other.x > HOIST_X - GAP) || (other.path === 'teleport' && other.beamFrom === null)),
+            ((other.path === 'upper' && other.x > LANDING_X - GAP) || (other.path === 'teleport' && other.beamFrom === null)),
         );
         const room = !lifts[lane].up.item && !landingBusy;
         if (!room) continue;
         item.beamFrom = null;
         // On the belt itself, just past the lift that may be down.
-        item.x = HOIST_X - 18;
+        item.x = LANDING_X;
         item.y = LANES[lane].y;
         item.z = UPPER_Z;
         item.t = 0;
