@@ -1179,7 +1179,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         if (item.path !== 'trunk') return item.pre < 1 ? 'approved · branch CI running' : 'approved · to the queue';
         if (Math.abs(item.x - (GATE_X - 10)) < 0.5) {
           if (item.red >= 0) return item.ciRepairs >= CI_REPAIR_BUDGET ? 'branch CI red · ci_repair spent · to a human' : `branch CI red · ci_repair ${item.ciRepairs + 1}/${CI_REPAIR_BUDGET}`;
-          if (item.sensitive && !item.human && item.pre >= 1) return 'touches wrangler, auth or migrations · waiting for a human';
+          if (item.sensitive && !item.human && item.pre >= 1) return 'touches wrangler, auth, migrations or dependencies · waiting for a human';
           return 'at the gate · branch CI running';
         }
         return 'approved · to the merge queue';
