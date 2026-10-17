@@ -13,12 +13,13 @@ export const BELT_Z = 24;
 export const CARD_H = 2.2;
 export const BOX_H = 10;
 
-// Three agents, each on its own belt. Machines are staggered along x so the
-// front ones never hide the ones behind.
+// Three agents, each on its own belt: the far line is the longest, the near
+// one the shortest, so the lines step down toward the viewer. Machines are
+// staggered along x so the front ones never hide the ones behind.
 export const LANES = [
-  { key: 'patchrelay', y: -100, intake: 120, machine: 214 },
-  { key: 'claude', y: -36, intake: 50, machine: 146 },
-  { key: 'codex', y: 28, intake: -18, machine: 78 },
+  { key: 'patchrelay', y: -100, intake: -18, machine: 78 },
+  { key: 'claude', y: -36, intake: 36, machine: 120 },
+  { key: 'codex', y: 28, intake: 120, machine: 236 },
 ] as const;
 export type LaneIndex = 0 | 1 | 2;
 
@@ -76,8 +77,9 @@ export const TAP = {
 export const PORTAL = { x0: REVIEW_X - 9, x1: REVIEW_X + 9, y0: LANES[0].y - 22, y1: LANES[2].y + 24, z0: 62, z1: 70 } as const;
 
 export const PLATE = { x: -56, y: -184, w: 996, d: 300, r: 12 };
-// The eval bench is drawn at x 196..404, y 30..60 and slid into place.
-export const BENCH_SHIFT = [396, 16] as const;
+// The eval bench is drawn at x 196..404, y 30..60 and slid into place: the
+// front corner the short near line leaves free.
+export const BENCH_SHIFT = [-232, 22] as const;
 export const EVAL_DIAL = { x: 292, y: 45, r: 10, top: 31 } as const;
 
 const EXTREMES: Point3[] = [
