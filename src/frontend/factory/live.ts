@@ -26,7 +26,7 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
-import { ARM_BASE } from './art';
+import { ARM_BASE, BAYS, BAY_Z } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
 // issues spawn at each agent's intake, move on belts that accumulate (an
@@ -47,7 +47,7 @@ export const AGENTS = [
 
 // How many review rounds each PR takes, and how long its candidate's CI
 // runs. Patterns, so the line repeats.
-const ROUNDS_OF = [1, 2, 1, 1, 3, 1, 2, 1, 1, 2];
+const ROUNDS_OF = [1, 2, 1, 1, 1, 3, 1, 1, 1, 1];
 const CI_OF = [4.2, 6.8, 3.4, 5.6, 7.4, 3.9, 5.1];
 const SPAWN_EVERY = [3.6, 4.4, 5.2];
 // Some PRs fail CI on their own branch at the entry pad; some go red once in
@@ -277,6 +277,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   const linksEl = part('links');
   const pulsesEl = part('pulses');
   const evalNeedleEl = part('eval-needle');
+  // The eval reader is drawn once over the first case and slid along.
+  const CASE0 = 212.9;
+  const evalHead = part('eval-head');
+  evalHead.innerHTML =
+    box(CASE0 - 3, 40.5, CASE0 + 3, 47.5, 43, 48.5, {}, 0.5, 0.3) +
+    cyl(CASE0, 44, 0.6, 35.2, 43, { crease: 'none' }, 10) +
+    cyl(CASE0, 44, 1.2, 34, 35.2, { tone: 'hi' }, 12);
+  let headX = 0;
+  const shutters = BAYS.map((bay) => ({ el: part(`shutter-${bay.name}`), open: 0, key: '' }));
   const cases = Array.from(svg.querySelectorAll<SVGGElement>('[data-case]'));
   const pegs = Array.from(svg.querySelectorAll<SVGGElement>('[data-peg]'));
   const still = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -848,6 +857,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (v) v.t += dt;
     });
     beacon += dt;
+    // A bay's shutter rolls up while its beacon is on, and back down after.
+    const bayOn = [beacon < 0.9, beacon > 0.6 && beacon < 1.7];
+    shutters.forEach((shutter, i) => {
+      const target = bayOn[i] ? 1 : 0;
+      shutter.open = still.matches ? target : shutter.open + (target - shutter.open) * (1 - Math.exp(-dt / 0.25));
+    });
+    // The eval reader follows the case being replayed, and jumps home.
+    const headTarget = (Math.floor(clock / 1.3) % 11) * 4.8;
+    headX = still.matches || headTarget < headX - 1 ? headTarget : headX + (headTarget - headX) * (1 - Math.exp(-dt / 0.12));
     for (const p of pulses) p.t += dt;
 
     if (tracked && tracked.done) {
@@ -1010,8 +1028,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       if (env > 0.01) beamSvg += teleportSvg(bx, by, bz, env, clock, item.id);
     }
     if (beams.innerHTML !== beamSvg) beams.innerHTML = beamSvg;
-    setLamp('stage', beacon < 0.9 ? 'lit' : null);
-    setLamp('production', beacon > 0.6 && beacon < 1.7 ? 'lit' : null);
+    const bayOn = [beacon < 0.9, beacon > 0.6 && beacon < 1.7];
+    setLamp('stage', bayOn[0] ? 'lit' : null);
+    setLamp('production', bayOn[1] ? 'lit' : null);
+    shutters.forEach((shutter) => {
+      const key = shutter.open.toFixed(3);
+      if (key === shutter.key) return;
+      shutter.key = key;
+      shutter.el.setAttribute('transform', k.translateAlong(P, [0, 0, shutter.open * (BAY_Z[1] - BAY_Z[0]) * 0.72]));
+    });
 
     for (let i = pulses.length - 1; i >= 0; i--) {
       const p = pulses[i];
@@ -1039,6 +1064,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         el.setAttribute('transform', lifted ? k.translateAlong(P, [0, 0, 2.4]) : '');
       }
     });
+    evalHead.setAttribute('transform', k.translateAlong(P, [headX, 0, 0]));
     const caseT = (clock % 1.3) / 1.3;
     evalNeedleEl.setAttribute('d', needleD(EVAL_DIAL, -0.375 + 0.75 * (0.15 + 0.7 * ease(caseT * 1.6) - 0.7 * ease((caseT - 0.75) * 4))));
     const pegAt = Math.floor(clock / 0.18) % 44;

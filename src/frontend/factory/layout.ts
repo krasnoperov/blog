@@ -73,6 +73,7 @@ const EXTREMES: Point3[] = [
   [BUS.x0, BUS.y0, BUS.z1 + 2],
   [BUS.x1, BUS.y0, BUS.z1 + 2],
   [DOCK_X + 92, TRUNK_Y + 48, 80],
+  [BUS.x1 + 28, -178, 152],
 ];
 
 export const P: Projection = k.fitProjection(EXTREMES, WIDTH, HEIGHT, { pad: 14, azimuth: AZIMUTH });

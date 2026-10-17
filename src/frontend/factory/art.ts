@@ -54,6 +54,7 @@ const rectOnY = (y: number, x0: number, x1: number, z0: number, z1: number) =>
 const byDepth = <T extends { x: number; y: number }>(list: T[]) => [...list].sort((a, b) => depth(a.x, a.y) - depth(b.x, b.y));
 
 const HALF = 11;
+const TAU_ART = Math.PI * 2;
 const BELT_TOP = 24;
 
 function floor() {
@@ -79,7 +80,7 @@ function floor() {
 function bus() {
   const out: string[] = [];
   const y = (BUS.y0 + BUS.y1) / 2;
-  for (const x of [60, 240, 420, 600, 780, 890]) {
+  for (const x of [60, 240, 420, 600, 780]) {
     out.push(post(x, y, 5.6, 0, 1.6, { tone: 'lo' }, 24));
     out.push(post(x, y, 2.6, 1.6, BUS.z0 - 4, { crease: 'none' }, 18));
     out.push(L([40, 90].map((z) => k.sideArc(x, y, 2.6, z, P, 12)).join(''), { tone: 'faint' }));
@@ -92,7 +93,6 @@ function bus() {
       inner: L([134, 136, 138].map((z) => k.segment([BUS.x0 + 1, BUS.y1, z], [BUS.x1 - 1, BUS.y1, z], P)).join(''), { tone: 'faint' }),
     }),
   );
-  out.push(box(BUS.x1, BUS.y0 - 1.5, BUS.x1 + 4, BUS.y1 + 1.5, BUS.z0 - 1.5, BUS.z1 + 1.5, {}, 0.8, 0.4));
   for (const x of Object.values(TAP)) {
     out.push(box(x - 6, BUS.y1, x + 6, BUS.y1 + 3, BUS.z0 - 1, BUS.z1 - 0.5, {}, 0.6, 0.3));
     out.push(D([[x - 3.5, BUS.y1 + 3, 137], [x + 3.5, BUS.y1 + 3, 137]], 0.4));
@@ -122,13 +122,13 @@ function legs(xs: number[], y: number) {
 // A belt conveyor, drawn in three passes around the items it carries: the
 // return strand and back frame, then the carrying side with its end drums,
 // then the front frame with the idler axles along it.
-function drum(x: number, y: number, zc: number, r: number, half = HALF) {
+function drum(x: number, y: number, zc: number, r: number, half = HALF, dir = 1) {
   const front: Point3[] = [];
   const back: Point3[] = [];
   for (let i = 0; i <= 12; i++) {
     const a = Math.PI / 2 - (i / 12) * Math.PI;
-    front.push([x + Math.cos(a) * r, y + half, zc + Math.sin(a) * r]);
-    back.push([x + Math.cos(a) * r, y - half, zc + Math.sin(a) * r]);
+    front.push([x + dir * Math.cos(a) * r, y + half, zc + Math.sin(a) * r]);
+    back.push([x + dir * Math.cos(a) * r, y - half, zc + Math.sin(a) * r]);
   }
   const ring = [...front, ...back.reverse()].map((point) => at(point));
   const d = k.pathOf(ring, true);
@@ -150,6 +150,7 @@ function belt(id: string, x0: number, x1: number, y: number, top: number, endDru
   for (let x = x0 - 8; x <= x1 + 8; x += 6) slats.push(k.lineOnTop([x, y - half], [x, y + half], top, P));
   const edges = [k.lineOnTop([x0, y - half + 1.4], [x1, y - half + 1.4], top, P), k.lineOnTop([x0, y + half - 1.4], [x1, y + half - 1.4], top, P)].join('');
   const carry = [
+    drum(x0, y, zc, r, half, -1),
     box(x0, y - half, x1, y + half, zc - 1, top, { tone: 'mid', crease: 'none' }, 0.3),
     `<clipPath id="${id}"><path d="${surface}"/></clipPath>`,
     `<g clip-path="url(#${id})"><g data-part="${id}">${L(slats.join(''), { tone: 'faint' })}</g></g>`,
@@ -349,6 +350,12 @@ function codexPress(x: number, y: number, part: 'back' | 'front') {
   }
   out.push(box(x - 10, y + HALF + 2, x + 10, y + HALF + 12, 0, 1.6, { tone: 'lo' }, 0.6));
   out.push(box(x - 6, y + HALF + 4, x + 6, y + HALF + 10, 1.6, 66, {}, 0.6, 0.4));
+  // The guide rack the ram's pinion climbs, bolted to the column.
+  const rackY = y + HALF + 10.8;
+  const teeth: string[] = [];
+  for (let z = 10; z <= 56; z += 2.5) teeth.push(k.segment([x - 1.6, rackY, z], [x + 1.6, rackY, z], P));
+  out.push(S(k.slabOf(plan(x - 1.6, y + HALF + 10, x + 1.6, rackY, 0.2), 8, 50, P, 2), { tone: 'mid', inner: L(teeth.join(''), { tone: 'faint' }) }));
+  out.push(D([[x - 4.2, y + HALF + 10, 5], [x + 4.2, y + HALF + 10, 5], [x - 4.2, y + HALF + 10, 62], [x + 4.2, y + HALF + 10, 62]], 0.45));
   out.push('<g data-part="ram"></g>');
   const crown = plan(x - 12, y - HALF - 12, x + 12, y + HALF + 12, 1.4);
   out.push(S(k.slabOf(crown, 66, 10, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(crown, 71, P, 3), { tone: 'faint' }) }));
@@ -366,7 +373,7 @@ function liftMast(x: number, y: number) {
   const out: string[] = [];
   out.push(box(x - 6, my - 4, x + 6, my + 3, 0, 1.4, { tone: 'lo' }, 0.6));
   for (const rx of [x - 4, x + 4]) out.push(box(rx - 1, my - 1, rx + 1, my + 1, 1.4, UPPER_Z + 4, { crease: 'none' }, 0.3));
-  out.push(L([28, 56, 84, 112].map((z) => k.segment([x - 4, my + 1, z], [x + 4, my + 1, z], P)).join(''), { tone: 'faint' }));
+  for (const z of [28, 56, 84, 112]) out.push(box(x - 3, my - 0.5, x + 3, my + 0.5, z - 0.5, z + 0.5, { crease: 'none' }, 0.2));
   out.push(box(x - 5, my - 1.5, x + 5, y - 6, UPPER_Z - 4, UPPER_Z - 1.5, {}, 0.4, 0.2));
   out.push(box(x - 5.5, my - 2, x + 5.5, my + 2, UPPER_Z + 4, UPPER_Z + 6, {}, 0.4, 0.3));
   return out.join('');
@@ -381,7 +388,7 @@ function stackFrame(side: 'back' | 'front') {
   const out: string[] = [];
   for (const x of [STACK_X - 11, STACK_X + 11]) {
     out.push(box(x - 1.6, y - 1.6, x + 1.6, y + 1.6, 17, FRAME_TOP, { crease: 'none' }, 0.4));
-    out.push(L([1, 2, 3].map((level) => k.segment([x - 1.6, y + 1.6, BELT_TOP + level * LEVEL_H - 0.6], [x + 1.6, y + 1.6, BELT_TOP + level * LEVEL_H - 0.6], P)).join(''), { tone: 'faint' }));
+    for (const level of [1, 2, 3]) out.push(box(x - 2.2, y - 2.2, x + 2.2, y + 2.2, BELT_TOP + level * LEVEL_H - 1, BELT_TOP + level * LEVEL_H - 0.2, { crease: 'none' }, 0.4));
   }
   out.push(box(STACK_X - 13, y - 2, STACK_X + 13, y + 2, FRAME_TOP, FRAME_TOP + 3, {}, 0.5, 0.3));
   if (side === 'front') {
@@ -526,6 +533,14 @@ function evalBench() {
     cases.push(`<g data-case="${i}">${box(x, 38, x + 1.8, 50, 21, 31, { tone: 'hi' }, 0.3)}</g>`);
   }
   out.push(cases.join(''));
+  // A reading head on a little gantry over the rack: it stops over each
+  // case as it is replayed.
+  for (const x of [204, 270]) {
+    out.push(post(x, 44, 2.6, 18, 19, { tone: 'lo' }, 14));
+    out.push(box(x - 1.2, 42.8, x + 1.2, 45.2, 19, 44, { crease: 'none' }, 0.3));
+  }
+  out.push(box(202, 42, 272, 46, 44, 47, {}, 0.5, 0.3));
+  out.push('<g data-part="eval-head"></g>');
   out.push(post(EVAL_DIAL.x, EVAL_DIAL.y, 4, 18, 26, {}, 20));
   out.push(post(EVAL_DIAL.x, EVAL_DIAL.y, EVAL_DIAL.r, 26, EVAL_DIAL.top, { tone: 'hi', crease: 'lo' }, 56, 0.6));
   out.push(L(k.ring(EVAL_DIAL.x, EVAL_DIAL.y, EVAL_DIAL.r - 1.8, EVAL_DIAL.top, P, 48), { tone: 'lo' }));
@@ -543,37 +558,104 @@ function evalBench() {
   return out.join('');
 }
 
+const rectOnX = (x: number, y0: number, y1: number, z0: number, z1: number) =>
+  `${k.segment([x, y0, z0], [x, y1, z0], P)}${k.segment([x, y1, z0], [x, y1, z1], P)}${k.segment([x, y1, z1], [x, y0, z1], P)}${k.segment([x, y0, z1], [x, y0, z0], P)}`;
+
+// Deploy: a two-bay dock. Each bay has a roller shutter that the live model
+// rolls up while its beacon is on: stage first, then production.
+export const BAYS = [
+  { name: 'stage', x0: DOCK_X + 8, x1: DOCK_X + 40 },
+  { name: 'production', x0: DOCK_X + 50, x1: DOCK_X + 82 },
+] as const;
+export const BAY_Z = [3, 38] as const;
 function dock() {
   const x0 = DOCK_X;
   const x1 = DOCK_X + 92;
   const y0 = TRUNK_Y - 48;
   const y1 = TRUNK_Y + 48;
-  const out: string[] = [drop(TAP.dock, [TAP.dock, y0, 70])];
+  const out: string[] = [drop(TAP.dock, [TAP.dock, y0 + 5, 76])];
   out.push(box(x0 - 4, y0 - 4, x1 + 4, y1 + 4, 0, 3, { tone: 'lo' }, 1, 0.4));
   const body = plan(x0, y0, x1, y1, 1.4);
-  const door: string[] = [];
-  for (let z = 7; z <= 39; z += 4) door.push(k.segment([x0 + 16, y1, z], [x0 + 62, y1, z], P));
+  const louvres: string[] = [];
+  for (let z = 22; z <= 34; z += 3) louvres.push(k.segment([x1, y0 + 28, z], [x1, y0 + 58, z], P));
   out.push(
     S(k.slabOf(body, 3, 63, P, 3, 0.8), {
       tone: 'mid',
       inner:
-        L(rectOnY(y1, x0 + 14, x0 + 64, 3, 43), { tone: 'lo' }) +
-        L(door.join(''), { tone: 'faint' }) +
-        L(rectOnY(y1, x0 + 74, x0 + 86, 50, 58), { tone: 'lo' }) +
-        L([16, 32, 48].map((z) => k.segment([x1, y0 + 2, z], [x1, y1 - 2, z], P)).join(''), { tone: 'faint' }),
+        L(k.sideSeam(body, 48, P), { tone: 'faint' }) +
+        L(BAYS.map((bay) => rectOnY(y1, bay.x0 - 2, bay.x1 + 2, BAY_Z[0], BAY_Z[1] + 2)).join(''), { tone: 'lo' }) +
+        L(rectOnX(x1, y0 + 28, y0 + 58, 19, 37), { tone: 'lo' }) +
+        L(louvres.join(''), { tone: 'faint' }),
     }),
   );
+  out.push(D([[x0 + 3, y1, 6], [x1 - 3, y1, 6], [x0 + 3, y1, 59], [x1 - 3, y1, 59], [x1, y1 - 3, 59], [x1, y0 + 3, 59]], 0.45));
+  BAYS.forEach((bay, i) => {
+    const opening = faceQuad(y1, bay.x0, bay.x1, BAY_Z[0], BAY_Z[1]);
+    out.push(`<path class="fx-bay" d="${opening}"/>`);
+    out.push(L(k.segment([bay.x0, y1 - 8, BAY_Z[0]], [bay.x1, y1 - 8, BAY_Z[0]], P), { tone: 'faint' }));
+    const slats: string[] = [];
+    for (let z = BAY_Z[0] + 3; z < BAY_Z[1]; z += 3) slats.push(faceLine(y1, bay.x0, bay.x1, z));
+    out.push(
+      `<clipPath id="fx-bay-${i}"><path d="${opening}"/></clipPath><g clip-path="url(#fx-bay-${i})"><g data-part="shutter-${bay.name}">` +
+        `<path class="fx-shutter" d="${opening}"/>` +
+        L(slats.join(''), { tone: 'faint' }) +
+        L(faceLine(y1, bay.x0, bay.x1, BAY_Z[0] + 1.2), { tone: 'lo' }) +
+        `</g></g>`,
+    );
+    out.push(L(rectOnY(y1, bay.x0, bay.x1, BAY_Z[0], BAY_Z[1]), { tone: 'mid' }));
+  });
   out.push(box(x0 - 3, y0 - 3, x1 + 3, y1 + 3, 66, 70, {}, 1.2, 0.6));
-  for (const [x, name] of [[x0 + 44, 'stage'], [x0 + 70, 'production']] as const) {
-    out.push(post(x, y1 - 18, 4, 70, 72, { tone: 'lo' }, 20));
-    out.push(S(k.cylinder(x, y1 - 18, 3, 72, 6, P, 22), { tone: 'mid', className: 'fx-lamp', crease: 'none' }).replace('<g ', `<g data-lamp="${name}" `));
-    out.push(post(x, y1 - 18, 3.6, 78, 79.6, {}, 20, 0.3));
+  // On the roof: a junction box where the bus drop lands, a condenser with
+  // fins and a fan, and a beacon over each bay.
+  out.push(box(TAP.dock - 5, y0 + 2, TAP.dock + 5, y0 + 8, 70, 76, {}, 0.5, 0.3));
+  const unit = plan(x0 + 10, y0 + 14, x0 + 50, y0 + 44, 1);
+  const fins: string[] = [];
+  for (let x = x0 + 13; x <= x0 + 47; x += 3) fins.push(k.segment([x, y0 + 44, 70], [x, y0 + 44, 80], P));
+  out.push(S(k.slabOf(unit, 70, 10, P, 3, 0.5), { tone: 'mid', inner: L(fins.join(''), { tone: 'faint' }) }));
+  out.push(post(x0 + 30, y0 + 29, 9, 80, 81.4, { tone: 'lo' }, 36));
+  out.push(L(k.ring(x0 + 30, y0 + 29, 7.6, 81.4, P, 32), { tone: 'lo' }));
+  out.push(L([0, 1, 2].map((i) => {
+    const a = (i / 3) * TAU_ART + 0.4;
+    return k.lineOnTop([x0 + 30 + Math.cos(a) * 1.6, y0 + 29 + Math.sin(a) * 1.6], [x0 + 30 + Math.cos(a) * 7.6, y0 + 29 + Math.sin(a) * 7.6], 81.4, P);
+  }).join(''), { tone: 'faint' }));
+  out.push(L(k.ring(x0 + 30, y0 + 29, 1.6, 81.4, P, 12), { tone: 'mid' }));
+  for (const bay of BAYS) {
+    const x = (bay.x0 + bay.x1) / 2;
+    out.push(post(x, y1 - 8, 4, 70, 72, { tone: 'lo' }, 20));
+    out.push(S(k.cylinder(x, y1 - 8, 3, 72, 6, P, 22), { tone: 'mid', className: 'fx-lamp', crease: 'none' }).replace('<g ', `<g data-lamp="${bay.name}" `));
+    out.push(post(x, y1 - 8, 3.6, 78, 79.6, {}, 20, 0.3));
   }
   return out.join('');
 }
 
+// GitHub: a hub cabinet at the end of the bus, with a column of port lights.
+export const HUB = { x0: BUS.x1, x1: BUS.x1 + 28, y0: -178, y1: -146, z: 152 } as const;
+function hub() {
+  const { x0, x1, y0, y1, z } = HUB;
+  const out: string[] = [];
+  out.push(box(x0 - 2, y0 - 2, x1 + 2, y1 + 2, 0, 2, { tone: 'lo' }, 0.8, 0.4));
+  const body = plan(x0, y0, x1, y1, 1.2);
+  const vents: string[] = [];
+  for (let z0 = 112; z0 <= 132; z0 += 4) vents.push(k.segment([x1, y0 + 8, z0], [x1, y1 - 8, z0], P));
+  out.push(
+    S(k.slabOf(body, 2, z - 6, P, 3, 0.8), {
+      tone: 'mid',
+      inner:
+        L(rectOnY(y1, x0 + 4, x1 - 4, 10, 100), { tone: 'lo' }) +
+        L(rectOnX(x1, y0 + 6, y1 - 6, 108, 136), { tone: 'lo' }) +
+        L(vents.join(''), { tone: 'faint' }) +
+        L(k.sideSeam(body, 104, P), { tone: 'faint' }),
+    }),
+  );
+  out.push(box(x0 - 1.5, y0 - 1.5, x1 + 1.5, y1 + 1.5, z - 4, z, {}, 1, 0.5));
+  const leds: Point3[] = [];
+  for (let row = 0; row < 8; row++) for (const dx of [9, 14, 19]) leds.push([x0 + dx, y1, 90 - row * 5]);
+  out.push(k.dotsSvg(leds.map((point) => at(point)), { size: 0.6, tone: 'hi', pulse: true }));
+  return out.join('');
+}
+
 export const FIGURE_LABEL =
-  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one, where they queue up behind each other and run to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the deploy dock as soon as it is green; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus carries the signals, and a front bench replays the evals.';
+  'An isometric software factory with three agent lines. patchrelay takes issues from a Linear hopper; Claude Code and Codex take theirs from session consoles. patchrelay and Claude Code each work with a SCARA arm that swings over the issue on the belt; Codex works with a small stamping press. Each has a small screen pod beside it. Pull requests from all three pass under one review-quill portal: approved ones ride on, rejected ones go up a lift onto an upper return belt and come back down a second lift just ahead of their own machine. A square collector at the end carries PRs from the outer lines across onto the middle one, where they queue up behind each other and run to the merge aggregate: a PR is admitted only once CI on its branch is green, then a crane stacks it on the PR ahead, so the bottom one sits on main and each one above is rebased on the one below. The bottom one rides off to the two-bay deploy dock as soon as it is green, where the stage shutter rolls up and then the production one; one that goes red is teleported back to its own line, and the ones above it drop down and retest. An overhead GitHub bus runs from a hub cabinet and carries the signals, and on a front bench a reading head replays the evals case by case.';
 
 let cached: string | null = null;
 
@@ -584,6 +666,7 @@ export function factorySvg() {
     '<defs><linearGradient id="fx-tp-glow" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="fx-tp-a"/><stop offset="0.55" class="fx-tp-b"/><stop offset="1" class="fx-tp-c"/></linearGradient><linearGradient id="fx-tp-core" x1="0" y1="1" x2="0" y2="0"><stop offset="0" class="fx-tp-core-a"/><stop offset="1" class="fx-tp-core-b"/></linearGradient></defs>',
     floor(),
     bus(),
+    hub(),
     portalBack(),
     lane(0),
     lane(1),

@@ -119,3 +119,9 @@
 
 /* A warm ring on Claude Code's tool. */
 .fx-claude-ring { fill: none; stroke: var(--fx-claude); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.iso { --fx-bay: #d4d4d0; }
+@media (prefers-color-scheme: dark) {
+  .iso { --fx-bay: #070708; }
+}
+.fx-bay { fill: var(--fx-bay); }
+.fx-shutter { fill: var(--anatomy-shade-2); }
