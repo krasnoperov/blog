@@ -30,7 +30,8 @@
 .fx-stage { min-width: 760px; outline: none; }
 .fx-stage:focus-visible { outline: 1px solid var(--anatomy-muted); outline-offset: 6px; }
 
-.fx-item { cursor: pointer; }
+.fx-item { cursor: pointer; outline: none; }
+.fx-item:focus-visible .iso-edge { stroke: var(--anatomy-lit); stroke-width: 1.8px; }
 .fx-item .iso-solid[data-lit] > .iso-top { fill: var(--anatomy-lit-top); }
 .fx-item .iso-solid[data-lit] > .iso-edge { stroke-width: 1.5px; }
 

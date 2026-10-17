@@ -417,7 +417,8 @@ export function factorySvg() {
     dock(),
     `<g transform="${k.translateAlong(P, [BENCH_DX, 0, 0])}">${evalBench()}</g>`,
   ];
-  cached = k.figureSvg({ width: WIDTH, height: HEIGHT, label: FIGURE_LABEL, body, className: 'fx-svg' });
+  // A group, not an image: the items inside are buttons you can follow.
+  cached = k.figureSvg({ width: WIDTH, height: HEIGHT, label: FIGURE_LABEL, body, className: 'fx-svg' }).replace('role="img"', 'role="group"');
   return cached;
 }
 

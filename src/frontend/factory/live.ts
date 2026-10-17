@@ -281,7 +281,15 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       ciDot: el.querySelector('[data-ci]') as SVGElement,
       done: false,
     };
+    el.setAttribute('tabindex', '0');
+    el.setAttribute('role', 'button');
+    el.setAttribute('aria-label', `Follow ${name}`);
     el.addEventListener('click', () => follow(item));
+    el.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      follow(item);
+    });
     layers.front.appendChild(el);
     items.push(item);
     if (!tracked) follow(item);

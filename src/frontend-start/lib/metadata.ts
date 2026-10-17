@@ -1,11 +1,9 @@
 import {
   BLOG_POSTS,
-  HOMEPAGE_POSTS,
   type BlogPostSummary,
 } from '../../shared/content/blog-posts';
 import {
   HOME_DESCRIPTION,
-  SITE_DESCRIPTION,
   SITE_FEED_PATH,
   SITE_AUTHOR_NAME,
   SITE_AUTHOR_SAME_AS,
@@ -74,18 +72,18 @@ export function homePageHead() {
     path: '/',
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Blog',
+      '@type': 'WebPage',
       name: SITE_NAME,
-      description: SITE_DESCRIPTION,
+      description: HOME_DESCRIPTION,
       url: absoluteUrl('/'),
-      // Mirror the visible homepage list so structured data and the rendered
-      // shop-window stay in sync. Archive (CollectionPage) keeps the full list.
-      blogPost: HOMEPAGE_POSTS.map((post) => ({
-        '@type': 'BlogPosting',
-        headline: post.title,
-        url: absoluteUrl(post.path),
-        datePublished: post.publishedAt,
-      })),
+      // The homepage is the factory figure, not a post list; the archive
+      // (CollectionPage) carries the posts.
+      author: {
+        '@type': 'Person',
+        name: SITE_AUTHOR_NAME,
+        url: SITE_AUTHOR_URL,
+        sameAs: SITE_AUTHOR_SAME_AS,
+      },
     },
   });
 }

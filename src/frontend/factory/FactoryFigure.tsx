@@ -19,7 +19,7 @@ export function FactoryFigure() {
         <div className="iso-plate-corners" aria-hidden="true">
           <span className="iso-plate-corner" data-corner="fig">Fig 1</span>
           <span className="iso-plate-corner" data-corner="title">Software factory · line 1</span>
-          <span className="iso-plate-corner" data-corner="hint">Click any item to follow it</span>
+          <span className="iso-plate-corner" data-corner="hint">Click or tab to an item to follow it</span>
           <span className="iso-plate-corner" data-corner="readout" ref={readoutRef}>warming up</span>
         </div>
         <div className="fx-scroll">
