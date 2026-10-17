@@ -68,16 +68,6 @@ function floor() {
   const screws = k.corners(PLATE, 11);
   out.push(L(screws.map(([x, y]) => k.ring(x, y, 2.2, 0, P, 16)).join(''), { tone: 'lo' }));
   out.push(D(screws.map(([x, y]) => [x, y, 0])));
-  const front = PLATE.y + PLATE.d;
-  const strip = plan(-20, front - 16, 780, front - 9, 1);
-  out.push(S(k.slabOf(strip, 0, 0.6, P, 3), { tone: 'lo', crease: 'none' }));
-  const ticks = k.topTicks(-16, 776, 4, 5, strip.y + 0.8, 0.6, [2, 3.8], P);
-  out.push(L(ticks.minor, { tone: 'lo' }), L(ticks.major, { tone: 'mid' }));
-  const label = plan(830, front - 26, 900, front - 10, 1.2);
-  out.push(S(k.slabOf(label, 0, 0.8, P, 4), { tone: 'lo' }));
-  out.push(L(k.planOutline(k.insetPlan(label, 1.6), 0.8, P, 4), { tone: 'faint' }));
-  out.push(k.faceTextSvg(k.topMatrix([836, label.y + 6.5], 0.8, P, 'x'), 'KRASNOPEROV · LINE 2', { size: 3.2, tone: 'mid' }));
-  out.push(L(k.lineOnTop([836, label.y + 10.5], [880, label.y + 10.5], 0.8, P), { tone: 'lo', free: true }));
   return out.join('');
 }
 
@@ -103,12 +93,6 @@ function bus() {
   }
   out.push('<g data-part="pulses"></g>');
   return out.join('');
-}
-
-// Drops from the bus land on the back edge of what they serve; they are
-// drawn just before the thing they land on.
-function drop(x: number, to: Point3) {
-  return k.wireSvg(at([x, BUS.y1 + 3, BUS.z0 - 1]), at(to), { tone: 'lo', via: [at([x, BUS.y1 + 3, to[2] + 30])] });
 }
 
 function legs(xs: number[], y: number) {
@@ -414,7 +398,6 @@ function stackFrame(side: 'back' | 'front') {
     for (let level = 1; level < STACK_MAX; level++) out.push(box(x - 2.2, y - 2.2, x + 2.2, y + 2.2, levelZ(level) - 1, levelZ(level) - 0.2, { crease: 'none' }, 0.4));
   }
   out.push(box(STACK_X - 13, y - 2, STACK_X + 13, y + 2, FRAME_TOP, FRAME_TOP + 3, {}, 0.5, 0.3));
-  if (side === 'front') out.push(engrave(STACK_X - 9, y + 1.6, 19.4, 'MAIN', 3.2));
   return out.join('');
 }
 
@@ -514,8 +497,6 @@ function lane(i: LaneIndex) {
   out.push(i === 0 ? hopper(intake, y) : sessionConsole(intake, y, i));
   if (i < 2) out.push(`<g data-part="arm-${i}"></g>`);
   if (i === 2) out.push(codexPress(machine, y, 'front'));
-  out.push(drop(TAP[LANES[i].key], [machine + 25, y - HALF - 17, 46]));
-  if (i === 0) out.push(k.wireSvg(at([intake + 20, y + 8, 100]), at([machine + 18, y - HALF - 15, 46]), { tone: 'mid', via: [at([intake + 40, y + 8, 120]), at([machine + 18, y - HALF - 15, 120])] }));
   if (isTrunk) out.push('<g data-part="links"></g>', cranePosts('front'), '<g data-part="beams"></g>');
   out.push(`<g data-part="probe-${i}"></g>`);
   // The upper return belt, from the lift past review back to the lift ahead
@@ -552,7 +533,6 @@ function portalFront() {
   out.push(box(PORTAL.x0 + 2, PORTAL.y1 + 2, PORTAL.x1 - 2, PORTAL.y1 + 8, 1.6, PORTAL.z0, {}, 0.5, 0.4));
   const beam = plan(PORTAL.x0, PORTAL.y0 - 10, PORTAL.x1, PORTAL.y1 + 10, 1);
   out.push(S(k.slabOf(beam, PORTAL.z0, PORTAL.z1 - PORTAL.z0, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(beam, PORTAL.z0 + 4, P, 3), { tone: 'faint' }) }));
-  out.push(drop(TAP.review, [REVIEW_X, PORTAL.y0 - 10, PORTAL.z1]));
   LANES.forEach((laneInfo, i) => {
     const y = laneInfo.y - 6;
     const top = PORTAL.z1 + 4;
@@ -644,7 +624,7 @@ function booth() {
 
 function production() {
   const { x0, x1, y0, y1, z } = PROD;
-  const out: string[] = [drop(TAP.dock, [TAP.dock, y0 + 5, z + 10])];
+  const out: string[] = [];
   out.push(box(x0 - 4, y0 - 4, x1 + 4, y1 + 4, 0, 3, { tone: 'lo' }, 1, 0.4));
   const body = plan(x0, y0, x1, y1, 1.4);
   const floors = [12, 24, 36, 48].map((level) => k.sideSeam(body, level + 1.5, P)).join('');

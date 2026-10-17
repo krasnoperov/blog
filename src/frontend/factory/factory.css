@@ -56,7 +56,7 @@
 [data-case][data-on] .iso-top { fill: var(--anatomy-lit-top); }
 [data-case][data-on] .iso-edge { stroke: var(--anatomy-lit); }
 [data-peg][data-on] .iso-top,
-[data-peg][data-on] .iso-shade { fill: var(--anatomy-green); }
+[data-peg][data-on] .iso-shade { fill: var(--anatomy-hi); }
 
 .fx-legend { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; }
 .fx-stats { font-family: var(--anatomy-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--anatomy-text); }
