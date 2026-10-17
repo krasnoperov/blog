@@ -130,6 +130,11 @@
   background: var(--anatomy-card);
 }
 
+.station:focus-visible {
+  outline: 1px solid var(--anatomy-muted);
+  outline-offset: -4px;
+}
+
 .stationNumber {
   font-family: var(--font-mono);
   font-size: 11px;

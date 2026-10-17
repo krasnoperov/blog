@@ -140,3 +140,13 @@
 .fx-sensitive { display: none; }
 .fx-item[data-sensitive] [data-k="box"] .fx-sensitive { display: inline; }
 .fx-hazard { fill: var(--fx-light); }
+/* Pointing at a machine: the rest dims, a note says what it does. */
+.fx-plate { position: relative; }
+.fx-spot { fill: var(--anatomy-paper); opacity: 0; pointer-events: none; transition: opacity 180ms ease; }
+.fx-spot[data-on] { opacity: .72; }
+.fx-spot-edge { fill: none; stroke: var(--anatomy-muted); stroke-width: .8px; vector-effect: non-scaling-stroke; pointer-events: none; }
+.fx-tip { position: absolute; z-index: 2; max-width: 280px; transform: translate(-50%, calc(-100% - 10px)); padding: 8px 10px; border: 1px solid var(--anatomy-faint); border-radius: 6px; background: var(--anatomy-paper); color: var(--anatomy-hi); font: 12px/1.45 var(--iso-font, ui-sans-serif, system-ui, sans-serif); box-shadow: 0 6px 24px rgb(0 0 0 / .08); opacity: 0; pointer-events: none; transition: opacity 140ms ease; }
+.fx-tip[data-on] { opacity: 1; }
+.fx-tip strong { display: block; margin-bottom: 2px; font-weight: 600; }
+.fx-tip span { color: var(--anatomy-mid); }
+@media (prefers-reduced-motion: reduce) { .fx-spot, .fx-tip { transition: none; } }

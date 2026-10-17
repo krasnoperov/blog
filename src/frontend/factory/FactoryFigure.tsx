@@ -19,7 +19,7 @@ export function FactoryFigure() {
         <div className="iso-plate-corners" aria-hidden="true">
           <span className="iso-plate-corner" data-corner="fig">Fig 1</span>
           <span className="iso-plate-corner" data-corner="title">Software factory · three lines, one queue</span>
-          <span className="iso-plate-corner" data-corner="hint">runs on its own</span>
+          <span className="iso-plate-corner" data-corner="hint">runs on its own · point at a machine</span>
           <span className="iso-plate-corner" data-corner="readout" ref={readoutRef}>warming up</span>
         </div>
         <div className="fx-scroll">

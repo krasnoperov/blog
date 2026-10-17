@@ -8,14 +8,20 @@ const REPO = 'https://github.com/krasnoperov/patchrelay';
 interface Station {
   n: string;
   name: string;
+  // The machines in the figure this station is about.
+  figure: string[];
   body: ReactNode;
   links: Array<{ label: string; href: string }>;
 }
+
+// Point the figure at machines: it dims the rest of the floor around them.
+const pointAt = (ids: string[]) => document.dispatchEvent(new CustomEvent('fx-station', { detail: { ids } }));
 
 const STATIONS: Station[] = [
   {
     n: '01',
     name: 'Intake',
+    figure: ['intake'],
     body: (
       <>Issues live in Linear. Delegating one to the patchrelay app is the only thing that lets patchrelay write code; undelegating stops the run.</>
     ),
@@ -24,6 +30,7 @@ const STATIONS: Station[] = [
   {
     n: '02',
     name: 'Triage',
+    figure: ['intake', 'patchrelay'],
     body: (
       <>A 45-second Codex pass returns one of six intents: <code>code_change</code>, <code>split_into_children</code>, <code>investigate</code>, <code>review</code>, <code>coordination</code> or <code>needs_input</code>. The last one goes back to Linear as a question.</>
     ),
@@ -32,6 +39,7 @@ const STATIONS: Station[] = [
   {
     n: '03',
     name: 'Dev',
+    figure: ['patchrelay', 'claude', 'codex'],
     body: (
       <>One durable worktree per issue. patchrelay drives Codex straight from Linear; I pick up the rest in Claude Code or Codex. Every path ends in a pull request.</>
     ),
@@ -43,6 +51,7 @@ const STATIONS: Station[] = [
   {
     n: '04',
     name: 'Review',
+    figure: ['review'],
     body: (
       <>review-quill checks out the exact head, reads it against the repo’s <code>REVIEW_WORKFLOW.md</code>, and posts a plain GitHub approve or request changes. Requested changes come back as a <code>review_fix</code> run when patchrelay wrote the code, or land in the waiting ship-pr session when I did.</>
     ),
@@ -54,8 +63,9 @@ const STATIONS: Station[] = [
   {
     n: '05',
     name: 'Merge queue',
+    figure: ['gate', 'stack', 'ci'],
     body: (
-      <>merge-steward admits a PR approved on its exact head with green checks, then builds future-main candidates, each on top of the one ahead, and runs CI on those SHAs in parallel. A red candidate is repaired in place on its candidate ref, rechecked by a narrow integration review, and tested again; the approved PR head stays frozen.</>
+      <>merge-steward admits a PR approved on its exact head with green checks, then builds future-main candidates, each on top of the one ahead, and runs CI on those SHAs in parallel. A candidate that conflicts with the ones below, or goes red, is repaired in place on its candidate ref, rechecked by a narrow integration review, and tested again; the approved PR head stays frozen, and nothing is stacked on a conflict until it has a candidate.</>
     ),
     links: [
       { label: 'post', href: '/posts/merge-steward' },
@@ -65,6 +75,7 @@ const STATIONS: Station[] = [
   {
     n: '06',
     name: 'Main',
+    figure: ['stack'],
     body: (
       <>Landing is a fast-forward of <code>main</code> to the SHA that passed. If <code>main</code> moved first, the candidate is relinked onto the new tip and tested again, not reviewed again.</>
     ),
@@ -73,6 +84,7 @@ const STATIONS: Station[] = [
   {
     n: '07',
     name: 'Deploy',
+    figure: ['deploy'],
     body: (
       <>A push to <code>main</code> runs the repo’s own Actions: stage and production on Cloudflare Workers, from the same SHA at once, each with its own smoke test. The issue is Done only when both pass.</>
     ),
@@ -81,6 +93,7 @@ const STATIONS: Station[] = [
   {
     n: '08',
     name: 'Feedback',
+    figure: ['usertold'],
     body: (
       <>UserTold interviews the people using what shipped. Interviews become evidence, evidence is linked to Linear issues, and what users said becomes the next work on the line.</>
     ),
@@ -89,6 +102,7 @@ const STATIONS: Station[] = [
   {
     n: '—',
     name: 'Human Needed',
+    figure: ['desk'],
     body: (
       <>Every repair loop has a budget: <code>review_fix</code> ×3, <code>ci_repair</code> ×2, <code>integration_repair</code> ×10. When one is spent, the issue moves to Human Needed. Changes to <code>wrangler.toml</code>, auth, migrations or dependencies always wait for a human’s approval.</>
     ),
@@ -97,6 +111,7 @@ const STATIONS: Station[] = [
   {
     n: '—',
     name: 'GitHub, the bus',
+    figure: ['bus'],
     body: (
       <>The services never call each other. A webhook only wakes them; every decision is re-read from GitHub: head SHA, reviews, checks, refs.</>
     ),
@@ -168,7 +183,15 @@ export default function FactoryHomePage() {
           <h2 id="stations-title" className={styles.sectionTitle}>Stations</h2>
           <ol className={styles.stationList}>
             {STATIONS.map((station) => (
-              <li key={station.name} className={styles.station}>
+              <li
+                key={station.name}
+                className={styles.station}
+                tabIndex={0}
+                onMouseEnter={() => pointAt(station.figure)}
+                onMouseLeave={() => pointAt([])}
+                onFocus={() => pointAt(station.figure)}
+                onBlur={() => pointAt([])}
+              >
                 <span className={styles.stationNumber}>{station.n}</span>
                 <h3 className={styles.stationName}>{station.name}</h3>
                 <p className={styles.stationBody}>{station.body}</p>
@@ -182,7 +205,7 @@ export default function FactoryHomePage() {
           </ol>
         </section>
 
-        <section className={styles.evals} aria-labelledby="evals-title">
+        <section className={styles.evals} aria-labelledby="evals-title" onMouseEnter={() => pointAt(['evals'])} onMouseLeave={() => pointAt([])}>
           <h2 id="evals-title" className={styles.sectionTitle}>Evals</h2>
           <div className={styles.evalGrid}>
             <article className={styles.evalCard}>

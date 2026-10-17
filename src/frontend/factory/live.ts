@@ -32,6 +32,9 @@ import {
   dropX,
 } from './layout';
 import type { LaneIndex } from './layout';
+import { BENCH_SHIFT, HEIGHT, WIDTH } from './layout';
+import { STATION_NOTES, areaOf, benchNote, hullOf, inside, pathOfHull } from './stations';
+import type { Flat } from './stations';
 import { ARM_BASE, CHIMNEYS, CI_DIAL, GATE_SPAN, STAGE_DIAL, TUBE_FRONT_LEGS, TUBE_PATH, STAMP, WINDOWS, levelZ } from './art';
 
 // The moving half of the figure. One small discrete model runs the line:
@@ -72,6 +75,10 @@ const SENSITIVE = (id: number) => id % 9 === 5;
 const APPROVE_TIME = 1.6;
 const HUMAN_TIME = 2.8;
 const FAILS_IN_QUEUE = (id: number) => id % 11 === 3;
+// Some conflict with the PRs below them when their candidate is built: they
+// sit askew on the stack and their CI cannot start until the conflict is
+// resolved on the candidate ref.
+const CONFLICTS = (id: number) => id % 13 === 6;
 // CI on the PR's own branch starts when the PR is opened and runs while it
 // is reviewed, so it is usually green by the time it reaches the gate.
 const BRANCH_CI = 3.0;
@@ -117,6 +124,9 @@ interface Item {
   ci: number;
   // Integration repair on the candidate: seconds into it, or -1.
   fix: number;
+  // A merge conflict with the candidates below, and how askew it sits.
+  conflict: boolean;
+  skew: number;
   // An issue that came from what users told usertold.
   fromUsers: boolean;
   // Repair attempts spent, a human's help, and approval of a sensitive change.
@@ -519,6 +529,8 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
       beamFrom: null,
       ci: 0,
       fix: -1,
+      conflict: false,
+      skew: 0,
       ciRepairs: 0,
       integrationRepairs: 0,
       escalated: '',
@@ -805,7 +817,9 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
         // red PR fading out of it, every level at rest.
         const settled =
           !items.some((other) => (other.stage === 'merged' && other.path === 'queue' && other.x < STACK_X + 18) || (other.path === 'teleport' && other.beamFrom !== null && Math.abs(other.beamFrom[0] - STACK_X) < 1)) &&
-          stack.every((candidate, level) => candidate.z === levelZ(level));
+          stack.every((candidate, level) => candidate.z === levelZ(level)) &&
+          // Nothing goes on a candidate that conflicts until it has one.
+          !stack.some((candidate) => candidate.conflict);
         if (crane.t >= 0.34 && settled) Object.assign(crane, { phase: 'lower', t: 0, target: levelZ(stack.length) });
       } else if (crane.phase === 'lower') {
         item.z = TRAVEL_Z + (crane.target - TRAVEL_Z) * ease(crane.t / 0.22);
@@ -815,6 +829,10 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
           item.path = 'stack';
           item.level = stack.length;
           item.ci = 0;
+          if (CONFLICTS(item.id) && !item.retried) {
+            item.conflict = true;
+            item.red = 0;
+          }
           stack.push(item);
           crane.item = null;
           Object.assign(crane, { phase: 'rise', t: 0 });
@@ -849,6 +867,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
           // built on it.
           candidate.fix = -1;
           candidate.red = -1;
+          candidate.conflict = false;
           candidate.retried = true;
           candidate.ci = 0;
           for (const above of stack.slice(level + 1)) above.retest = true;
@@ -913,7 +932,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     drums.forEach((drum, level) => {
       const here = stack[level];
       const target = here && here.z === levelZ(level) ? here.ci : here ? drum.level : 0;
-      drum.state = !here ? 'none' : here.red >= 0 ? 'red' : here.ci >= 1 ? 'green' : 'running';
+      drum.state = !here ? 'none' : here.conflict ? 'amber' : here.red >= 0 ? 'red' : here.ci >= 1 ? 'green' : 'running';
       drum.level = still.matches ? target : drum.level + (target - drum.level) * (1 - Math.exp(-dt / 0.1));
       const spinning = drum.state === 'running' && !still.matches;
       drum.spin += ((spinning ? 1 : 0) - drum.spin) * (1 - Math.exp(-dt / 0.35));
@@ -1172,7 +1191,7 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
           const below = stack[item.level - 1];
           const base = below ? `built on ${below.name}` : 'on main';
           const state =
-            item.fix >= FIX_TIME ? 'review-quill/integration' : item.fix >= 0 ? `integration_repair ${item.integrationRepairs}/${INTEGRATION_REPAIR_BUDGET} on its candidate ref` : item.red >= 0 ? 'red' : item.retest ? 'testing again' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, to main' : 'green';
+            item.fix >= FIX_TIME ? 'review-quill/integration' : item.fix >= 0 ? `${item.conflict ? 'conflict · ' : ''}integration_repair ${item.integrationRepairs}/${INTEGRATION_REPAIR_BUDGET} on its candidate ref` : item.conflict ? 'conflicts with the PRs below' : item.red >= 0 ? 'red' : item.retest ? 'testing again' : item.ci < 1 ? 'CI running' : item.level === 0 ? 'green, to main' : 'green';
           return `merge queue · level ${item.level + 1} · ${base} · ${state}`;
         }
         if (item.path === 'queue') return here(ENTRY_X) ? 'admitted · waiting for the crane' : 'admitted · to the merge queue';
@@ -1218,7 +1237,11 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   function render() {
     const groups = new Map<SVGGElement, Array<{ el: Element; key: number }>>();
     for (const item of items) {
-      item.el.setAttribute('transform', k.translateAlong(P, [item.x, item.y, item.z]));
+      // A conflicting candidate sits askew until its conflict is resolved.
+      const skewTarget = item.conflict && item.path === 'stack' && (item.fix < 0 || item.fix < FIX_TIME * 0.8) ? 1 : 0;
+      item.skew = still.matches ? skewTarget : item.skew + (skewTarget - item.skew) * 0.2;
+      if (Math.abs(item.skew - skewTarget) < 0.01) item.skew = skewTarget;
+      item.el.setAttribute('transform', k.translateAlong(P, [item.x + item.skew * 2.5, item.y, item.z + item.skew * 3.5]));
       const morph = item.morph;
       item.card.style.display = morph >= 1 ? 'none' : '';
       item.box.style.display = morph <= 0 ? 'none' : '';
@@ -1463,6 +1486,86 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
     }
   }
 
+  // Pointing at a machine: the rest of the floor dims, the machine keeps its
+  // ink, and a short note says what it does. The station list on the page
+  // can point at machines too.
+  const host = svg;
+  const notes = [...STATION_NOTES, benchNote(BENCH_SHIFT)].map((note) => {
+    const hull = hullOf(note);
+    return { ...note, hull, area: areaOf(hull) };
+  });
+  const spot = document.createElementNS(SVG_NS, 'path');
+  spot.setAttribute('class', 'fx-spot');
+  spot.setAttribute('fill-rule', 'evenodd');
+  const spotEdge = document.createElementNS(SVG_NS, 'path');
+  spotEdge.setAttribute('class', 'fx-spot-edge');
+  host.appendChild(spot);
+  host.appendChild(spotEdge);
+  const plate = stage.closest('.fx-plate') as HTMLElement | null;
+  const tip = document.createElement('div');
+  tip.className = 'fx-tip';
+  tip.setAttribute('aria-hidden', 'true');
+  plate?.appendChild(tip);
+  let shown = '';
+  function showStations(ids: string[], withTip: boolean) {
+    const key = `${ids.join(',')}:${withTip}`;
+    if (key === shown) return;
+    shown = key;
+    const picked = notes.filter((note) => ids.includes(note.id));
+    if (!picked.length) {
+      spot.removeAttribute('data-on');
+      spotEdge.setAttribute('d', '');
+      tip.removeAttribute('data-on');
+      return;
+    }
+    const holes = picked.map((note) => pathOfHull(note.hull)).join('');
+    spot.setAttribute('d', `M0 0H${WIDTH}V${HEIGHT}H0Z${holes}`);
+    spot.setAttribute('data-on', '');
+    spotEdge.setAttribute('d', holes);
+    if (!withTip || !plate) {
+      tip.removeAttribute('data-on');
+      return;
+    }
+    const note = picked[0];
+    tip.innerHTML = '';
+    const title = document.createElement('strong');
+    title.textContent = note.title;
+    const text = document.createElement('span');
+    text.textContent = note.text;
+    tip.appendChild(title);
+    tip.appendChild(text);
+    // Above the machine, kept inside the plate.
+    const xs = note.hull.map((p) => p[0]);
+    const top = Math.min(...note.hull.map((p) => p[1]));
+    const ctm = host.getScreenCTM();
+    if (!ctm) return;
+    const point = new DOMPoint((Math.min(...xs) + Math.max(...xs)) / 2, top).matrixTransform(ctm);
+    const box = plate.getBoundingClientRect();
+    const half = Math.min(140, box.width / 2 - 8);
+    tip.style.left = `${Math.min(box.width - half - 8, Math.max(half + 8, point.x - box.left))}px`;
+    tip.style.top = `${point.y - box.top}px`;
+    tip.setAttribute('data-on', '');
+  }
+  const pick = (event: PointerEvent): string | null => {
+    const ctm = host.getScreenCTM();
+    if (!ctm) return null;
+    const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(ctm.inverse());
+    const point: Flat = [p.x, p.y];
+    let best: (typeof notes)[number] | null = null;
+    for (const note of notes) if (inside(point, note.hull) && (!best || note.area < best.area)) best = note;
+    return best ? best.id : null;
+  };
+  const onMove = (event: PointerEvent) => {
+    const id = pick(event);
+    showStations(id ? [id] : [], true);
+  };
+  const onLeave = () => showStations([], false);
+  const onPage = (event: Event) => showStations((event as CustomEvent<{ ids: string[] }>).detail?.ids ?? [], false);
+  host.addEventListener('pointermove', onMove);
+  host.addEventListener('pointerdown', onMove);
+  host.addEventListener('pointerleave', onLeave);
+  document.addEventListener('fx-station', onPage);
+
   // A read-only snapshot of where every item is, for tests.
   Object.assign(stage, { factoryState: () => items.map((item) => ({ id: item.id, lane: item.lane, path: item.path, stage: item.stage, level: item.level, ci: item.path === 'stack' ? item.ci : null, x: item.x, y: item.y, z: item.z })) });
 
@@ -1505,6 +1608,13 @@ export function startFactory({ stage, readout, stats }: FactoryHandles) {
   still.addEventListener('change', onMotion);
 
   return () => {
+    host.removeEventListener('pointermove', onMove);
+    host.removeEventListener('pointerdown', onMove);
+    host.removeEventListener('pointerleave', onLeave);
+    document.removeEventListener('fx-station', onPage);
+    spot.remove();
+    spotEdge.remove();
+    tip.remove();
     observer.disconnect();
     document.removeEventListener('visibilitychange', onVisibility);
     still.removeEventListener('change', onMotion);
