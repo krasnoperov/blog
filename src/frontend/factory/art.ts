@@ -367,22 +367,18 @@ function codexPress(x: number, y: number, part: 'back' | 'front') {
   return out.join('');
 }
 
-// A lift: four posts and a platform that runs between the belt and the
-// upper return belt. Back posts sit behind the belt, front posts in front.
-function liftPosts(x: number, y: number, side: 'back' | 'front') {
-  const py = side === 'back' ? y - HALF - 6 : y + HALF + 6;
+// A lift: one slim mast behind the belt, a platform that rides it like a
+// forklift carriage, and a short arm at the top that carries the end of the
+// upper return belt. Nothing stands in front of the belt.
+const MAST_Y = HALF + 8;
+function liftMast(x: number, y: number) {
+  const my = y - MAST_Y;
   const out: string[] = [];
-  for (const px of [x - 12, x + 12]) {
-    out.push(box(px - 3.5, py - 3.5, px + 3.5, py + 3.5, 0, 1.4, { tone: 'lo' }, 0.6));
-    out.push(box(px - 1.2, py - 1.2, px + 1.2, py + 1.2, 1.4, UPPER_Z + 6, { crease: 'none' }, 0.3));
-    out.push(L([30, 60, 90].map((z) => k.segment([px - 1.2, py + 1.2, z], [px + 1.2, py + 1.2, z], P)).join(''), { tone: 'faint' }));
-  }
-  out.push(box(x - 14, py - 2, x + 14, py + 2, UPPER_Z + 6, UPPER_Z + 10, {}, 0.5, 0.3));
-  if (side === 'front') {
-    out.push(box(x - 14, y - HALF - 8, x - 10, y + HALF + 8, UPPER_Z + 6, UPPER_Z + 10, {}, 0.5, 0.3));
-    out.push(box(x + 10, y - HALF - 8, x + 14, y + HALF + 8, UPPER_Z + 6, UPPER_Z + 10, {}, 0.5, 0.3));
-    out.push(D([[x - 12, py, UPPER_Z + 10], [x + 12, py, UPPER_Z + 10]], 0.4));
-  }
+  out.push(box(x - 6, my - 4, x + 6, my + 3, 0, 1.4, { tone: 'lo' }, 0.6));
+  for (const rx of [x - 4, x + 4]) out.push(box(rx - 1, my - 1, rx + 1, my + 1, 1.4, UPPER_Z + 4, { crease: 'none' }, 0.3));
+  out.push(L([28, 56, 84, 112].map((z) => k.segment([x - 4, my + 1, z], [x + 4, my + 1, z], P)).join(''), { tone: 'faint' }));
+  out.push(box(x - 5, my - 1.5, x + 5, y - 6, UPPER_Z - 4, UPPER_Z - 1.5, {}, 0.4, 0.2));
+  out.push(box(x - 5.5, my - 2, x + 5.5, my + 2, UPPER_Z + 4, UPPER_Z + 6, {}, 0.4, 0.3));
   return out.join('');
 }
 
@@ -440,7 +436,7 @@ function lane(i: LaneIndex) {
   for (let x = x0 + 10; x < x1 - 4; x += 58) legXs.push(x);
   out.push(legs(legXs, y));
   if (i === 2) out.push(codexPress(machine, y, 'back'));
-  out.push(liftPosts(HOIST_X, y, 'back'), liftPosts(dropX(i), y, 'back'));
+  out.push(liftMast(dropX(i), y), liftMast(HOIST_X, y));
   if (isTrunk) {
     out.push(cranePosts('back'));
     out.push(post(ENTRY_X, y - HALF - 10, 3.6, 0, 1.4, { tone: 'lo' }), post(ENTRY_X, y - HALF - 10, 1.3, 1.4, 34, { crease: 'none' }, 12));
@@ -472,11 +468,11 @@ function lane(i: LaneIndex) {
   if (i === 0) out.push(k.wireSvg(at([intake + 20, y + 8, 100]), at([machine - 6, y + 8, 69]), { tone: 'mid', via: [at([intake + 40, y + 8, 120]), at([machine - 6, y + 8, 120])] }));
   if (isTrunk) out.push('<g data-part="links"></g>', cranePosts('front'));
   out.push(`<g data-part="probe-${i}"></g>`);
-  out.push(liftPosts(HOIST_X, y, 'front'), liftPosts(dropX(i), y, 'front'));
   // The upper return belt, from the lift past review back to the lift ahead
   // of the machine.
-  const upper = belt(`ubelt-${i}`, dropX(i) - 10, HOIST_X + 10, y, UPPER_Z, true, 8, true);
-  out.push(upper.back, upper.carry, `<g data-part="upper-${i}"></g>`, upper.front);
+  // Drawn light, so the line underneath stays readable.
+  const upper = belt(`ubelt-${i}`, dropX(i) - 10, HOIST_X + 10, y, UPPER_Z, true, 6, true);
+  out.push(`<g class="fx-upper">${upper.back}${upper.carry}</g>`, `<g data-part="upper-${i}"></g>`, `<g class="fx-upper">${upper.front}</g>`);
   return out.join('');
 }
 

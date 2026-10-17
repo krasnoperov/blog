@@ -116,3 +116,5 @@
 .fx-tp-ring { fill: none; stroke: var(--fx-tp); stroke-width: 1px; vector-effect: non-scaling-stroke; }
 .fx-tp-ray { fill: none; stroke: var(--fx-tp); stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 5 9; }
 .fx-tp-spark { fill: var(--fx-tp-core); stroke: var(--fx-tp); stroke-width: .4px; vector-effect: non-scaling-stroke; }
+/* The upper return belts are drawn light so the line below stays readable. */
+.fx-upper { opacity: .55; }

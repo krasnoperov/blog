@@ -33,6 +33,7 @@ import type { LaneIndex } from './layout';
 // three lanes run independently and meet at review-quill and the collector.
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const HALF_BELT = 11;
 const SPEED = 46;
 const GAP = 27;
 const TAU = Math.PI * 2;
@@ -181,7 +182,9 @@ function craneSvg(x: number, hook: number) {
 
 // A lift platform: a deck with guide shoes reaching to the posts.
 function platformSvg(x: number, y: number, z: number) {
-  return box(x - 13, y - 9, x - 10, y + 9, z - 4, z, { tone: 'lo' }, 0.3) + box(x + 10, y - 9, x + 13, y + 9, z - 4, z, { tone: 'lo' }, 0.3) + box(x - 10, y - 10, x + 10, y + 10, z - 2, z, { tone: 'mid' }, 0.6, 0.3);
+  // A deck and a carriage that rides the mast behind the belt.
+  const carriage = box(x - 5, y - HALF_BELT - 9, x + 5, y - 10, z - 6, z, { tone: 'lo' }, 0.3);
+  return carriage + box(x - 10, y - 10, x + 10, y + 10, z - 2, z, { tone: 'mid' }, 0.6, 0.3);
 }
 
 export interface FactoryHandles {
