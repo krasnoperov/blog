@@ -4,15 +4,12 @@ test.describe('blog navigation', () => {
   test('reader can move from home to archive to a post', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { name: 'How my code gets from an issue to production' })).toBeVisible();
-    await page.getByRole('button', { name: /Landing/ }).click();
-    await expect(page.getByRole('img', { name: /Landing/ })).toBeVisible();
-    // Play runs while the pointer is still over the figure.
-    await page.getByRole('button', { name: 'Play' }).first().click();
-    await expect(page.getByRole('img', { name: /Step 11 of 11/ })).toBeVisible({ timeout: 6000 });
-    await page.getByRole('button', { name: 'one goes red' }).click();
-    await page.getByRole('button', { name: 'Next step' }).nth(1).click();
-    await expect(page.getByRole('heading', { name: 'Build the train' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The software factory behind my products' })).toBeVisible();
+    await expect(page.getByRole('group', { name: /isometric software factory/i })).toBeVisible();
+    const label = (await page.getByRole('button', { name: /^Follow / }).last().getAttribute('aria-label')) ?? '';
+    await page.getByRole('button', { name: label, exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[data-corner="readout"]')).toContainText(label.replace('Follow ', ''));
     await page.getByRole('navigation', { name: 'Elsewhere' }).getByRole('link', { name: 'notes' }).click();
 
     await expect(page).toHaveURL(/\/posts$/);
