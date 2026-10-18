@@ -539,7 +539,7 @@ function lane(i: LaneIndex) {
   if (i < 2) out.push(`<g data-part="arm-${i}"></g>`);
   if (i === 2) out.push(codexPress(machine, y, 'front'));
   if (isTrunk) out.push('<g data-part="links"></g>', cranePosts('front'), '<g data-part="beams"></g>');
-  out.push(`<g data-part="probe-${i}"></g>`);
+  out.push(`<g data-part="probe-${i}"></g>`, portalLane(i));
   // The upper return belt, from the lift past review back to the lift ahead
   // of the machine.
   // Kept slim, so the line underneath stays readable.
@@ -570,24 +570,29 @@ function portalBack() {
   return out.join('');
 }
 
-function portalFront() {
+// The beam spans all three lines, so it is drawn in three sections, each
+// with its own line: a lift or return belt on a nearer line then paints over
+// the beam behind it, and the beam over the lines behind it.
+const PORTAL_CUTS = [PORTAL.y0 - 10, (LANES[0].y + LANES[1].y) / 2, (LANES[1].y + LANES[2].y) / 2, PORTAL.y1 + 10];
+function portalLane(i: LaneIndex) {
   const out: string[] = [];
-  out.push(box(PORTAL.x0 - 2, PORTAL.y1, PORTAL.x1 + 2, PORTAL.y1 + 10, 0, 1.6, { tone: 'lo' }, 0.6));
-  out.push(box(PORTAL.x0 + 2, PORTAL.y1 + 2, PORTAL.x1 - 2, PORTAL.y1 + 8, 1.6, PORTAL.z0, {}, 0.5, 0.4));
-  const beam = plan(PORTAL.x0, PORTAL.y0 - 10, PORTAL.x1, PORTAL.y1 + 10, 1);
+  if (i === 2) {
+    out.push(box(PORTAL.x0 - 2, PORTAL.y1, PORTAL.x1 + 2, PORTAL.y1 + 10, 0, 1.6, { tone: 'lo' }, 0.6));
+    out.push(box(PORTAL.x0 + 2, PORTAL.y1 + 2, PORTAL.x1 - 2, PORTAL.y1 + 8, 1.6, PORTAL.z0, {}, 0.5, 0.4));
+  }
+  const beam = plan(PORTAL.x0, PORTAL_CUTS[i], PORTAL.x1, PORTAL_CUTS[i + 1], 0.4);
   out.push(S(k.slabOf(beam, PORTAL.z0, PORTAL.z1 - PORTAL.z0, P, 3, 0.6), { tone: 'mid', inner: L(k.sideSeam(beam, PORTAL.z0 + 4, P, 3), { tone: 'faint' }) }));
-  LANES.forEach((laneInfo, i) => {
-    const y = laneInfo.y - 6;
-    const top = PORTAL.z1 + 4;
-    out.push(post(REVIEW_X, y, 8, PORTAL.z1, PORTAL.z1 + 1.2, { tone: 'lo' }, 36));
-    out.push(post(REVIEW_X, y, 7.2, PORTAL.z1 + 1.2, top, { tone: 'hi', crease: 'lo' }, 48, 0.5));
-    out.push(L(k.ring(REVIEW_X, y, 5.6, top, P, 40), { tone: 'lo' }));
-    const ticks = k.radialTicks(REVIEW_X, y, 5.2, 32, 4, top, [0.8, 1.8], P);
-    out.push(L(ticks.minor, { tone: 'lo' }), L(ticks.major, { tone: 'mid' }));
-    out.push(`<path data-part="needle-${i}" class="iso-line" data-tone="hi" data-free="start" style="stroke-width:0.9" d=""/>`);
-    out.push(L(k.ring(REVIEW_X, y, 1, top, P, 12), { tone: 'mid' }));
-    out.push(lamp(`verdict${i}`, REVIEW_X, laneInfo.y + 12, PORTAL.z1, 2.2, 3));
-  });
+  const laneInfo = LANES[i];
+  const y = laneInfo.y - 6;
+  const top = PORTAL.z1 + 4;
+  out.push(post(REVIEW_X, y, 8, PORTAL.z1, PORTAL.z1 + 1.2, { tone: 'lo' }, 36));
+  out.push(post(REVIEW_X, y, 7.2, PORTAL.z1 + 1.2, top, { tone: 'hi', crease: 'lo' }, 48, 0.5));
+  out.push(L(k.ring(REVIEW_X, y, 5.6, top, P, 40), { tone: 'lo' }));
+  const ticks = k.radialTicks(REVIEW_X, y, 5.2, 32, 4, top, [0.8, 1.8], P);
+  out.push(L(ticks.minor, { tone: 'lo' }), L(ticks.major, { tone: 'mid' }));
+  out.push(`<path data-part="needle-${i}" class="iso-line" data-tone="hi" data-free="start" style="stroke-width:0.9" d=""/>`);
+  out.push(L(k.ring(REVIEW_X, y, 1, top, P, 12), { tone: 'mid' }));
+  out.push(lamp(`verdict${i}`, REVIEW_X, laneInfo.y + 12, PORTAL.z1, 2.2, 3));
   return out.join('');
 }
 
@@ -868,7 +873,6 @@ export function factorySvg() {
     ciHall(),
     lane(1),
     lane(2),
-    portalFront(),
     desk(),
     booth(),
     production(),
