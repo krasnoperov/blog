@@ -8,6 +8,16 @@ import {
 
 export const BLOG_POST_MANIFEST = [
   {
+    slug: 'github-agent-identities',
+    title: "I wanted to approve my agent's pull request",
+    summary:
+      'An agent opens a PR, another agent reviews it, and I approve it as myself. Getting those three identities right led through GitHub Apps, hourly tokens, credential helpers, and unattended GPG signing. A working setup, with reusable templates, for one Linux box.',
+    publishedAt: '2026-11-27',
+    readingTime: '9 min read',
+    tags: ['github', 'agentic-development', 'authentication', 'code-review', 'gpg'],
+    featured: true,
+  },
+  {
     slug: 'i-just-wanted-to-speak-spanish',
     title: 'I just wanted to speak Spanish',
     summary:

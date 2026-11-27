@@ -1,4 +1,5 @@
 import fromYoloToPatchrelayMarkdown from './posts/from-yolo-to-patchrelay.md';
+import githubAgentIdentitiesMarkdown from './posts/github-agent-identities.md';
 import gatesNotAutonomyMarkdown from './posts/gates-not-autonomy.md';
 import doNotRaceAgentPrsMarkdown from './posts/do-not-race-agent-prs.md';
 import helloWorldMarkdown from './posts/hello-world-formatting-the-factory-notes.md';
@@ -26,6 +27,7 @@ import {
 } from './blog-post-manifest';
 
 const RAW_POSTS = {
+  'github-agent-identities': githubAgentIdentitiesMarkdown,
   'do-not-race-agent-prs': doNotRaceAgentPrsMarkdown,
   'from-yolo-to-patchrelay': fromYoloToPatchrelayMarkdown,
   'gates-not-autonomy': gatesNotAutonomyMarkdown,
