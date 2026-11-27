@@ -11,9 +11,9 @@ export const BLOG_POST_MANIFEST = [
     slug: 'github-agent-identities',
     title: "I wanted to approve my agent's pull request",
     summary:
-      'An agent opens a PR, another agent reviews it, and I approve it as myself. Getting those three identities right led through GitHub Apps, hourly tokens, credential helpers, and unattended GPG signing. A working setup, with reusable templates, for one Linux box.',
+      'Separate GitHub identities for a coding agent, a reviewer, and me took two Apps, rotating tokens, and a GPG service. Here is the setup and its reusable configs.',
     publishedAt: '2026-11-27',
-    readingTime: '9 min read',
+    readingTime: '5 min read',
     tags: ['github', 'agentic-development', 'authentication', 'code-review', 'gpg'],
     featured: true,
   },
