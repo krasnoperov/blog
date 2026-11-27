@@ -1,63 +1,49 @@
 ---
 title: From YOLO to patchrelay
-summary: Notes on a year of agent-driven development — permission prompts, a rented Hetzner box with nothing on it, a parallel-agent experiment that turned into merge-conflict hell, and the small annoyance that became patchrelay.
+summary: "Running four coding agents moved my bottleneck from writing code to coordinating reviews, CI, and merges. That is where patchrelay started."
 publishedAt: 2026-04-29
-readingTime: 5 min read
+readingTime: 3 min read
 tags: software-factory, patchrelay, agentic-development, security
 featured: true
 ---
 
-## Writing less code
+Sometime in late 2025 I stopped writing code by hand. I hadn't decided to. I just noticed that I'd spent weeks describing what I wanted in prose and reading the diff afterwards. The models' architectural choices had become reasonable enough that I could leave a task for half an hour and come back to something that mostly worked.
 
-Sometime in late 2025 I stopped writing code by hand, and it crept up on me. I didn't decide to — there was no manifesto, no talk that converted me. I just noticed, a few weeks in, that I'd been describing what I wanted in prose and reading the diff afterwards, and that this had been working well enough that picking up the keyboard again felt like a downgrade.
-
-Around the end of last year the frontier models crossed some threshold for me where the architecture they produced was, mostly, reasonable. I could state an idea, walk away for half an hour, and come back to something that mostly worked.
-
-Something about that is unsettling, and I'm trying not to wave it off. The tests pass. The thing ships. But a growing share of what I produce is code I didn't quite write, and I can't always explain why a particular abstraction was chosen. The plan is to train the intuition the way I always have — build things, see where I land, keep the approaches that hold up. The shape of "writing software" is moving, and the way I map it is the way I always have: by working in it.
+That still unsettles me. A growing share of what I ship is code I didn't write, and I can't always explain why a particular abstraction was chosen. I'm trying to develop that intuition by building things and seeing which choices hold up.
 
 ## Permission prompts
 
-The thing that almost killed agent flow for me was permission prompts.
+The first obstacle was the constant request to approve commands. I tried allowlisting them, but the agent kept finding a new shape: a `git -c` flag, a one-line shell script, an argument I hadn't anticipated. It stalled; I tapped “yes” like I was logging into my bank.
 
-Every command the agent wanted to run, it asked me first. I tried to allowlist my way out of it, and allowlists don't work against an agent — the model invents new command shapes constantly. A `git -c` flag I'd never seen, a one-line bash script, an argument I didn't think to whitelist. So the agent stalls, often before it's done anything useful, and I'm sitting in front of it tapping "yes" like I'm logging into my bank.
+Turning prompts off solved that interruption. It also gave the agent access to my laptop's SSH keys, browser sessions, and personal files. I hadn't seen it do anything malicious, but a poisoned package or instructions in a web page seemed like plausible ways for that access to go wrong.
 
-The obvious move is to turn the prompts off. Then the agent is fast. It also has my SSH keys, my browser sessions, and full access to anything on the laptop. Nothing I saw was actually malicious — not in months of running this way — but I could imagine the attack surface clearly enough: prompt injection from a web search, a poisoned npm package the model decides to try because it looked plausible. The right answer can't be that the model is well-behaved. It has to be that the agent physically can't reach the things I care about.
+So I rented a dedicated [Hetzner](https://www.hetzner.com/) server for well under €100 a month. It had room for parallel agents and their browsers, and the workflow no longer depended on my apartment's internet connection.
 
-## Renting a box
-
-So I rented a server. A dedicated box at [Hetzner](https://www.hetzner.com/) for well under €100/month — a quarter of what the top Claude Max and ChatGPT Pro tiers cost combined, at $200/month each.
-
-The current hype cycle around running coding agents at home has people buying Mac Minis for this: quiet, your own hardware, available 24/7. The problem is that a base Mac Mini strains the moment you have a handful of headless browsers running Playwright in parallel, which is exactly the kind of load a fleet of agents will throw at it. A loaded Mac Studio handles the workload, but against two years of Hetzner rent the math isn't close. Hetzner gives absurd value per euro, and the gap only widens at the higher tiers. I'm in Spain and the home internet is fine, but pinning a workflow to my apartment's uplink also felt wrong.
-
-The point of the box isn't power. It's that there's nothing on it. No SSH keys to anything that matters, no browser session, no personal documents, no production credentials. The agent runs without permission prompts because there is genuinely nothing worth stealing. If the box gets compromised tomorrow, I rebuild it in an afternoon and lose nothing.
+I kept my personal documents, browser sessions, and production credentials off it. The box still held source code and the credentials needed to work on it; compromising it would matter. But an agent running there couldn't reach everything on my laptop.
 
 ## Four agents at once
 
-Running multiple agents in parallel wasn't really an experiment — it's what falls out of a proper setup. zmx sessions plus git worktrees give you persistent shells, one per branch in its own directory, each attachable from its own terminal window, and spinning up four agents on four worktrees is no harder than opening four terminals. The first time I had it working I just sat there for a minute looking at it.
+zmx sessions and Git worktrees gave each branch a persistent shell in its own directory. Opening four agents was about as easy as opening four terminals. The first time I had it working, I sat there for a minute looking at it.
 
-I'd also moved my task tracking off GitHub Issues to [Linear](https://linear.app/) by then, which is dramatically nicer for spinning up well-scoped tasks quickly. I broke the work into four lanes, fed one to each terminal, and watched.
+I'd moved task tracking to [Linear](https://linear.app/) by then. I split the work into four lanes and fed one to each terminal. For the first hour, it worked beautifully: agents installed Playwright, took screenshots, ran tests, and made progress while I watched.
 
-The first hour was magic. No permission prompts. Tools all worked. Agents installed Playwright, took screenshots, ran tests. Four lanes of progress at the same time. That's the demo every parallel-agent post is selling, and it really does work — for an hour.
+Then they started merging. Branches conflicted, CI failed, and `main` kept moving while another agent rebased. Each individual conflict was something an agent could resolve. Choosing what should happen next kept falling to me.
 
-Merge time is where it stops being magic. Four agents means four pull requests, and four pull requests in an actively-developed project means merge conflicts — not occasionally, but in essentially every combination. Each individual conflict is something an agent can resolve. But by then I'm a manager. I'm watching CI, restarting failed builds, deciding which PR lands first, asking each agent to rebase against whatever just landed. I hadn't written the four branches myself, so I had no intuition for which conflicts were trivial and which were going to bite.
-
-By the end of the day, most of my time had gone into mechanical coordination rather than building features — and that's all work that has to be automated.
+I hadn't written those branches, so I had little intuition for which conflicts were harmless. By the end of the day I was mostly watching CI and telling agents to rebase or retry.
 
 ## patchrelay
 
-The real reason I started patchrelay wasn't typing. It was that running four agents had turned me into a full-time conductor — most of what I did all day was telling each one to go check CI, fix what was broken, rebase against whatever had just landed, run the build again. The agents could do all of that work themselves; what they couldn't do was decide on their own when to do it. (This was a couple of weeks before `/loop` landed in Claude Code, which closes a meaningful chunk of this gap on its own. At the time there was no built-in option, so I started building one.)
+The repeated instructions were what made me build patchrelay: check CI, read the review, fix it, rebase, try again. The agents could do the work once asked. I needed something to notice when to ask.
 
-The shape of the answer was clear enough: something that could pull a task from Linear, kick off an agentic session against it, listen for webhooks from CI and review, and keep steering the agent until the PR was green, conflict-free, and merged. Not a copy-paste helper — actual orchestration around an agent session.
+I started with webhooks responding to Linear status changes, then added Linear's agent integration so I could delegate an issue directly. A small Node.js server starts the agent session and reacts to CI and review events until the PR merges or needs my help. Progress stays visible in the tracker.
 
-Linear stayed as the tracker. I started small: webhooks reacting to status changes. From there I worked outward into Linear's agent integrations, which let you delegate a task to an agent directly. Each new piece pulled the loop closer to running on its own: task in, branch out, review and CI iterating in the middle, all of it visible from the tracker.
+Version one is useful, and the review-and-CI part still fails in new ways. There's also a more basic question I haven't answered: when does writing an issue and walking away beat sitting next to the agent and steering it?
 
-patchrelay v1 is a small Node.js server. It works enough to be useful and breaks enough to remind me it's v1 — the loop from task to pull request keeps failing in new and interesting ways, mostly around the review-and-CI middle.
-
-So that's where I start: a v1 that works enough to delegate to, and one open question. Does writing a Linear issue and walking away actually beat sitting next to the agent, steering it turn by turn? My hunch is that it depends on the task — but a hunch isn't a workflow. The only way to know is to live in it: delegate what looks delegable, keep the rest interactive, and watch which instinct holds up over a few weeks of real work. Let's find out.
+My hunch is that it depends on how well I can specify the task. I'll delegate the ones that look clear and keep the exploratory work interactive for a few weeks, then compare.
 
 ## PS
 
-This post was drafted by the [Ghostwriter](https://github.com/estruyf/ghostwriter-agents-ai) skill in Claude Code from an interview I did with it, and then rewritten by hand because the first draft sounded too much like an AI doing an impression of a person. The opinions are mine throughout.
+The original draft came from an interview with the [Ghostwriter](https://github.com/estruyf/ghostwriter-agents-ai) skill in Claude Code. I rewrote it by hand because it sounded like an AI doing an impression of a person. This version has since had another editorial pass; the opinions remain mine.
 
 ## Related
 

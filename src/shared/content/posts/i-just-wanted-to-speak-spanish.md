@@ -1,79 +1,68 @@
 ---
 title: 'I just wanted to speak Spanish'
-summary: 'Courses were too slow, so I built my own. Testing it needed user interviews, so I built UserTold. Showing that needed video, so I built MakeFX. One wish, four products, and the next move for each.'
+summary: "Learning to speak Spanish led me to build a course, user-interview tools, and a media canvas. These are the products and what I plan to do with them next."
 publishedAt: 2026-10-08
-readingTime: 5 min read
+readingTime: 3 min read
 tags: indie-hacking, product-development, learnspeakrepeat, usertold, makefx, fellowmakers
 featured: true
 ---
 
 Hi, I'm Alekséi. I'm from Siberia, I live in Alicante, and I could read Spanish long before I could speak it.
 
-I set out to fix that one thing. The fix grew into four products, each one built because the one before it needed it. Agents build them, and agents can run every one of them from ChatGPT, Claude, or Codex.
+I built a course to practise speaking every day. Improving it led me to build tools for user interviews and video production. Alongside those, I built a directory of other people working on their own products.
 
-Here is the chain.
-
-## I wanted to speak Spanish, but the courses were too slow
+## Learn, Speak, Repeat!
 
 ```image
 /media/posts/i-just-wanted-to-speak-spanish/learnspeakrepeat.webp
 Two speech loops spiral under an evening moon.
 ```
 
-I already knew some Spanish. What I needed was to say it out loud, every day. The courses I tried were too slow for me or too dull to come back to.
+I already knew some Spanish. The courses I tried were too slow for me or too dull to return to, and I needed practice saying things out loud.
 
-So I built [Learn, Speak, Repeat!](https://learnspeakrepeat.com).
+[Learn, Speak, Repeat!](https://learnspeakrepeat.com) builds a session for the time I have each evening. It ends with a two-minute monologue or a role-play with an AI voice partner that corrects me and has me try again. Mistakes become review cards for the next session.
 
-Every evening it builds me a session for the time I have, and every session ends with speaking: a two-minute monologue, or a role-play with an AI voice partner that corrects me and has me say it again. Whatever I get wrong becomes a review card for the next evening.
+Opus 5.5 wrote the curriculum, using research on how adults learn to speak, with separate tracks for English and Russian speakers. I practise for 20, 40, or 60 minutes each evening without opening a textbook.
 
-Opus 5.5 wrote the course. I asked it to explain Spanish to me and got back a full curriculum, grounded in research on how adults learn to speak, with separate tracks for English and Russian speakers. Every chapter is written for the learner reading it.
+The plans at publication are €19 and €39 a month; the larger one includes six hours of speaking. Next I want a dedicated landing page and channel for Russian speakers.
 
-That is a live voice partner and a personal course for €19 or €39 a month. The bigger plan is six hours of speaking a month, for about the price of two hours with a tutor. I practise with it every evening, 20, 40, or 60 minutes, and I never open a textbook.
-
-## I needed to watch people learn, but no tool was built for agents
+## UserTold
 
 ```image
 /media/posts/i-just-wanted-to-speak-spanish/usertold.webp
 A voice line goes in through one door and leaves along several paths.
 ```
 
-To make the course better for everyone, I needed to see other learners use it: where they slowed down, what they skipped, what they said out loud. And I wanted my coding agent to run those interviews, read the answers, and turn them into work.
+To improve the course, I needed to see where other learners slowed down, what they skipped, and what they said out loud. I wanted my coding agent to set up the interviews and turn the answers into work. The tools I found were expensive or expected a person to operate a dashboard.
 
-The tools I found were either expensive or built for a person clicking through a dashboard. So I built [UserTold](https://usertold.ai).
+With [UserTold](https://usertold.ai), my agent writes a study that runs inside the product: a voice interview, or observation of a task followed by questions. Each session returns quotes and actions tied to the page where they happened. That evidence can become a Linear or GitHub issue; closing the issue marks the evidence resolved.
 
-My agent writes a study, and UserTold runs it inside the product: a voice interview, or quiet observation of a task followed by questions about what just happened. Each session comes back as evidence: the quote, the click, and the page it happened on. Evidence becomes issues in Linear or GitHub, and when an issue closes, the evidence is marked resolved. It costs $0.25 per recorded minute, billed only for interviews that finish processing. That's $15 an hour of real user interviews, with no contract.
+At publication, it costs $0.25 per recorded minute, billed only for interviews that finish processing. That's $15 an hour, with no contract.
 
-UserTold is now listed in ChatGPT, and the listing brings a new audience with its own reasons to come. The next study UserTold runs is on them, and what they say becomes the next post in this series.
+UserTold is listed in ChatGPT. I want the next study to find out what that new audience came for, and use the interviews for the next post in this series.
 
-## I wanted to show it working, but there was no canvas for agents
+## MakeFX
 
 ```image
 /media/posts/i-just-wanted-to-speak-spanish/makefx.webp
 A canvas of finished assets, each tied to its recipe, and one empty tile.
 ```
 
-The fastest way to explain UserTold is to show it, which means video. I wanted my agent to make that video: images, voice, a presenter who looks the same in every take. Generation tools gave my agent loose files with no record of how they were made.
+Explaining UserTold meant showing it on video. I wanted an agent to produce the images, voice, and a presenter who looked the same in each take. The generation tools I tried left me with files and no record of how they were made.
 
-So I built [MakeFX](https://makefx.app). My agent connects with one command and makes images, video, and audio. Everything lands on one shared canvas, and every asset keeps its recipe: the model, the prompt, the references, and what it cost. The price is on the card before anything runs, a failed generation is free, and credits never expire. Fable rewrote it this autumn, and it now delivers the assets for the products I run.
+[MakeFX](https://makefx.app) keeps those assets on a shared canvas with their model, prompt, references, and cost. The agent connects with one command and can generate images, video, and audio. Prices appear before generation; failed generations are free and credits don't expire.
 
-Next, MakeFX makes its own launch film, end to end, from one agent prompt, published with the full receipt.
+Fable rewrote MakeFX this autumn. It now supplies assets for my products. Next I want it to make its own launch film from one agent prompt, published with the full receipt.
 
-## I build alone, and so do hundreds of others
+## FellowMakers
 
-In September a founder in Germany posted three lines on X: an age, a country, and a wish to meet other builders. Hundreds of people answered in the same shape, and I was one of them.
+In September, a founder in Germany posted an age, a country, and a wish to meet other builders on X. Hundreds answered in the same format, including me. I wanted a way to browse those replies.
 
-A few hundred replies is a wall of text. I wanted a map. So I built [FellowMakers](https://fellowmakers.app): 1,595 builders and 1,284 projects, every fact taken from what people wrote themselves. Where people build the same thing without knowing each other, it groups them into waves, and there are 71 of them. [My card is there too](https://fellowmakers.app/people/snejink).
+[FellowMakers](https://fellowmakers.app) maps the people and projects from what they wrote themselves. At publication it has 1,595 builders, 1,284 projects, and 71 groups of people building related things. [My card is there too](https://fellowmakers.app/people/snejink).
 
-## Four products, four next moves
+The next project is a State of Solo Builders report based on those accounts.
 
-I'm Aleksei Krasnoperov, on X [@snejink](https://x.com/snejink). One person ships four products because agents do the building, behind [a reviewer and a merge queue](/posts/gates-not-autonomy) that check every change, and [an agent session that plans and runs the work](/posts/orchestrator-moved-into-the-session).
-
-Each product has its next move, and each one is the next post in this series:
-
-- Learn, Speak, Repeat!: its own landing page and channel for Russian speakers.
-- UserTold: what the new audience from ChatGPT came for, straight from the interviews.
-- MakeFX: its own launch film, made on MakeFX, with the receipt.
-- FellowMakers: the first State of Solo Builders, from 1,595 builders' own words.
+Agents build these products behind [a reviewer and a merge queue](/posts/gates-not-autonomy). I describe the work and steer it through [the main agent session](/posts/orchestrator-moved-into-the-session). I'll use this series to show what happens when the products reach people beyond that setup.
 
 If you build something too, [find me on FellowMakers](https://fellowmakers.app/people/snejink).
 
