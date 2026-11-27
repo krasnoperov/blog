@@ -2,24 +2,22 @@
 title: Hello World for Factory Notes
 summary: A self-demonstrating post that shows how this blog renders markdown structure, code, tables, and Mermaid diagrams.
 publishedAt: 2026-03-28
-readingTime: 4 min read
+readingTime: 2 min read
 tags: hello-world, markdown, diagrams
 featured: false
 ---
 
-This is the first post, and its only job is to prove the format can carry technical content cleanly — markdown for prose, code for examples, Mermaid for diagrams, frontmatter for metadata. No CMS, nothing proprietary, nothing that'll be painful to migrate in two years.
+I use this first post to check how the blog renders headings, quotes, code, tables, and Mermaid diagrams. The examples below double as a rendering fixture.
 
-## A minimal note can still be structured
+## Headings and quotes
 
-When I write about the software factory, I want to move from idea to shape to execution.
+A heading separates sections. A blockquote should remain distinct from the surrounding prose:
 
-> An idea becomes useful when the system gives it a path.
-
-The path doesn't need to be complicated. It just needs to be legible.
+> Check the rendered preview as well as the markdown source.
 
 ## Example source pattern
 
-The kind of fragment I want to write quickly:
+A short markdown example:
 
 ```md
 ## Outcome
@@ -30,11 +28,9 @@ Make the next step obvious.
 - Make diagrams easy to embed.
 ```
 
-That's enough to carry intent without ceremony.
-
 ## Diagram examples
 
-Mermaid is useful when a note needs to show flow, hand-off, or state instead of describing everything in paragraphs.
+These four examples exercise different Mermaid renderers.
 
 ### 1. Flow of a note through the system
 
@@ -44,8 +40,6 @@ flowchart LR
   B --> C[Rendered post]
   C --> D[Shared understanding]
 ```
-
-The simplest kind: one thing becoming the next thing.
 
 ### 2. Review loop between author and publishing surface
 
@@ -65,8 +59,6 @@ sequenceDiagram
   Reader-->>Author: Shared understanding
 ```
 
-Useful when the order of responses matters more than the shape.
-
 ### 3. State of an idea before it becomes useful
 
 ```mermaid
@@ -78,8 +70,6 @@ stateDiagram-v2
   Published --> Reused: Link it in later work
   Reused --> Published: Revise with better detail
 ```
-
-Works well when a post is really about maturity — what an idea is before it's operational, and what changes as it becomes reusable.
 
 ### 4. Architecture view of a tiny publishing factory
 
@@ -101,11 +91,9 @@ architecture-beta
   reader:L --> R:worker
 ```
 
-This is the most useful "advanced" style for the blog. It lets a post show groups, infrastructure, and boundaries without turning into a full architecture document.
-
 ## Table example
 
-Sometimes the shortest explanation is a table.
+The table should stay readable at narrow widths.
 
 | Layer | Format | Why it exists |
 |-|-|-|
@@ -116,7 +104,7 @@ Sometimes the shortest explanation is a table.
 
 ## A small code example
 
-Even a blog about delivery systems should be able to carry a small executable idea:
+Code blocks preserve indentation and scroll when needed:
 
 ```ts
 type FactoryNote = {
@@ -125,5 +113,3 @@ type FactoryNote = {
   publishedAt: string;
 };
 ```
-
-The format should disappear behind the writing, while still being strong enough to carry technical content cleanly. That's the whole point of this page.

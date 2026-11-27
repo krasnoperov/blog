@@ -1,62 +1,56 @@
 ---
 title: 'patchrelay: Linear issues in, pull requests out'
-summary: patchrelay is the deterministic orchestration layer that turns a delegated Linear issue into a linked pull request and keeps that PR healthy until merge or close.
+summary: "patchrelay takes a delegated Linear issue through implementation, review fixes, CI repairs, and merge, keeping the same workspace available throughout."
 publishedAt: 2026-04-29
-readingTime: 5 min read
+readingTime: 3 min read
 tags: software-factory, patchrelay, agentic-development, codex, harness-engineering
 featured: true
 ---
 
-Sometime in March I caught myself, again, copying a Linear ticket ID into a terminal so I could paste it into a Codex prompt — for the fourth or fifth time that morning. I'd already switched between four zmx sessions in four worktrees, restarted two failed builds, and rebased one branch against a `main` that had moved twice while I wasn't looking. The agents were faster than me at writing code. I was the bottleneck.
+One morning in March, I caught myself copying a Linear ticket ID into a Codex prompt for the fourth or fifth time. I'd switched between four zmx sessions, restarted two failed builds, and rebased against a `main` that had moved twice.
 
-patchrelay is what I built to stop being the bottleneck. I assign a Linear issue to it, walk away, and come back to a pull request that's implemented, reviewed, and either merged or honestly stuck with the reason in writing. Same agent I'd run myself; the surrounding machinery — durable workspace per issue, distinct repair loops, Linear glue — runs on its own.
+I built patchrelay to take over that coordination. I delegate a Linear issue; it starts an agent, opens a PR, and handles the review and repair work until the PR merges or gets stuck with a reason I can read.
 
-## The harness
+## A workspace that survives the run
 
-patchrelay is the deterministic orchestration layer between Linear and Codex. The Codex app-server gives me JSON-RPC, `codex resume`, and a session protocol — primitives, not a system. Everything that turns a Linear issue into a healthy pull request — which run type to fire on which event, where state lives across restarts, what counts as done — patchrelay owns. The model is good at writing code; everything around it is a control problem.
+patchrelay connects Linear to Codex App Server. The server supplies the session protocol; patchrelay decides which event starts which kind of work and when that work is done.
 
-### One durable worktree per Linear issue
+Each issue gets a persistent Git worktree. If CI fails an hour after implementation, the repair run returns to the same code. SQLite stores run state, observations, and thread IDs so a restart doesn't lose the issue's history.
 
-Every Linear issue gets a git worktree on disk that lives across runs. When the agent starts an implementation, that worktree is its scratch space. When CI fails an hour later and a `ci_repair` run kicks off, it resumes against the same worktree — the agent sees the code it just wrote, not a fresh checkout of `main`. Run state, observations, and thread IDs all persist in SQLite alongside the worktree.
+When a run gets stuck, I can open its worktree and use `codex resume <thread-id>` to investigate. I often ask a different model, or use different instructions, to read the commits and failing tests. Having the previous conversation and files available makes that much easier than reconstructing a failed run from a log.
 
-The alternative is the stateless model: clone, work, throw away. That's the right model for a one-shot agent and the wrong model for an agent that should learn from its own previous turns inside an issue's lifecycle.
+## Six kinds of work
 
-### Run types are not "try again"
+The first version had one generic loop and a retry counter. That gave the agent too little guidance: a failing test and a requested review change need different evidence and have different completion conditions.
 
-The first version of patchrelay had one generic agent loop and a retry counter. It was bad. "The PR has failing checks, run the agent again" and "the reviewer requested changes, run the agent again" sound like the same problem and they aren't. Different inputs, different prompts, different success criteria, different reasons to escalate.
+The orchestrator now selects a run type from the event:
 
-So patchrelay has six run types, and the orchestrator picks the right one based on what changed in GitHub or Linear:
+| Run | Trigger |
+|-|-|
+| `implementation` | A new Linear assignment |
+| `review_fix` | A reviewer requests changes |
+| `ci_repair` | Required checks fail on the PR head |
+| `queue_repair` | The merge queue evicts the PR |
+| `branch_upkeep` | `main` advances under the branch |
+| `main_repair` | `main` goes red |
 
-- `implementation` — new Linear assignment
-- `review_fix` — `REQUEST_CHANGES` review posted on the PR
-- `ci_repair` — required checks failing on the PR head
-- `queue_repair` — merge-steward evicted the PR from the queue
-- `branch_upkeep` — `main` advanced under the PR
-- `main_repair` — `main` itself went red
+Each gets the relevant context—review comments, failing logs, or the eviction incident—and its own retry budget. Exhausting that budget brings the issue back to me.
 
-Each has its own prompt scaffold, its own context selection (the failing check logs, or the review comments, or the merge-queue eviction incident), its own retry budget. The agent doesn't have to figure out from cold context what kind of work is in front of it — the orchestrator hands it a labeled job with the inputs that make sense for the job.
+## Repository instructions
 
-### Repo-local workflow files
+I tried baking repository conventions into patchrelay and leaving the agent to infer them from a README. Neither worked reliably.
 
-Every repo I work in has its own quirks: where tests live, what "done" means, which checks must be green before review is even sensible. I tried two extremes — bake the conventions into patchrelay, and let the model figure them out from a generic README — and neither worked. Baking makes the harness brittle. Asking the model to guess is right about half the time.
+Two committed files now describe how to work in each repository. `IMPLEMENTATION_WORKFLOW.md` covers implementation, CI repair, queue repair, and main repair. `REVIEW_WORKFLOW.md` covers review fixes and branch upkeep. They specify checks, conventions, and what counts as finished. Machine-wide policy lives in Codex `developer_instructions`.
 
-What works is two markdown files committed to each repo: `IMPLEMENTATION_WORKFLOW.md` for the implementation-shaped runs (implementation, ci-repair, queue-repair, main-repair) and `REVIEW_WORKFLOW.md` for the review-shaped runs (review-fix, branch-upkeep). They're short, action-oriented, human-authored. Patchrelay reads them at the start of each run and stitches them into the prompt. Durable machine-level policy lives in Codex `developer_instructions`. Per-repo behavior lives in the repo. The harness stays narrow.
+That lets me change a project's workflow without changing the service.
 
-### Linear is the control plane
+## Following the issue through merge
 
-There's no patchrelay UI for daily work. An operator dashboard exists, but the daily-use surface is Linear. Assign an issue to the patchrelay app, watch the agent post a plan as agent-session activity, watch progress updates land on the issue, click through to the PR when it opens. Comments on the Linear issue forward into the active Codex session as user messages. Rejections trigger a `review_fix` run. Approvals close the issue.
+Linear is where I use patchrelay day to day. I delegate the issue, read the plan and activity updates, and follow the link to the PR. Issue comments become user messages in the active Codex session.
 
-The four events I rely on — issue assignment, comment, status change, approval — are all real Linear webhooks, and the agent's session activity feed lands back on the issue without me wiring anything. Linear isn't a backlog poller in this design; it's the control plane.
+Review and landing happen through [review-quill](/posts/review-quill) and [merge-steward](/posts/merge-steward). The services coordinate through GitHub reviews, checks, and webhooks. A requested change starts a repair; an approved PR with green checks can enter the queue. Approval alone doesn't finish the issue: patchrelay follows it through landing.
 
-### Operator takeover via `codex resume`
-
-When a run gets stuck, I could SSH in, attach to the worktree, and continue the conversation by hand. In practice I almost never do that. What I do is open another Codex session inside the same worktree with `codex resume <thread-id>` and ask it to investigate what went wrong — read the recent commits, look at the failing test, propose a hypothesis. The investigator is usually a different model, or a session running with a different `developer_instructions` profile than the original implementer.
-
-This was the feature that pushed me toward the Codex app-server in the first place, and it's the one I'd find hardest to give up. Sending a fresh agent into the exact state another agent left behind, without losing the conversation, is what makes "an agent gets stuck" a cheap failure mode to recover from.
-
-## What's not in this post
-
-The orchestration story above is half the system. The other half is two services that got pulled out of patchrelay because they were not, on closer inspection, agent work at all. [merge-steward](/posts/merge-steward) puts chaotic parallel-PR work into an order. [review-quill](/posts/review-quill) is the strict reviewer that drills the agent until the PR is right. They share no API surface with patchrelay or with each other; they coordinate only through GitHub statuses.
+There is an operator dashboard, but most days I only need Linear and the PR timeline. I open the underlying session when those no longer explain why the work is stuck.
 
 ## Try it
 

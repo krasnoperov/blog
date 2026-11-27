@@ -8,11 +8,9 @@ tags: durable-objects, celld, distributed-systems, gpt-5.6, remotion
 featured: true
 ---
 
-Ryan Dahl released [`celld`](https://github.com/denoland/celld). It brings Workers and Durable Objects to compatible infrastructure beyond Cloudflare, making the model useful in custom systems and easier to adopt without fear of vendor lock-in.
+I made two videos about Durable Objects after Ryan Dahl released [`celld`](https://github.com/denoland/celld), which brings the Workers and Durable Objects model to compatible infrastructure beyond Cloudflare.
 
-A Durable Object starts with a simple boundary: one named entity, its state, and the decisions that change it. The process serving the object can disappear; the object remains.
-
-What does that change when designing a system? Start with this boundary and follow it far enough to see where it helps—and where it should end.
+The first explains the model: a named entity keeps its state even when the process serving it is replaced.
 
 ```video
 /media/celld/durable-objects-explained.mp4
@@ -20,9 +18,9 @@ What does that change when designing a system? Start with this boundary and foll
 Durable Objects, explained
 ```
 
-## Keeping the promise
+## The runtime
 
-The runtime has a harder job: preserve that abstraction across replaceable processes and machines. `celld` is one answer. Follow a Durable Object through a failure and see how it continues elsewhere.
+The second follows an object through a failure and shows how `celld` continues serving it elsewhere.
 
 ```video
 /media/celld/durable-objects-under-the-hood.mp4
@@ -32,4 +30,4 @@ Durable Objects, under the hood
 
 GPT-5.6 made both videos as animated Remotion slide shows under my direction.
 
-[Writing Practice](/posts/a-writing-agent-with-durable-objects) explores the same boundary for agentic work: one Durable Object for each long-lived writing task.
+[Writing Practice](/posts/a-writing-agent-with-durable-objects) applies the model to agentic work, with one Durable Object per long-lived writing task.
