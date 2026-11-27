@@ -9,9 +9,9 @@ import {
 export const BLOG_POST_MANIFEST = [
   {
     slug: 'github-agent-identities',
-    title: "I wanted to approve my agent's pull request",
+    title: "Approving your coding agent's pull requests",
     summary:
-      'How I configured separate GitHub identities for coding and review agents, with credentials and signing keys that work through long sessions and restarts.',
+      'An agent using your GitHub account opens PRs you cannot approve yourself. Separate GitHub Apps let the writer, reviewer, and human act under different identities.',
     publishedAt: '2026-11-27',
     readingTime: '4 min read',
     tags: ['github', 'agentic-development', 'authentication', 'code-review', 'gpg'],
