@@ -1,41 +1,35 @@
 ---
 title: "I wanted to approve my agent's pull request"
-summary: 'Separate GitHub identities for a coding agent, a reviewer, and me took two Apps, rotating tokens, and a GPG service. Here is the setup and its reusable configs.'
+summary: 'How I configured separate GitHub identities for coding and review agents, with credentials and signing keys that work through long sessions and restarts.'
 publishedAt: 2026-11-27
-readingTime: 5 min read
+readingTime: 4 min read
 tags: github, agentic-development, authentication, code-review, gpg
 featured: true
 ---
 
-I wanted an agent to open a PR, another agent to review it, and to approve it myself. But the coding agent used my GitHub credentials, so GitHub saw me trying to approve my own PR. Changing the commit author wouldn't help: the PR belongs to whoever opened it through the API.
+I want to approve a coding agent's pull request under my own name. I also want another agent to review it independently. If the coding agent uses my GitHub credentials, the PR belongs to me, and GitHub won't let me approve it. A different name in the commit doesn't change who opened the PR.
 
-[This exchange on X](https://x.com/snejink/status/2126207173864620226) brought me back to the setup I'd already built for this. It works for autonomous services and terminals where I'm steering an agent.
+On my Linux host, the agents use GitHub Apps for their identities. The credentials expire every hour, so services replace them while the agents keep running. Both `gh` and Git read the replacement credentials. Signed commits need GPG keys as well, with another service to make them usable after a restart.
 
-The short version: the writer and reviewer each get a GitHub App. Their installation tokens expire after an hour, so a timer replaces them every 30 minutes. Running sessions read credentials from files because environment variables would keep the expired tokens. Git uses `gh` as its credential helper so both tools act as the same bot.
+That setup works for unattended jobs and sessions where I'm typing alongside an agent. I've extracted it into a [project-neutral template repository](https://github.com/krasnoperov/github-agent-identities).
 
-I also wanted signed commits. That required separate GPG keys, then a service to supply their passphrases after restarts. The [scripts and configuration are in this template repo](https://github.com/krasnoperov/github-agent-identities). Here are the parts that needed care.
+## GitHub identities
 
-## A token isn't a separate identity
+Creating another personal access token would still leave the PR under my account. I need credentials belonging to a different identity. GitHub Apps provide that without requiring me to maintain extra human accounts.
 
-Another personal access token would still represent me. GitHub Apps give the agents their own actors without extra human accounts. I install each App on selected repositories and use its private key to mint installation credentials:
+Each App has a private key. I use it to sign a JWT, then exchange that for an [installation access token](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation). The token can access the repositories covered by that installation, within the App's permissions. There is no webhook server involved in obtaining it.
 
-```text
-App private key → signed JWT → installation token → gh and Git over HTTPS
-```
+The writer and reviewer have separate Apps. Sharing one would give them the same identity and bring back the [self-approval restriction](https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/approving-a-pull-request-with-required-reviews). The writer gets Contents and Pull requests write permissions; the reviewer gets Contents read and Pull requests write. CI operations need their own permissions.
 
-The writer needs Contents and Pull requests write permissions. The reviewer needs Contents read and Pull requests write. CI operations may need additional permissions. Minting tokens doesn't require a webhook server; GitHub documents the [authentication flow](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/authenticating-as-a-github-app-installation).
+The template selects these through `writer` and `reviewer` profiles. A shell launched with the writer profile acts as the writer App, including commands I type myself. I approve through my own GitHub account separately.
 
-The reviewer needs a different App because [PR authors cannot approve their own PRs](https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/approving-a-pull-request-with-required-reviews). Another token or installation of the writer App would still be the writer.
+## Keeping a session working
 
-My host has separate Apps for [patchrelay](/posts/patchrelay), [review-quill](/posts/review-quill), and interactive coding. The template uses `writer` and `reviewer` profiles. Commands I type inside a writer session also run as that App.
+Installation tokens last one hour. I don't want to restart a coding session whenever one expires, so a systemd timer mints a replacement every 30 minutes. It loads the App key from an encrypted credential and atomically replaces that profile's private `hosts.yml`.
 
-## Rotating a token doesn't update a running process
+The running agent must actually use the new file. If it inherited `GH_TOKEN` at startup, it would keep the old value: environment tokens [take precedence over gh's stored credentials](https://cli.github.com/manual/gh_help_environment). The launcher removes `GH_TOKEN` and `GITHUB_TOKEN` and sets `GH_CONFIG_DIR` instead. Each new `gh` command reads the current token from that directory.
 
-A systemd timer mints replacement tokens every 30 minutes. Its service loads the App key through `LoadCredentialEncrypted` and atomically replaces a private `hosts.yml` file.
-
-But `GH_TOKEN` and `GITHUB_TOKEN` [override credentials stored by gh](https://cli.github.com/manual/gh_help_environment). An agent launched with either variable would keep using the old token. The launcher therefore removes them and sets `GH_CONFIG_DIR` to the selected profile's directory. Every new `gh` invocation reads the current file.
-
-Git calls `gh` for credentials:
+Git uses the same credentials through `gh auth git-credential`:
 
 ```ini
 [credential "https://github.com"]
@@ -43,36 +37,30 @@ Git calls `gh` for credentials:
     helper = !/usr/bin/gh auth git-credential
 ```
 
-The empty entry clears inherited helpers for that scope. The launcher supplies this configuration through `GIT_CONFIG_COUNT` and rewrites GitHub URLs to HTTPS, keeping the human's global Git configuration intact.
+The empty entry clears inherited helpers for this scope. The launcher passes the configuration to child processes and rewrites GitHub remotes to HTTPS. It doesn't change my global Git config.
 
-An installation token covers one installation. A second organization needs another profile and token file. Selecting the profile once for both tools keeps `git push` and `gh pr create` on the same identity.
+Each installation gets its own profile and token file. That matters when the same App is installed in more than one organization.
 
-## A push credential doesn't sign a commit
+## Signing commits
 
-Separate Apps solve the approval problem. Signing local commits requires another key.
+The PR identities are now separate, but I also want signatures on commits created locally. Pushing with an App token doesn't add one.
 
-Each writing identity gets a GPG certificate. The primary certification key stays off the runner; only the signing subkey goes onto it. The launcher selects a dedicated `GNUPGHOME` and pins that subkey with `user.signingKey=SIGNING_SUBKEY_FINGERPRINT!`. The trailing `!` prevents GPG from choosing a different key. If the configured key is missing, committing fails.
+I give each writing identity a GPG certificate and put only its private signing subkey on the runner. The primary certification key stays off that machine. The profile selects a dedicated `GNUPGHOME` and pins the exact signing subkey with a trailing `!` in `user.signingKey`.
 
-The Git author is the App's bot. The committer uses a dedicated signer email, verified on my GitHub account and included in the public GPG certificate registered there. That lets GitHub [verify the signature](https://docs.github.com/en/authentication/troubleshooting-commit-signature-verification/using-a-verified-email-address-in-your-gpg-key) while retaining the bot as author. The bot's noreply address uses its numeric user ID, which is different from the App ID.
+The App's bot is the Git author. The committer uses a dedicated signer email, which I verify on my GitHub account and include in the public GPG certificate registered there. GitHub [checks that email against both the key and the account](https://docs.github.com/en/authentication/troubleshooting-commit-signature-verification/using-a-verified-email-address-in-your-gpg-key). A verified signature records use of the signing key; my human approval is still a separate PR review.
 
-The runner can use that signing subkey without me. My approval remains a separate review event on the PR.
+A protected subkey adds another failure to handle: after GPG loses its passphrase cache, a commit can wait for someone to answer a password prompt. A service reads the passphrase from an encrypted systemd credential and supplies it over stdin to `gpg-preset-passphrase`. It checks the cache every two seconds and restores it when needed. The agent process receives the signing configuration without the passphrase in its environment.
 
-## A protected key can still block unattended work
+The [signing guide](https://github.com/krasnoperov/github-agent-identities/blob/main/docs/signing.md) covers importing the subkey, configuring the service, and testing recovery. Backups and key renewal remain my responsibility.
 
-After a restart, GPG's passphrase cache is empty. The next commit can stop at a password prompt.
+My services share a Unix user, so these profiles don't isolate them from each other. A process with that user's access can read another profile's credentials or request a signature. Separate OS users or machines would be needed to enforce that boundary.
 
-A separate service reads the passphrase from an encrypted systemd credential and feeds it over stdin to [`gpg-preset-passphrase`](https://www.gnupg.org/documentation/manuals/gnupg/gpg_002dpreset_002dpassphrase.html). It addresses the subkey by its keygrip, refreshes the cache hourly, and checks every two seconds for cache loss. The coding agent gets signing configuration without receiving the passphrase itself.
+## Reviewing the result
 
-The [signing guide](https://github.com/krasnoperov/github-agent-identities/blob/main/docs/signing.md) covers GPG preset permissions, socket paths, service setup, and recovery. Backups, revocation, and subkey renewal still need handling.
+On a disposable PR, I checked the bot attribution, GitHub's signature verification, and my human approval on the exact commit. Automated reviews use the separate reviewer App. The template includes [acceptance checks](https://github.com/krasnoperov/github-agent-identities/blob/main/docs/verification.md) for the review actors, token rotation, and signing recovery.
 
-My services share a Unix user. These profiles keep routine actions attributed correctly, but a process running as that user can access another profile's credentials. Isolating untrusted agents requires separate OS permissions too.
+Repository rules still need attention. Two approvals can come from two agents; requiring a human as well means checking who approved, not only counting reviews.
 
-## What this buys me
+I can approve the agent's work as myself now. Maintaining that arrangement means looking after App registrations, token rotation, Git settings, and GPG services on a single box.
 
-On a disposable PR I checked that the coding App owned it, GitHub verified its commit signature, and my human approval referred to that exact commit. The separate reviewer App handles automated review in the normal review-quill flow. The template includes [acceptance checks](https://github.com/krasnoperov/github-agent-identities/blob/main/docs/verification.md) for both reviewers, token rotation, and signing failures.
-
-Repository rules still decide which approvals count. Requiring two reviews doesn't necessarily mean one human and one agent; a gate that requires both must check the actors.
-
-I can now approve the agent's work as myself and distinguish that approval from the automated review. Getting there took App registrations, credential rotation, Git configuration, GPG keys, and background services on one box.
-
-Next I want to look at source-control systems built for this workflow: agents with separate identities, review loops that survive another push, and a human view of what each agent changed and what needs a decision. Can they replace this setup with less administration? That's the next post.
+For the next post, I want to compare source-control tools built for agents: how they assign identities, what happens to a review after another push, and whether I can see which agent is working or waiting for me. How much of this administration would I still have to do?
